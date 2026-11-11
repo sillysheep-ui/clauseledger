@@ -1,0 +1,66 @@
+# 上海 —— 唯一已验证到"条款可切"的样本
+city_code: sh
+name: 上海
+level: L2          # L1 检索 / L2 判定 / L3 动作
+verified_at: 2026-11-11
+
+sources:
+  - id: sh-rsj-guifan
+    kind: policy_list
+    tier: A
+    dept: 人社
+    url: https://rsj.sh.gov.cn/tgwgfx_17726/index.html
+    pagination: {style: index_n, total_pages: 29}
+    table:
+      row: "table tbody tr"
+      cols: [title, doc_no, issued_at, valid_until]
+    attachments: {selector: "a[href$='.pdf'], a[href$='.docx']"}
+    covers: [社保, 补贴, 职称]
+    status: verified
+    note: 565 条 / 34 秒；天然带文号与有效期至
+
+  - id: sh-rsj-qita
+    kind: policy_list
+    tier: A
+    dept: 人社
+    url: https://rsj.sh.gov.cn/tgwqt_17736/index.html
+    pagination: {style: index_n}
+    table: {row: "table tbody tr", cols: [title, doc_no, issued_at, valid_until]}
+    covers: [落户, 社保]
+    status: verified
+    note: 「其他文件」，细则与操作口径多在此
+
+  - id: sh-rsj-jiedu
+    kind: notice
+    tier: C
+    dept: 人社
+    url: https://rsj.sh.gov.cn/tzcjd_17351/index.html
+    covers: [落户, 社保]
+    status: verified
+    note: 解读，只作旁证与金标来源
+
+  - id: sh-edu-gongkai
+    kind: policy_list
+    tier: B
+    dept: 教育
+    url: https://edu.sh.gov.cn/
+    covers: [应届生, 学历]
+    status: unverified
+    note: 已知附件在此（落户细则 PDF），栏目路径待确认
+
+  - id: sh-portal-gwk
+    kind: policy_list
+    tier: A
+    dept: 门户
+    url: https://www.shanghai.gov.cn/gwk/
+    pagination: {style: unknown}
+    covers: [综合]
+    status: unverified
+    note: 信息公开平台，实测有 41 个 PDF 附件链接
+
+# 待确认：公安(户籍) / 住建(租房补贴) / 医保 / 公积金
+todo:
+  - 公安人口管理栏目（居住证、落户受理）
+  - 住建局租房补贴专栏
+  - 医保局参保报销
+  - 公积金中心缴存与贷款
