@@ -44,3 +44,6 @@ eval_out/
 data/watch/
 data/scan/
 .pw-browsers/
+
+# 采集派生结构（可由 raw 重算）
+data/processed/
