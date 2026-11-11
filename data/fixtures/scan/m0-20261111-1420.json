@@ -1,0 +1,89 @@
+{
+  "summary": {
+    "上海": {
+      "样本数": 1,
+      "可达率": 1.0,
+      "带附件页面数": 1,
+      "附件链接数": 2,
+      "附件可下载率": 1.0,
+      "疑似扫描件": 0,
+      "条款总数": 7,
+      "可结构化条款": 6,
+      "可结构化比例": 0.857,
+      "条款可切率": 1.0,
+      "G1_源可达": true,
+      "G2_附件可下载": true,
+      "G3_条款可切": true,
+      "G4_可结构化": true
+    }
+  },
+  "rows": [
+    {
+      "city": "上海",
+      "url": "https://www.shanghai.gov.cn/gwk/search/content/f4df3bb5b82747b893b1eb10ca2b1f8b",
+      "status": 200,
+      "final_url": "https://www.shanghai.gov.cn/gwk/search/content/f4df3bb5b82747b893b1eb10ca2b1f8b",
+      "content_type": "text/html",
+      "bytes": 22518,
+      "elapsed_ms": 305,
+      "kind": "html",
+      "text_chars": 2403,
+      "tables": 0,
+      "clauses": 7,
+      "cond_clauses": 6,
+      "numbering": "han",
+      "numbering_counts": {
+        "article": 0,
+        "han": 7,
+        "paren": 0,
+        "arabic": 4
+      },
+      "doc_no": "沪教委学〔2026〕13\n号",
+      "dates": 4,
+      "attachments": [
+        {
+          "label": "上海市教育委员会 上海市发展和改革委员会 上海市公安局关于做好2026年非上海生",
+          "url": "https://www.shanghai.gov.cn/cmsres/e1/e1ba062900da428c832b02cfef1989ae/2821f15a0b7d4285fac43b0cec0ac319.docx"
+        },
+        {
+          "label": "",
+          "url": "https://www.shanghai.gov.cn/cmsres/c0/c0be2153e4e04371a7bd856e099f83fc/03cad02918ba513e483ac2037250f613.pdf"
+        }
+      ],
+      "error": "",
+      "reachable": true,
+      "pdf_pages": 0,
+      "attachment_probe": [
+        {
+          "url": "https://www.shanghai.gov.cn/cmsres/e1/e1ba062900da428c832b02cfef1989ae/2821f15a0b7d4285fac43b0cec0ac319.docx",
+          "label": "上海市教育委员会 上海市发展和改革委员会 上海市公安局关于做好2026年非上海生",
+          "status": 200,
+          "content_type": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+          "bytes": 128924,
+          "ok": true
+        },
+        {
+          "url": "https://www.shanghai.gov.cn/cmsres/c0/c0be2153e4e04371a7bd856e099f83fc/03cad02918ba513e483ac2037250f613.pdf",
+          "label": "",
+          "status": 200,
+          "content_type": "application/pdf",
+          "bytes": 537774,
+          "ok": true,
+          "pdf_pages": 52,
+          "text_chars_first3": 2005,
+          "scanned_likely": false,
+          "numbering": "arabic",
+          "numbering_counts": {
+            "article": 0,
+            "han": 29,
+            "paren": 12,
+            "arabic": 69
+          },
+          "clauses": 65,
+          "cond_clauses": 47
+        }
+      ],
+      "topic": "落户-应届生"
+    }
+  ]
+}

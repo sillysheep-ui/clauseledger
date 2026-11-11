@@ -37,3 +37,7 @@ data/manifests/
 # 评测临时产物
 eval_out/
 *.log
+
+# 本地环境
+.venv/
+.uv-cache/
