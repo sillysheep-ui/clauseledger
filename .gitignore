@@ -43,3 +43,4 @@ eval_out/
 .uv-cache/
 data/watch/
 data/scan/
+.pw-browsers/
