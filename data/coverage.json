@@ -1,0 +1,2990 @@
+{
+ "schema": "coverage/v1",
+ "generated_at": "2026-11-11T17:35:31+0800",
+ "corpus_version": null,
+ "totals": {
+  "cities_total": 333,
+  "cities_reachable": 309,
+  "cities_blocked": 24,
+  "blocked_by_reason": {
+   "identity_mismatch": 5,
+   "discovery_gap": 18,
+   "waf_blocked": 1
+  }
+ },
+ "cities": {
+  "石家庄": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "https://www.sjz.gov.cn/",
+   "chars": 2711,
+   "matters": {},
+   "departments": {}
+  },
+  "唐山": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "https://www.hebei.gov.cn/columns/9033927e-cc80-4b5e-a266-a6a6e888c1d3/index.html",
+   "chars": 2733,
+   "matters": {},
+   "departments": {}
+  },
+  "秦皇岛": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "https://www.qhd.gov.cn/",
+   "chars": 3968,
+   "matters": {},
+   "departments": {}
+  },
+  "邯郸": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "https://www.hd.gov.cn/",
+   "chars": 2195,
+   "matters": {},
+   "departments": {}
+  },
+  "邢台": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "http://www.xingtai.gov.cn/",
+   "chars": 2476,
+   "matters": {},
+   "departments": {}
+  },
+  "保定": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "https://www.baoding.gov.cn/",
+   "chars": 3715,
+   "matters": {},
+   "departments": {}
+  },
+  "张家口": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "https://www.zjk.gov.cn/",
+   "chars": 4280,
+   "matters": {},
+   "departments": {}
+  },
+  "承德": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "https://www.chengde.gov.cn/",
+   "chars": 2544,
+   "matters": {},
+   "departments": {}
+  },
+  "沧州": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "https://www.cangzhou.gov.cn/",
+   "chars": 2349,
+   "matters": {},
+   "departments": {}
+  },
+  "廊坊": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "https://www.lf.gov.cn/",
+   "chars": 5734,
+   "matters": {},
+   "departments": {}
+  },
+  "衡": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "http://www.hengshui.gov.cn/",
+   "chars": 3292,
+   "matters": {},
+   "departments": {}
+  },
+  "太原": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "https://www.taiyuan.gov.cn/",
+   "chars": 1915,
+   "matters": {},
+   "departments": {}
+  },
+  "大同": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "https://www.dt.gov.cn/",
+   "chars": 7427,
+   "matters": {},
+   "departments": {}
+  },
+  "阳泉": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "https://www.yq.gov.cn/",
+   "chars": 3009,
+   "matters": {},
+   "departments": {}
+  },
+  "长治": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "https://www.changzhi.gov.cn/",
+   "chars": 6404,
+   "matters": {},
+   "departments": {}
+  },
+  "晋城": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "https://www.jcgov.gov.cn/",
+   "chars": 5886,
+   "matters": {},
+   "departments": {}
+  },
+  "朔州": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "http://www.shuozhou.gov.cn/",
+   "chars": 7342,
+   "matters": {},
+   "departments": {}
+  },
+  "晋中": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "https://www.shanxi.gov.cn/ywdt/zwlb/gsdt/202611/t20261111_10257912.shtml",
+   "chars": 10099,
+   "matters": {},
+   "departments": {}
+  },
+  "运城": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "https://www.yuncheng.gov.cn/",
+   "chars": 5565,
+   "matters": {},
+   "departments": {}
+  },
+  "忻州": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "http://www.sxxz.gov.cn/",
+   "chars": 3251,
+   "matters": {},
+   "departments": {}
+  },
+  "临汾": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "http://www.linfen.gov.cn/",
+   "chars": 2545,
+   "matters": {},
+   "departments": {}
+  },
+  "吕梁": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "http://www.lvliang.gov.cn/",
+   "chars": 8287,
+   "matters": {},
+   "departments": {}
+  },
+  "呼和浩特": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "http://www.huhhot.gov.cn",
+   "chars": 3309,
+   "matters": {},
+   "departments": {}
+  },
+  "包头": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "https://www.baotou.gov.cn/",
+   "chars": 2611,
+   "matters": {},
+   "departments": {}
+  },
+  "乌海": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "http://www.wuhai.gov.cn/",
+   "chars": 5839,
+   "matters": {},
+   "departments": {}
+  },
+  "赤峰": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "https://www.chifeng.gov.cn/",
+   "chars": 4833,
+   "matters": {},
+   "departments": {}
+  },
+  "通辽": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "https://www.tongliao.gov.cn/",
+   "chars": 2778,
+   "matters": {},
+   "departments": {}
+  },
+  "鄂尔多斯": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "http://www.ordos.gov.cn/",
+   "chars": 2123,
+   "matters": {},
+   "departments": {}
+  },
+  "呼伦贝尔": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "https://www.hlbe.gov.cn/",
+   "chars": 5613,
+   "matters": {},
+   "departments": {}
+  },
+  "巴彦淖尔": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "https://www.bynr.gov.cn/",
+   "chars": 2848,
+   "matters": {},
+   "departments": {}
+  },
+  "乌兰察布": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "https://www.wulanchabu.gov.cn/",
+   "chars": 3198,
+   "matters": {},
+   "departments": {}
+  },
+  "兴安": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "http://www.xam.gov.cn/",
+   "chars": 4643,
+   "matters": {},
+   "departments": {}
+  },
+  "锡林郭勒": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "https://www.xlgl.gov.cn/",
+   "chars": 4517,
+   "matters": {},
+   "departments": {}
+  },
+  "阿拉善": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "http://www.als.gov.cn/",
+   "chars": 2703,
+   "matters": {},
+   "departments": {}
+  },
+  "沈阳": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "https://www.shenyang.gov.cn/",
+   "chars": 2375,
+   "matters": {},
+   "departments": {}
+  },
+  "大连": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "https://www.dl.gov.cn/",
+   "chars": 3080,
+   "matters": {},
+   "departments": {}
+  },
+  "鞍山": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "http://www.anshan.gov.cn/",
+   "chars": 5263,
+   "matters": {},
+   "departments": {}
+  },
+  "抚顺": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "https://www.fushun.gov.cn/",
+   "chars": 5689,
+   "matters": {},
+   "departments": {}
+  },
+  "本溪": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "https://www.benxi.gov.cn/",
+   "chars": 6210,
+   "matters": {},
+   "departments": {}
+  },
+  "丹东": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "https://www.dandong.gov.cn/",
+   "chars": 5885,
+   "matters": {},
+   "departments": {}
+  },
+  "锦州": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "https://www.jz.gov.cn/",
+   "chars": 5079,
+   "matters": {},
+   "departments": {}
+  },
+  "营口": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "https://www.yingkou.gov.cn/",
+   "chars": 4237,
+   "matters": {},
+   "departments": {}
+  },
+  "阜新": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "https://www.fuxin.gov.cn/",
+   "chars": 4786,
+   "matters": {},
+   "departments": {}
+  },
+  "辽阳": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "http://www.liaoyang.gov.cn/",
+   "chars": 2430,
+   "matters": {},
+   "departments": {}
+  },
+  "盘锦": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "https://www.panjin.gov.cn/",
+   "chars": 3983,
+   "matters": {},
+   "departments": {}
+  },
+  "铁岭": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "https://www.tieling.gov.cn/",
+   "chars": 3480,
+   "matters": {},
+   "departments": {}
+  },
+  "朝阳": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "https://www.chaoyang.gov.cn/",
+   "chars": 7542,
+   "matters": {},
+   "departments": {}
+  },
+  "葫芦岛": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "https://www.hld.gov.cn/",
+   "chars": 3357,
+   "matters": {},
+   "departments": {}
+  },
+  "长春": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "http://www.changchun.gov.cn/",
+   "chars": 3645,
+   "matters": {},
+   "departments": {}
+  },
+  "吉林": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "https://www.jl.gov.cn/",
+   "chars": 1817,
+   "matters": {},
+   "departments": {}
+  },
+  "四平": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "http://www.siping.gov.cn/",
+   "chars": 5007,
+   "matters": {},
+   "departments": {}
+  },
+  "辽源": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "https://www.liaoyuan.gov.cn/",
+   "chars": 3143,
+   "matters": {},
+   "departments": {}
+  },
+  "通化": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "https://www.tonghua.gov.cn/",
+   "chars": 2528,
+   "matters": {},
+   "departments": {}
+  },
+  "白山": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "http://www.cbs.gov.cn/",
+   "chars": 443,
+   "matters": {},
+   "departments": {}
+  },
+  "松原": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "http://www.jlsy.gov.cn/",
+   "chars": 4918,
+   "matters": {},
+   "departments": {}
+  },
+  "白城": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "http://www.jlbc.gov.cn/",
+   "chars": 7207,
+   "matters": {},
+   "departments": {}
+  },
+  "延边": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "http://www.yanbian.gov.cn/",
+   "chars": 2717,
+   "matters": {},
+   "departments": {}
+  },
+  "哈尔滨": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "https://www.harbin.gov.cn/",
+   "chars": 3143,
+   "matters": {},
+   "departments": {}
+  },
+  "齐齐哈尔": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "https://www.qqhr.gov.cn/",
+   "chars": 1828,
+   "matters": {},
+   "departments": {}
+  },
+  "鸡西": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "https://www.jixi.gov.cn/",
+   "chars": 1601,
+   "matters": {},
+   "departments": {}
+  },
+  "鹤岗": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "https://www.hegang.gov.cn/",
+   "chars": 2837,
+   "matters": {},
+   "departments": {}
+  },
+  "双鸭山": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "http://www.shuangyashan.gov.cn/",
+   "chars": 1925,
+   "matters": {},
+   "departments": {}
+  },
+  "大庆": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "https://www.daqing.gov.cn/",
+   "chars": 1537,
+   "matters": {},
+   "departments": {}
+  },
+  "伊春": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "https://www.yc.gov.cn/",
+   "chars": 3362,
+   "matters": {},
+   "departments": {}
+  },
+  "佳木斯": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "https://www.jms.gov.cn/",
+   "chars": 2957,
+   "matters": {},
+   "departments": {}
+  },
+  "七台河": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "https://www.qth.gov.cn/",
+   "chars": 2007,
+   "matters": {},
+   "departments": {}
+  },
+  "牡丹江": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "https://www.mdj.gov.cn/",
+   "chars": 4180,
+   "matters": {},
+   "departments": {}
+  },
+  "黑河": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "https://www.heihe.gov.cn/",
+   "chars": 2283,
+   "matters": {},
+   "departments": {}
+  },
+  "绥化": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "https://www.suihua.gov.cn/",
+   "chars": 2640,
+   "matters": {},
+   "departments": {}
+  },
+  "大兴安岭": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "https://www.dxal.gov.cn/",
+   "chars": 709,
+   "matters": {},
+   "departments": {}
+  },
+  "南": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "https://www.nanjing.gov.cn/index.html",
+   "chars": 1438,
+   "matters": {},
+   "departments": {}
+  },
+  "无锡": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "https://www.wuxi.gov.cn/",
+   "chars": 3226,
+   "matters": {},
+   "departments": {}
+  },
+  "徐州": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "https://www.xz.gov.cn/",
+   "chars": 3957,
+   "matters": {},
+   "departments": {}
+  },
+  "常州": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "https://www.changzhou.gov.cn/",
+   "chars": 1248,
+   "matters": {},
+   "departments": {}
+  },
+  "苏州": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "https://www.suzhou.gov.cn/",
+   "chars": 4798,
+   "matters": {},
+   "departments": {}
+  },
+  "南通": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "https://www.nantong.gov.cn/",
+   "chars": 3614,
+   "matters": {},
+   "departments": {}
+  },
+  "连云港": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "http://www.lyg.gov.cn/",
+   "chars": 3295,
+   "matters": {},
+   "departments": {}
+  },
+  "淮安": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "https://www.huaian.gov.cn/",
+   "chars": 1983,
+   "matters": {},
+   "departments": {}
+  },
+  "盐城": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "https://www.yancheng.gov.cn/",
+   "chars": 1138,
+   "matters": {},
+   "departments": {}
+  },
+  "扬州": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "https://www.yangzhou.gov.cn/",
+   "chars": 2165,
+   "matters": {},
+   "departments": {}
+  },
+  "镇江": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "https://www.zhenjiang.gov.cn/",
+   "chars": 4544,
+   "matters": {},
+   "departments": {}
+  },
+  "泰州": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "https://www.taizhou.gov.cn/",
+   "chars": 1371,
+   "matters": {},
+   "departments": {}
+  },
+  "宿迁": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "https://www.suqian.gov.cn/",
+   "chars": 3796,
+   "matters": {},
+   "departments": {}
+  },
+  "杭州": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "https://www.hangzhou.gov.cn/",
+   "chars": 4425,
+   "matters": {},
+   "departments": {}
+  },
+  "宁波": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "https://www.ningbo.gov.cn/",
+   "chars": 1323,
+   "matters": {},
+   "departments": {}
+  },
+  "温州": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "https://www.wenzhou.gov.cn/",
+   "chars": 6465,
+   "matters": {},
+   "departments": {}
+  },
+  "嘉兴": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "https://www.jiaxing.gov.cn/",
+   "chars": 1848,
+   "matters": {},
+   "departments": {}
+  },
+  "湖州": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "https://www.huzhou.gov.cn/",
+   "chars": 1196,
+   "matters": {},
+   "departments": {}
+  },
+  "绍兴": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "https://www.sx.gov.cn/",
+   "chars": 2046,
+   "matters": {},
+   "departments": {}
+  },
+  "金华": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "https://www.jinhua.gov.cn/",
+   "chars": 2522,
+   "matters": {},
+   "departments": {}
+  },
+  "衢州": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "https://www.qz.gov.cn/",
+   "chars": 3787,
+   "matters": {},
+   "departments": {}
+  },
+  "舟山": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "https://www.zhoushan.gov.cn/",
+   "chars": 2426,
+   "matters": {},
+   "departments": {}
+  },
+  "台州": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "blocked",
+   "reason": "identity_mismatch",
+   "detail": "域名能打开，但页面与城市对不上（多音字域名碰撞或防护页顶替）",
+   "caveat": "未接入不代表当地没有相关政策，只代表我们没能自动取到"
+  },
+  "丽": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "https://www.lishui.gov.cn/",
+   "chars": 5145,
+   "matters": {},
+   "departments": {}
+  },
+  "合肥": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "https://www.hefei.gov.cn/",
+   "chars": 1962,
+   "matters": {},
+   "departments": {}
+  },
+  "芜湖": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "https://www.wuhu.gov.cn/",
+   "chars": 2005,
+   "matters": {},
+   "departments": {}
+  },
+  "蚌埠": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "https://www.bengbu.gov.cn/",
+   "chars": 2604,
+   "matters": {},
+   "departments": {}
+  },
+  "淮南": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "https://www.ah.gov.cn/zwyw/mtjj/565553471.html",
+   "chars": 3185,
+   "matters": {},
+   "departments": {}
+  },
+  "马鞍山": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "https://www.mas.gov.cn/",
+   "chars": 5016,
+   "matters": {},
+   "departments": {}
+  },
+  "淮北": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "https://www.huaibei.gov.cn/",
+   "chars": 2684,
+   "matters": {},
+   "departments": {}
+  },
+  "铜陵": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "https://www.tl.gov.cn/",
+   "chars": 2036,
+   "matters": {},
+   "departments": {}
+  },
+  "安庆": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "https://www.anqing.gov.cn/",
+   "chars": 2041,
+   "matters": {},
+   "departments": {}
+  },
+  "黄山": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "https://www.huangshan.gov.cn/",
+   "chars": 1100,
+   "matters": {},
+   "departments": {}
+  },
+  "滁州": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "https://www.chuzhou.gov.cn/",
+   "chars": 2887,
+   "matters": {},
+   "departments": {}
+  },
+  "阜阳": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "https://www.fy.gov.cn/",
+   "chars": 4944,
+   "matters": {},
+   "departments": {}
+  },
+  "宿州": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "http://www.ahsz.gov.cn/",
+   "chars": 3509,
+   "matters": {},
+   "departments": {}
+  },
+  "六安": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "https://www.luan.gov.cn/",
+   "chars": 2745,
+   "matters": {},
+   "departments": {}
+  },
+  "亳州": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "https://www.bozhou.gov.cn/",
+   "chars": 3958,
+   "matters": {},
+   "departments": {}
+  },
+  "池州": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "https://www.chizhou.gov.cn/",
+   "chars": 3087,
+   "matters": {},
+   "departments": {}
+  },
+  "宣城": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "https://www.xuancheng.gov.cn/",
+   "chars": 3884,
+   "matters": {},
+   "departments": {}
+  },
+  "福州": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "https://www.fuzhou.gov.cn/",
+   "chars": 4418,
+   "matters": {},
+   "departments": {}
+  },
+  "厦门": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "https://www.fj.gov.cn/xwdt/fjyw/202611/t20261107_7246064.htm",
+   "chars": 5985,
+   "matters": {},
+   "departments": {}
+  },
+  "莆田": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "https://www.putian.gov.cn/",
+   "chars": 4051,
+   "matters": {},
+   "departments": {}
+  },
+  "三明": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "http://www.sanming.gov.cn/",
+   "chars": 3398,
+   "matters": {},
+   "departments": {}
+  },
+  "泉州": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "https://www.quanzhou.gov.cn/",
+   "chars": 5101,
+   "matters": {},
+   "departments": {}
+  },
+  "漳州": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "https://www.zhangzhou.gov.cn/cms/html/zzsrmzf/index.html",
+   "chars": 3816,
+   "matters": {},
+   "departments": {}
+  },
+  "南平": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "https://www.np.gov.cn/cms/html/npszf/index.html",
+   "chars": 4869,
+   "matters": {},
+   "departments": {}
+  },
+  "龙岩": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "https://www.longyan.gov.cn/",
+   "chars": 3453,
+   "matters": {},
+   "departments": {}
+  },
+  "宁德": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "https://www.ningde.gov.cn/",
+   "chars": 5741,
+   "matters": {},
+   "departments": {}
+  },
+  "南昌": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "http://www.nc.gov.cn/",
+   "chars": 4124,
+   "matters": {},
+   "departments": {}
+  },
+  "景德镇": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "https://jdz.gov.cn/",
+   "chars": 2333,
+   "matters": {},
+   "departments": {}
+  },
+  "萍乡": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "https://www.pingxiang.gov.cn/",
+   "chars": 1725,
+   "matters": {},
+   "departments": {}
+  },
+  "九江": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "https://www.jiujiang.gov.cn/",
+   "chars": 6861,
+   "matters": {},
+   "departments": {}
+  },
+  "新余": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "https://www.xinyu.gov.cn/",
+   "chars": 385,
+   "matters": {},
+   "departments": {}
+  },
+  "鹰潭": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "http://www.yingtan.gov.cn/",
+   "chars": 1472,
+   "matters": {},
+   "departments": {}
+  },
+  "赣州": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "https://www.ganzhou.gov.cn/",
+   "chars": 4318,
+   "matters": {},
+   "departments": {}
+  },
+  "吉安": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "https://www.jian.gov.cn/",
+   "chars": 916,
+   "matters": {},
+   "departments": {}
+  },
+  "宜春": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "https://www.yichun.gov.cn/",
+   "chars": 1284,
+   "matters": {},
+   "departments": {}
+  },
+  "抚州": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "http://www.jxfz.gov.cn/",
+   "chars": 3417,
+   "matters": {},
+   "departments": {}
+  },
+  "上饶": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "http://www.zgsr.gov.cn/",
+   "chars": 2605,
+   "matters": {},
+   "departments": {}
+  },
+  "济南": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "https://www.jinan.gov.cn/",
+   "chars": 7502,
+   "matters": {},
+   "departments": {}
+  },
+  "青岛": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "http://www.qingdao.gov.cn/",
+   "chars": 2623,
+   "matters": {},
+   "departments": {}
+  },
+  "淄博": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "https://www.zibo.gov.cn/",
+   "chars": 2569,
+   "matters": {},
+   "departments": {}
+  },
+  "枣庄": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "http://www.zaozhuang.gov.cn/",
+   "chars": 2963,
+   "matters": {},
+   "departments": {}
+  },
+  "东营": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "http://www.dongying.gov.cn/",
+   "chars": 3442,
+   "matters": {},
+   "departments": {}
+  },
+  "烟台": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "https://www.yantai.gov.cn/",
+   "chars": 3637,
+   "matters": {},
+   "departments": {}
+  },
+  "潍坊": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "https://www.weifang.gov.cn/",
+   "chars": 5664,
+   "matters": {},
+   "departments": {}
+  },
+  "济宁": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "https://www.jining.gov.cn/",
+   "chars": 3626,
+   "matters": {},
+   "departments": {}
+  },
+  "泰安": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "https://www.taian.gov.cn/",
+   "chars": 3406,
+   "matters": {},
+   "departments": {}
+  },
+  "威海": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "https://www.weihai.gov.cn/",
+   "chars": 4031,
+   "matters": {},
+   "departments": {}
+  },
+  "日照": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "http://www.rizhao.gov.cn/",
+   "chars": 1521,
+   "matters": {},
+   "departments": {}
+  },
+  "临沂": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "https://www.linyi.gov.cn/",
+   "chars": 3902,
+   "matters": {},
+   "departments": {}
+  },
+  "德州": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "https://www.dezhou.gov.cn/",
+   "chars": 4292,
+   "matters": {},
+   "departments": {}
+  },
+  "聊城": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "http://www.liaocheng.gov.cn/",
+   "chars": 4156,
+   "matters": {},
+   "departments": {}
+  },
+  "滨州": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "http://www.binzhou.gov.cn/",
+   "chars": 2104,
+   "matters": {},
+   "departments": {}
+  },
+  "菏泽": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "http://www.heze.gov.cn/",
+   "chars": 7226,
+   "matters": {},
+   "departments": {}
+  },
+  "郑州": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "https://www.zhengzhou.gov.cn/",
+   "chars": 2604,
+   "matters": {},
+   "departments": {}
+  },
+  "开封": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "https://www.kaifeng.gov.cn/",
+   "chars": 496,
+   "matters": {},
+   "departments": {}
+  },
+  "洛阳": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "https://www.ly.gov.cn/",
+   "chars": 3056,
+   "matters": {},
+   "departments": {}
+  },
+  "平顶山": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "https://www.pds.gov.cn/",
+   "chars": 3973,
+   "matters": {},
+   "departments": {}
+  },
+  "安阳": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "https://www.anyang.gov.cn/",
+   "chars": 3565,
+   "matters": {},
+   "departments": {}
+  },
+  "鹤壁": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "https://www.hebi.gov.cn/",
+   "chars": 1720,
+   "matters": {},
+   "departments": {}
+  },
+  "新乡": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "https://www.xinxiang.gov.cn/",
+   "chars": 2074,
+   "matters": {},
+   "departments": {}
+  },
+  "焦作": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "https://www.jiaozuo.gov.cn/",
+   "chars": 4138,
+   "matters": {},
+   "departments": {}
+  },
+  "濮阳": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "https://www.puyang.gov.cn/",
+   "chars": 3390,
+   "matters": {},
+   "departments": {}
+  },
+  "许昌": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "https://www.xuchang.gov.cn/",
+   "chars": 7620,
+   "matters": {},
+   "departments": {}
+  },
+  "漯河": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "http://www.luohe.gov.cn",
+   "chars": 4594,
+   "matters": {},
+   "departments": {}
+  },
+  "三门峡": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "https://www.smx.gov.cn/",
+   "chars": 4550,
+   "matters": {},
+   "departments": {}
+  },
+  "南阳": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "https://www.nanyang.gov.cn/",
+   "chars": 5112,
+   "matters": {},
+   "departments": {}
+  },
+  "商丘": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "https://www.shangqiu.gov.cn/",
+   "chars": 10373,
+   "matters": {},
+   "departments": {}
+  },
+  "信阳": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "https://www.xinyang.gov.cn/",
+   "chars": 4616,
+   "matters": {},
+   "departments": {}
+  },
+  "周口": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "https://www.zhoukou.gov.cn/page_pc/index.html",
+   "chars": 4005,
+   "matters": {},
+   "departments": {}
+  },
+  "驻马店": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "https://www.zhumadian.gov.cn/",
+   "chars": 2687,
+   "matters": {},
+   "departments": {}
+  },
+  "武汉": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "https://www.wuhan.gov.cn/",
+   "chars": 3157,
+   "matters": {},
+   "departments": {}
+  },
+  "黄石": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "https://www.huangshi.gov.cn/",
+   "chars": 2662,
+   "matters": {},
+   "departments": {}
+  },
+  "十堰": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "https://www.shiyan.gov.cn/",
+   "chars": 3015,
+   "matters": {},
+   "departments": {}
+  },
+  "宜昌": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "https://www.yichang.gov.cn/",
+   "chars": 2980,
+   "matters": {},
+   "departments": {}
+  },
+  "襄阳": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "http://www.xiangyang.gov.cn/wzsy/",
+   "chars": 2557,
+   "matters": {},
+   "departments": {}
+  },
+  "鄂州": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "https://www.ezhou.gov.cn/sy/",
+   "chars": 2073,
+   "matters": {},
+   "departments": {}
+  },
+  "荆门": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "https://www.jingmen.gov.cn/",
+   "chars": 2661,
+   "matters": {},
+   "departments": {}
+  },
+  "孝感": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "https://www.xiaogan.gov.cn/",
+   "chars": 3458,
+   "matters": {},
+   "departments": {}
+  },
+  "荆州": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "https://www.jingzhou.gov.cn/",
+   "chars": 4206,
+   "matters": {},
+   "departments": {}
+  },
+  "黄冈": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "https://www.hg.gov.cn/",
+   "chars": 1950,
+   "matters": {},
+   "departments": {}
+  },
+  "咸宁": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "http://www.xianning.gov.cn/",
+   "chars": 2775,
+   "matters": {},
+   "departments": {}
+  },
+  "随州": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "https://www.suizhou.gov.cn/",
+   "chars": 3400,
+   "matters": {},
+   "departments": {}
+  },
+  "恩施": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "http://www.es.gov.cn/",
+   "chars": 1593,
+   "matters": {},
+   "departments": {}
+  },
+  "长沙": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "https://www.changsha.gov.cn/",
+   "chars": 3754,
+   "matters": {},
+   "departments": {}
+  },
+  "株洲": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "https://www.zhuzhou.gov.cn/",
+   "chars": 5766,
+   "matters": {},
+   "departments": {}
+  },
+  "湘潭": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "https://www.xt.gov.cn/",
+   "chars": 3602,
+   "matters": {},
+   "departments": {}
+  },
+  "衡阳": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "https://www.hengyang.gov.cn/",
+   "chars": 1716,
+   "matters": {},
+   "departments": {}
+  },
+  "邵阳": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "https://www.shaoyang.gov.cn/",
+   "chars": 2220,
+   "matters": {},
+   "departments": {}
+  },
+  "岳阳": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "https://www.yueyang.gov.cn/",
+   "chars": 2245,
+   "matters": {},
+   "departments": {}
+  },
+  "常德": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "https://www.changde.gov.cn/",
+   "chars": 3079,
+   "matters": {},
+   "departments": {}
+  },
+  "张家界": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "https://www.zjj.gov.cn/",
+   "chars": 3349,
+   "matters": {},
+   "departments": {}
+  },
+  "益阳": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "https://www.yiyang.gov.cn/yiyang/index.htm",
+   "chars": 3200,
+   "matters": {},
+   "departments": {}
+  },
+  "郴州": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "blocked",
+   "reason": "discovery_gap",
+   "detail": "我们没找到该城市的官方入口（省级导航未取到），不是当地没有公开信息",
+   "caveat": "未接入不代表当地没有相关政策，只代表我们没能自动取到"
+  },
+  "永州": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "https://www.yongzhou.gov.cn/mixmedia/",
+   "chars": 5144,
+   "matters": {},
+   "departments": {}
+  },
+  "怀化": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "https://www.huaihua.gov.cn/",
+   "chars": 3331,
+   "matters": {},
+   "departments": {}
+  },
+  "娄底": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "blocked",
+   "reason": "discovery_gap",
+   "detail": "我们没找到该城市的官方入口（省级导航未取到），不是当地没有公开信息",
+   "caveat": "未接入不代表当地没有相关政策，只代表我们没能自动取到"
+  },
+  "湘西": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "blocked",
+   "reason": "discovery_gap",
+   "detail": "我们没找到该城市的官方入口（省级导航未取到），不是当地没有公开信息",
+   "caveat": "未接入不代表当地没有相关政策，只代表我们没能自动取到"
+  },
+  "广州": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "http://www.guangzhou.gov.cn/",
+   "chars": 1371,
+   "matters": {},
+   "departments": {}
+  },
+  "韶关": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "blocked",
+   "reason": "waf_blocked",
+   "detail": "站点可访问但部署了挑战式防护（412/521），自动化拿不到正文",
+   "caveat": "未接入不代表当地没有相关政策，只代表我们没能自动取到"
+  },
+  "深圳": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "http://www.shenzhen.gov.cn/",
+   "chars": 1549,
+   "matters": {},
+   "departments": {}
+  },
+  "珠海": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "https://www.zhuhai.gov.cn/",
+   "chars": 4708,
+   "matters": {},
+   "departments": {}
+  },
+  "汕头": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "https://www.shantou.gov.cn/",
+   "chars": 6663,
+   "matters": {},
+   "departments": {}
+  },
+  "佛山": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "https://www.foshan.gov.cn/",
+   "chars": 2634,
+   "matters": {},
+   "departments": {}
+  },
+  "江门": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "https://www.gd.gov.cn/gdywdt/dsdt/content/post_4977252.html",
+   "chars": 816,
+   "matters": {},
+   "departments": {}
+  },
+  "湛江": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "https://www.zhanjiang.gov.cn/",
+   "chars": 3241,
+   "matters": {},
+   "departments": {}
+  },
+  "茂名": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "http://www.maoming.gov.cn/",
+   "chars": 2144,
+   "matters": {},
+   "departments": {}
+  },
+  "肇庆": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "https://www.zhaoqing.gov.cn/",
+   "chars": 2930,
+   "matters": {},
+   "departments": {}
+  },
+  "惠州": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "https://www.huizhou.gov.cn/",
+   "chars": 3741,
+   "matters": {},
+   "departments": {}
+  },
+  "梅州": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "https://www.meizhou.gov.cn/",
+   "chars": 1421,
+   "matters": {},
+   "departments": {}
+  },
+  "汕尾": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "https://www.gd.gov.cn/gdywdt/dsdt/content/post_4977241.html",
+   "chars": 2250,
+   "matters": {},
+   "departments": {}
+  },
+  "河源": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "https://www.heyuan.gov.cn/",
+   "chars": 6185,
+   "matters": {},
+   "departments": {}
+  },
+  "阳江": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "https://www.yangjiang.gov.cn/",
+   "chars": 4010,
+   "matters": {},
+   "departments": {}
+  },
+  "清远": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "blocked",
+   "reason": "identity_mismatch",
+   "detail": "域名能打开，但页面与城市对不上（多音字域名碰撞或防护页顶替）",
+   "caveat": "未接入不代表当地没有相关政策，只代表我们没能自动取到"
+  },
+  "东莞": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "https://www.dg.gov.cn/",
+   "chars": 4423,
+   "matters": {},
+   "departments": {}
+  },
+  "中山": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "https://www.zs.gov.cn/",
+   "chars": 3215,
+   "matters": {},
+   "departments": {}
+  },
+  "潮州": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "https://www.chaozhou.gov.cn/",
+   "chars": 4258,
+   "matters": {},
+   "departments": {}
+  },
+  "揭阳": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "http://www.jieyang.gov.cn/",
+   "chars": 4206,
+   "matters": {},
+   "departments": {}
+  },
+  "云浮": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "https://www.yunfu.gov.cn/",
+   "chars": 3850,
+   "matters": {},
+   "departments": {}
+  },
+  "南宁": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "https://www.nanning.gov.cn/",
+   "chars": 4676,
+   "matters": {},
+   "departments": {}
+  },
+  "柳州": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "http://www.liuzhou.gov.cn/",
+   "chars": 8387,
+   "matters": {},
+   "departments": {}
+  },
+  "桂林": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "https://www.guilin.gov.cn/",
+   "chars": 3172,
+   "matters": {},
+   "departments": {}
+  },
+  "梧州": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "http://www.wuzhou.gov.cn/",
+   "chars": 2995,
+   "matters": {},
+   "departments": {}
+  },
+  "北海": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "http://www.beihai.gov.cn/",
+   "chars": 4497,
+   "matters": {},
+   "departments": {}
+  },
+  "防城港": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "blocked",
+   "reason": "discovery_gap",
+   "detail": "我们没找到该城市的官方入口（省级导航未取到），不是当地没有公开信息",
+   "caveat": "未接入不代表当地没有相关政策，只代表我们没能自动取到"
+  },
+  "钦州": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "http://www.qinzhou.gov.cn/",
+   "chars": 4823,
+   "matters": {},
+   "departments": {}
+  },
+  "贵港": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "blocked",
+   "reason": "discovery_gap",
+   "detail": "我们没找到该城市的官方入口（省级导航未取到），不是当地没有公开信息",
+   "caveat": "未接入不代表当地没有相关政策，只代表我们没能自动取到"
+  },
+  "玉林": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "http://www.yulin.gov.cn/",
+   "chars": 6690,
+   "matters": {},
+   "departments": {}
+  },
+  "百色": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "http://www.baise.gov.cn/",
+   "chars": 6202,
+   "matters": {},
+   "departments": {}
+  },
+  "贺州": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "blocked",
+   "reason": "discovery_gap",
+   "detail": "我们没找到该城市的官方入口（省级导航未取到），不是当地没有公开信息",
+   "caveat": "未接入不代表当地没有相关政策，只代表我们没能自动取到"
+  },
+  "河池": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "http://www.hechi.gov.cn/",
+   "chars": 4567,
+   "matters": {},
+   "departments": {}
+  },
+  "来宾": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "http://www.laibin.gov.cn/",
+   "chars": 5997,
+   "matters": {},
+   "departments": {}
+  },
+  "崇左": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "http://www.chongzuo.gov.cn/",
+   "chars": 4372,
+   "matters": {},
+   "departments": {}
+  },
+  "海口": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "https://www.haikou.gov.cn/",
+   "chars": 4516,
+   "matters": {},
+   "departments": {}
+  },
+  "三亚": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "https://www.sanya.gov.cn/",
+   "chars": 4448,
+   "matters": {},
+   "departments": {}
+  },
+  "三沙": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "https://www.sansha.gov.cn/",
+   "chars": 6247,
+   "matters": {},
+   "departments": {}
+  },
+  "儋州": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "https://www.danzhou.gov.cn/danzhou/index.html",
+   "chars": 4152,
+   "matters": {},
+   "departments": {}
+  },
+  "成都": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "https://www.chengdu.gov.cn/",
+   "chars": 1822,
+   "matters": {},
+   "departments": {}
+  },
+  "自贡": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "https://www.zg.gov.cn/",
+   "chars": 1850,
+   "matters": {},
+   "departments": {}
+  },
+  "攀枝花": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "http://www.panzhihua.gov.cn/",
+   "chars": 2824,
+   "matters": {},
+   "departments": {}
+  },
+  "泸州": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "https://www.luzhou.gov.cn/",
+   "chars": 3865,
+   "matters": {},
+   "departments": {}
+  },
+  "德阳": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "blocked",
+   "reason": "discovery_gap",
+   "detail": "我们没找到该城市的官方入口（省级导航未取到），不是当地没有公开信息",
+   "caveat": "未接入不代表当地没有相关政策，只代表我们没能自动取到"
+  },
+  "绵阳": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "https://www.my.gov.cn/",
+   "chars": 3290,
+   "matters": {},
+   "departments": {}
+  },
+  "广元": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "blocked",
+   "reason": "identity_mismatch",
+   "detail": "域名能打开，但页面与城市对不上（多音字域名碰撞或防护页顶替）",
+   "caveat": "未接入不代表当地没有相关政策，只代表我们没能自动取到"
+  },
+  "遂宁": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "https://www.suining.gov.cn/",
+   "chars": 2222,
+   "matters": {},
+   "departments": {}
+  },
+  "内江": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "https://www.neijiang.gov.cn/",
+   "chars": 5054,
+   "matters": {},
+   "departments": {}
+  },
+  "乐山": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "https://www.leshan.gov.cn/",
+   "chars": 3840,
+   "matters": {},
+   "departments": {}
+  },
+  "南充": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "https://www.nanchong.gov.cn/",
+   "chars": 4057,
+   "matters": {},
+   "departments": {}
+  },
+  "眉山": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "https://www.ms.gov.cn/",
+   "chars": 2973,
+   "matters": {},
+   "departments": {}
+  },
+  "宜宾": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "https://www.yibin.gov.cn/",
+   "chars": 7367,
+   "matters": {},
+   "departments": {}
+  },
+  "广安": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "https://www.guang-an.gov.cn/",
+   "chars": 1813,
+   "matters": {},
+   "departments": {}
+  },
+  "达州": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "http://www.dazhou.gov.cn/",
+   "chars": 3853,
+   "matters": {},
+   "departments": {}
+  },
+  "雅安": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "https://www.yaan.gov.cn/",
+   "chars": 1233,
+   "matters": {},
+   "departments": {}
+  },
+  "巴中": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "https://www.cnbz.gov.cn/",
+   "chars": 5028,
+   "matters": {},
+   "departments": {}
+  },
+  "资阳": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "https://www.ziyang.gov.cn/",
+   "chars": 1184,
+   "matters": {},
+   "departments": {}
+  },
+  "阿坝": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "http://www.abazhou.gov.cn/",
+   "chars": 4240,
+   "matters": {},
+   "departments": {}
+  },
+  "甘孜": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "http://www.gzz.gov.cn/",
+   "chars": 7060,
+   "matters": {},
+   "departments": {}
+  },
+  "凉山": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "http://www.lsz.gov.cn/",
+   "chars": 3658,
+   "matters": {},
+   "departments": {}
+  },
+  "贵阳": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "https://www.guiyang.gov.cn/",
+   "chars": 2901,
+   "matters": {},
+   "departments": {}
+  },
+  "六盘": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "http://www.gzlps.gov.cn/",
+   "chars": 4823,
+   "matters": {},
+   "departments": {}
+  },
+  "遵义": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "https://www.zunyi.gov.cn/",
+   "chars": 4100,
+   "matters": {},
+   "departments": {}
+  },
+  "安顺": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "https://www.anshun.gov.cn/",
+   "chars": 3407,
+   "matters": {},
+   "departments": {}
+  },
+  "毕节": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "https://www.bijie.gov.cn/",
+   "chars": 2656,
+   "matters": {},
+   "departments": {}
+  },
+  "铜仁": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "https://www.tongren.gov.cn/",
+   "chars": 3727,
+   "matters": {},
+   "departments": {}
+  },
+  "黔西南布依族": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "https://www.qxn.gov.cn/",
+   "chars": 2600,
+   "matters": {},
+   "departments": {}
+  },
+  "黔东南": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "https://www.qdn.gov.cn/",
+   "chars": 4278,
+   "matters": {},
+   "departments": {}
+  },
+  "黔南布依族": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "https://www.qiannan.gov.cn/",
+   "chars": 4189,
+   "matters": {},
+   "departments": {}
+  },
+  "昆明": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "https://www.km.gov.cn/",
+   "chars": 3341,
+   "matters": {},
+   "departments": {}
+  },
+  "曲靖": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "http://www.qj.gov.cn",
+   "chars": 3663,
+   "matters": {},
+   "departments": {}
+  },
+  "玉溪": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "https://www.yuxi.gov.cn/",
+   "chars": 5981,
+   "matters": {},
+   "departments": {}
+  },
+  "保山": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "https://www.baoshan.gov.cn/",
+   "chars": 5012,
+   "matters": {},
+   "departments": {}
+  },
+  "昭通": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "https://www.zt.gov.cn/",
+   "chars": 3225,
+   "matters": {},
+   "departments": {}
+  },
+  "丽江": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "https://www.lijiang.gov.cn/",
+   "chars": 2801,
+   "matters": {},
+   "departments": {}
+  },
+  "普洱": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "blocked",
+   "reason": "discovery_gap",
+   "detail": "我们没找到该城市的官方入口（省级导航未取到），不是当地没有公开信息",
+   "caveat": "未接入不代表当地没有相关政策，只代表我们没能自动取到"
+  },
+  "临沧": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "https://www.lincang.gov.cn/",
+   "chars": 2584,
+   "matters": {},
+   "departments": {}
+  },
+  "楚雄": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "http://www.cxz.gov.cn",
+   "chars": 4576,
+   "matters": {},
+   "departments": {}
+  },
+  "红河哈尼族": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "https://www.hh.gov.cn/",
+   "chars": 4690,
+   "matters": {},
+   "departments": {}
+  },
+  "文山": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "https://www.ynws.gov.cn/",
+   "chars": 731,
+   "matters": {},
+   "departments": {}
+  },
+  "西双版纳": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "https://www.xsbn.gov.cn/",
+   "chars": 3556,
+   "matters": {},
+   "departments": {}
+  },
+  "大理": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "blocked",
+   "reason": "discovery_gap",
+   "detail": "我们没找到该城市的官方入口（省级导航未取到），不是当地没有公开信息",
+   "caveat": "未接入不代表当地没有相关政策，只代表我们没能自动取到"
+  },
+  "德宏": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "https://www.dh.gov.cn/Web/index.do",
+   "chars": 4165,
+   "matters": {},
+   "departments": {}
+  },
+  "怒江傈僳族": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "http://www.nujiang.gov.cn/",
+   "chars": 5490,
+   "matters": {},
+   "departments": {}
+  },
+  "迪庆": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "https://www.diqing.gov.cn/",
+   "chars": 3320,
+   "matters": {},
+   "departments": {}
+  },
+  "拉萨": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "https://lasa.gov.cn/",
+   "chars": 4006,
+   "matters": {},
+   "departments": {}
+  },
+  "日喀则": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "http://www.rikaze.gov.cn/",
+   "chars": 2907,
+   "matters": {},
+   "departments": {}
+  },
+  "昌都": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "http://www.changdu.gov.cn/",
+   "chars": 1942,
+   "matters": {},
+   "departments": {}
+  },
+  "林芝": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "https://www.linzhi.gov.cn/",
+   "chars": 1916,
+   "matters": {},
+   "departments": {}
+  },
+  "山南": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "https://www.shannan.gov.cn/",
+   "chars": 4152,
+   "matters": {},
+   "departments": {}
+  },
+  "那曲": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "http://www.naqu.gov.cn/",
+   "chars": 2379,
+   "matters": {},
+   "departments": {}
+  },
+  "阿里": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "https://www.al.gov.cn/",
+   "chars": 3420,
+   "matters": {},
+   "departments": {}
+  },
+  "西安": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "https://www.shaanxi.gov.cn/xw/ldx/ds/202611/t20261111_3723579.html",
+   "chars": 742,
+   "matters": {},
+   "departments": {}
+  },
+  "铜川": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "https://www.tongchuan.gov.cn/",
+   "chars": 991,
+   "matters": {},
+   "departments": {}
+  },
+  "宝鸡": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "https://www.baoji.gov.cn/",
+   "chars": 2414,
+   "matters": {},
+   "departments": {}
+  },
+  "咸阳": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "https://www.xianyang.gov.cn/",
+   "chars": 1991,
+   "matters": {},
+   "departments": {}
+  },
+  "渭南": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "https://www.weinan.gov.cn/",
+   "chars": 5736,
+   "matters": {},
+   "departments": {}
+  },
+  "延安": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "https://www.yanan.gov.cn/",
+   "chars": 6077,
+   "matters": {},
+   "departments": {}
+  },
+  "汉中": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "https://www.hanzhong.gov.cn/",
+   "chars": 4063,
+   "matters": {},
+   "departments": {}
+  },
+  "榆林": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "https://www.yl.gov.cn/",
+   "chars": 3057,
+   "matters": {},
+   "departments": {}
+  },
+  "安康": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "https://www.ankang.gov.cn/",
+   "chars": 5197,
+   "matters": {},
+   "departments": {}
+  },
+  "商洛": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "https://www.shangluo.gov.cn/",
+   "chars": 3225,
+   "matters": {},
+   "departments": {}
+  },
+  "兰州": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "https://www.lanzhou.gov.cn/",
+   "chars": 2065,
+   "matters": {},
+   "departments": {}
+  },
+  "嘉峪关": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "https://www.jyg.gov.cn/",
+   "chars": 2204,
+   "matters": {},
+   "departments": {}
+  },
+  "金昌": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "blocked",
+   "reason": "discovery_gap",
+   "detail": "我们没找到该城市的官方入口（省级导航未取到），不是当地没有公开信息",
+   "caveat": "未接入不代表当地没有相关政策，只代表我们没能自动取到"
+  },
+  "白银": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "https://www.baiyin.gov.cn/",
+   "chars": 2710,
+   "matters": {},
+   "departments": {}
+  },
+  "天": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "https://www.tianshui.gov.cn/",
+   "chars": 8177,
+   "matters": {},
+   "departments": {}
+  },
+  "武威": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "blocked",
+   "reason": "identity_mismatch",
+   "detail": "域名能打开，但页面与城市对不上（多音字域名碰撞或防护页顶替）",
+   "caveat": "未接入不代表当地没有相关政策，只代表我们没能自动取到"
+  },
+  "张掖": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "https://www.zhangye.gov.cn/",
+   "chars": 2414,
+   "matters": {},
+   "departments": {}
+  },
+  "平凉": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "https://www.pingliang.gov.cn/",
+   "chars": 5850,
+   "matters": {},
+   "departments": {}
+  },
+  "酒泉": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "https://www.jiuquan.gov.cn/",
+   "chars": 3503,
+   "matters": {},
+   "departments": {}
+  },
+  "庆阳": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "blocked",
+   "reason": "identity_mismatch",
+   "detail": "域名能打开，但页面与城市对不上（多音字域名碰撞或防护页顶替）",
+   "caveat": "未接入不代表当地没有相关政策，只代表我们没能自动取到"
+  },
+  "定西": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "https://www.dingxi.gov.cn/",
+   "chars": 2180,
+   "matters": {},
+   "departments": {}
+  },
+  "陇南": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "https://www.longnan.gov.cn/",
+   "chars": 2104,
+   "matters": {},
+   "departments": {}
+  },
+  "临夏": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "blocked",
+   "reason": "discovery_gap",
+   "detail": "我们没找到该城市的官方入口（省级导航未取到），不是当地没有公开信息",
+   "caveat": "未接入不代表当地没有相关政策，只代表我们没能自动取到"
+  },
+  "甘南": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "blocked",
+   "reason": "discovery_gap",
+   "detail": "我们没找到该城市的官方入口（省级导航未取到），不是当地没有公开信息",
+   "caveat": "未接入不代表当地没有相关政策，只代表我们没能自动取到"
+  },
+  "西宁": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "https://www.xining.gov.cn/",
+   "chars": 5482,
+   "matters": {},
+   "departments": {}
+  },
+  "海东": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "https://www.haidong.gov.cn/",
+   "chars": 3537,
+   "matters": {},
+   "departments": {}
+  },
+  "海北": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "blocked",
+   "reason": "discovery_gap",
+   "detail": "我们没找到该城市的官方入口（省级导航未取到），不是当地没有公开信息",
+   "caveat": "未接入不代表当地没有相关政策，只代表我们没能自动取到"
+  },
+  "黄南": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "blocked",
+   "reason": "discovery_gap",
+   "detail": "我们没找到该城市的官方入口（省级导航未取到），不是当地没有公开信息",
+   "caveat": "未接入不代表当地没有相关政策，只代表我们没能自动取到"
+  },
+  "海南": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "blocked",
+   "reason": "discovery_gap",
+   "detail": "我们没找到该城市的官方入口（省级导航未取到），不是当地没有公开信息",
+   "caveat": "未接入不代表当地没有相关政策，只代表我们没能自动取到"
+  },
+  "果洛": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "blocked",
+   "reason": "discovery_gap",
+   "detail": "我们没找到该城市的官方入口（省级导航未取到），不是当地没有公开信息",
+   "caveat": "未接入不代表当地没有相关政策，只代表我们没能自动取到"
+  },
+  "玉树": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "blocked",
+   "reason": "discovery_gap",
+   "detail": "我们没找到该城市的官方入口（省级导航未取到），不是当地没有公开信息",
+   "caveat": "未接入不代表当地没有相关政策，只代表我们没能自动取到"
+  },
+  "海西": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "blocked",
+   "reason": "discovery_gap",
+   "detail": "我们没找到该城市的官方入口（省级导航未取到），不是当地没有公开信息",
+   "caveat": "未接入不代表当地没有相关政策，只代表我们没能自动取到"
+  },
+  "银川": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "https://www.yinchuan.gov.cn/",
+   "chars": 2541,
+   "matters": {},
+   "departments": {}
+  },
+  "石嘴山": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "https://www.shizuishan.gov.cn/",
+   "chars": 3665,
+   "matters": {},
+   "departments": {}
+  },
+  "吴忠": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "https://www.wuzhong.gov.cn/",
+   "chars": 3674,
+   "matters": {},
+   "departments": {}
+  },
+  "固原": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "https://www.nxgy.gov.cn/",
+   "chars": 5128,
+   "matters": {},
+   "departments": {}
+  },
+  "中卫": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "https://www.nxzw.gov.cn/",
+   "chars": 4136,
+   "matters": {},
+   "departments": {}
+  },
+  "乌鲁木齐": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "https://www.wlmq.gov.cn/",
+   "chars": 2796,
+   "matters": {},
+   "departments": {}
+  },
+  "克拉玛依": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "https://www.klmy.gov.cn/",
+   "chars": 3906,
+   "matters": {},
+   "departments": {}
+  },
+  "吐鲁番": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "https://www.tlf.gov.cn/",
+   "chars": 3026,
+   "matters": {},
+   "departments": {}
+  },
+  "哈密": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "https://www.xinjiang.gov.cn//xinjiang/dzdt/202610/ce92493f17d44d9c9493c84a0334fbbf.shtml",
+   "chars": 2854,
+   "matters": {},
+   "departments": {}
+  },
+  "昌吉": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "http://www.cjs.gov.cn/",
+   "chars": 6704,
+   "matters": {},
+   "departments": {}
+  },
+  "博尔塔拉": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "https://www.xjboz.gov.cn/",
+   "chars": 4936,
+   "matters": {},
+   "departments": {}
+  },
+  "巴音郭楞": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "http://www.xjbz.gov.cn/",
+   "chars": 470,
+   "matters": {},
+   "departments": {}
+  },
+  "阿克苏": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "https://www.aks.gov.cn/",
+   "chars": 6540,
+   "matters": {},
+   "departments": {}
+  },
+  "克孜勒苏": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "https://www.xjkz.gov.cn/",
+   "chars": 4691,
+   "matters": {},
+   "departments": {}
+  },
+  "喀什": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "https://www.kashi.gov.cn/",
+   "chars": 3083,
+   "matters": {},
+   "departments": {}
+  },
+  "和田": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "https://www.xjht.gov.cn/",
+   "chars": 3610,
+   "matters": {},
+   "departments": {}
+  },
+  "伊犁": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "https://www.xinjiang.gov.cn/xinjiang/dzdt/202611/9a8940832d594e2fbb113cc13635742d.shtml",
+   "chars": 2791,
+   "matters": {},
+   "departments": {}
+  },
+  "塔城": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "https://www.xjtc.gov.cn/",
+   "chars": 6795,
+   "matters": {},
+   "departments": {}
+  },
+  "阿勒泰": {
+   "province": "",
+   "checked_at": "2026-11-11T17:35:31+0800",
+   "status": "reachable",
+   "url": "https://www.alt.gov.cn/",
+   "chars": 2533,
+   "matters": {},
+   "departments": {}
+  }
+ }
+}
