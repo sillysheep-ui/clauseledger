@@ -1,0 +1,422 @@
+{
+ "meta": {
+  "ts": "20261112-002724",
+  "commit": "ae64bf6",
+  "index": "data/index/stats.json",
+  "index_bytes": 224
+ },
+ "per": {
+  "literal": {
+   "n": 20,
+   "hit1": 18,
+   "hit3": 20,
+   "mrr": 18.833333333333336,
+   "cov": 19.1,
+   "refused": 0,
+   "answered": 0,
+   "effective1": 0
+  },
+  "paraphrase": {
+   "n": 10,
+   "hit1": 1,
+   "hit3": 1,
+   "mrr": 1.0,
+   "cov": 0.67,
+   "refused": 0,
+   "answered": 0,
+   "effective1": 0
+  },
+  "version": {
+   "n": 5,
+   "hit1": 5,
+   "hit3": 5,
+   "mrr": 5.0,
+   "cov": 5.0,
+   "refused": 0,
+   "answered": 0,
+   "effective1": 3
+  },
+  "out_of_scope": {
+   "n": 15,
+   "hit1": 0,
+   "hit3": 0,
+   "mrr": 0.0,
+   "cov": 0.0,
+   "refused": 15,
+   "answered": 0,
+   "effective1": 0
+  }
+ },
+ "rows": [
+  {
+   "q": "劳务派遣用工比例上限",
+   "cat": "literal",
+   "rank": 1,
+   "top": "沪人社规〔2023〕32号",
+   "status": "effective",
+   "cov": 0.6
+  },
+  {
+   "q": "集体合同怎么签订",
+   "cat": "literal",
+   "rank": 2,
+   "top": "沪人社规〔2026〕11号",
+   "status": "effective",
+   "cov": 1.0
+  },
+  {
+   "q": "工资支付办法有哪些规定",
+   "cat": "literal",
+   "rank": 1,
+   "top": "沪人社规〔2026〕10号",
+   "status": "effective",
+   "cov": 1.0
+  },
+  {
+   "q": "女职工劳动保护特别规定",
+   "cat": "literal",
+   "rank": 3,
+   "top": "沪人社规〔2025〕4号",
+   "status": "effective",
+   "cov": 1.0
+  },
+  {
+   "q": "劳动能力鉴定怎么申请",
+   "cat": "literal",
+   "rank": 1,
+   "top": "沪人社规〔2025〕18号",
+   "status": "effective",
+   "cov": 1.0
+  },
+  {
+   "q": "社会保险费怎么缴纳",
+   "cat": "literal",
+   "rank": 1,
+   "top": "沪人社基发〔2014〕41号",
+   "status": "unknown",
+   "cov": 1.0
+  },
+  {
+   "q": "退休人员养老金调整",
+   "cat": "literal",
+   "rank": 1,
+   "top": "沪人社规〔2024〕9号",
+   "status": "expired",
+   "cov": 1.0
+  },
+  {
+   "q": "高温季节津贴标准",
+   "cat": "literal",
+   "rank": 1,
+   "top": "沪人社就发（2011）47号",
+   "status": "unknown",
+   "cov": 1.0
+  },
+  {
+   "q": "最低工资标准调整",
+   "cat": "literal",
+   "rank": 1,
+   "top": "沪人社规〔2023〕19号",
+   "status": "effective",
+   "cov": 1.0
+  },
+  {
+   "q": "失业保险金支付标准",
+   "cat": "literal",
+   "rank": 1,
+   "top": "沪人社规〔2026〕7号",
+   "status": "effective",
+   "cov": 1.0
+  },
+  {
+   "q": "生育津贴怎么算",
+   "cat": "literal",
+   "rank": 1,
+   "top": "沪人社福发（2009）20号",
+   "status": "unknown",
+   "cov": 1.0
+  },
+  {
+   "q": "生育医疗费补贴标准",
+   "cat": "literal",
+   "rank": 1,
+   "top": "沪人社福发〔2016〕35号",
+   "status": "unknown",
+   "cov": 0.75
+  },
+  {
+   "q": "工伤康复期间费用结算",
+   "cat": "literal",
+   "rank": 1,
+   "top": "沪人社福发（2010）71号",
+   "status": "expired",
+   "cov": 1.0
+  },
+  {
+   "q": "工伤保险辅助器具配置",
+   "cat": "literal",
+   "rank": 1,
+   "top": "沪人社福发〔2014〕45号",
+   "status": "unknown",
+   "cov": 1.0
+  },
+  {
+   "q": "灵活就业登记怎么办",
+   "cat": "literal",
+   "rank": 1,
+   "top": "沪人社就发〔2015〕38号",
+   "status": "unknown",
+   "cov": 0.75
+  },
+  {
+   "q": "职称评审委员会怎么组建",
+   "cat": "literal",
+   "rank": 1,
+   "top": "沪人社规〔2021〕30号",
+   "status": "effective",
+   "cov": 1.0
+  },
+  {
+   "q": "职业技能培训补贴",
+   "cat": "literal",
+   "rank": 1,
+   "top": "沪人社规〔2025〕7号",
+   "status": "effective",
+   "cov": 1.0
+  },
+  {
+   "q": "职业年金基金管理",
+   "cat": "literal",
+   "rank": 1,
+   "top": "沪人社规〔2019〕1号",
+   "status": "effective",
+   "cov": 1.0
+  },
+  {
+   "q": "丧假有几天",
+   "cat": "literal",
+   "rank": 1,
+   "top": "沪劳资发〔87〕130号",
+   "status": "unknown",
+   "cov": 1.0
+  },
+  {
+   "q": "公益性岗位补贴标准",
+   "cat": "literal",
+   "rank": 1,
+   "top": "沪人社规〔2025〕31号",
+   "status": "effective",
+   "cov": 1.0
+  },
+  {
+   "q": "老婆生孩子能休多久",
+   "cat": "paraphrase",
+   "rank": 0,
+   "top": "",
+   "status": "",
+   "cov": 0.0
+  },
+  {
+   "q": "岳父去世能请几天假",
+   "cat": "paraphrase",
+   "rank": 0,
+   "top": "",
+   "status": "",
+   "cov": 0.0
+  },
+  {
+   "q": "生娃的津贴去哪领",
+   "cat": "paraphrase",
+   "rank": 0,
+   "top": "",
+   "status": "",
+   "cov": 0.0
+  },
+  {
+   "q": "干活受伤了赔多少钱",
+   "cat": "paraphrase",
+   "rank": 0,
+   "top": "",
+   "status": "",
+   "cov": 0.0
+  },
+  {
+   "q": "干到退休能拿多少",
+   "cat": "paraphrase",
+   "rank": 0,
+   "top": "",
+   "status": "",
+   "cov": 0.0
+  },
+  {
+   "q": "外地人在上海怎么交社保",
+   "cat": "paraphrase",
+   "rank": 0,
+   "top": "",
+   "status": "",
+   "cov": 0.0
+  },
+  {
+   "q": "换工作了社保断了怎么办",
+   "cat": "paraphrase",
+   "rank": 1,
+   "top": "沪社保业一〔1997〕110号",
+   "status": "unknown",
+   "cov": 0.67
+  },
+  {
+   "q": "上班中暑算不算工伤",
+   "cat": "paraphrase",
+   "rank": 0,
+   "top": "",
+   "status": "",
+   "cov": 0.0
+  },
+  {
+   "q": "试用期能被随便辞退吗",
+   "cat": "paraphrase",
+   "rank": 0,
+   "top": "",
+   "status": "",
+   "cov": 0.0
+  },
+  {
+   "q": "加班费怎么算",
+   "cat": "paraphrase",
+   "rank": 0,
+   "top": "",
+   "status": "",
+   "cov": 0.0
+  },
+  {
+   "q": "失业保险金支付标准",
+   "cat": "version",
+   "rank": 1,
+   "top": "沪人社规〔2026〕7号",
+   "status": "effective",
+   "cov": 1.0
+  },
+  {
+   "q": "最低工资标准",
+   "cat": "version",
+   "rank": 1,
+   "top": "沪人社规〔2023〕19号",
+   "status": "effective",
+   "cov": 1.0
+  },
+  {
+   "q": "生育生活津贴标准",
+   "cat": "version",
+   "rank": 1,
+   "top": "沪人社福发（2009）20号",
+   "status": "unknown",
+   "cov": 1.0
+  },
+  {
+   "q": "高温津贴标准",
+   "cat": "version",
+   "rank": 1,
+   "top": "沪人社规〔2019〕19号",
+   "status": "effective",
+   "cov": 1.0
+  },
+  {
+   "q": "公益性岗位收入标准",
+   "cat": "version",
+   "rank": 1,
+   "top": "沪人社就发〔2013〕25号",
+   "status": "unknown",
+   "cov": 1.0
+  },
+  {
+   "q": "火星殖民补贴怎么申请",
+   "cat": "out_of_scope",
+   "top": "",
+   "ok": true
+  },
+  {
+   "q": "北京落户积分怎么算",
+   "cat": "out_of_scope",
+   "top": "",
+   "ok": true
+  },
+  {
+   "q": "深圳租房补贴标准",
+   "cat": "out_of_scope",
+   "top": "",
+   "ok": true
+  },
+  {
+   "q": "个税专项附加扣除标准",
+   "cat": "out_of_scope",
+   "top": "",
+   "ok": true
+  },
+  {
+   "q": "公积金贷款额度上限",
+   "cat": "out_of_scope",
+   "top": "",
+   "ok": true
+  },
+  {
+   "q": "驾驶证到期怎么换",
+   "cat": "out_of_scope",
+   "top": "",
+   "ok": true
+  },
+  {
+   "q": "护照办理需要什么材料",
+   "cat": "out_of_scope",
+   "top": "",
+   "ok": true
+  },
+  {
+   "q": "医保门诊报销比例",
+   "cat": "out_of_scope",
+   "top": "",
+   "ok": true
+  },
+  {
+   "q": "上海人才公寓怎么申请",
+   "cat": "out_of_scope",
+   "top": "",
+   "ok": true
+  },
+  {
+   "q": "孩子上小学怎么报名",
+   "cat": "out_of_scope",
+   "top": "",
+   "ok": true
+  },
+  {
+   "q": "结婚登记需要什么材料",
+   "cat": "out_of_scope",
+   "top": "",
+   "ok": true
+  },
+  {
+   "q": "公司注册流程",
+   "cat": "out_of_scope",
+   "top": "",
+   "ok": true
+  },
+  {
+   "q": "股票印花税税率",
+   "cat": "out_of_scope",
+   "top": "",
+   "ok": true
+  },
+  {
+   "q": "新能源汽车补贴",
+   "cat": "out_of_scope",
+   "top": "",
+   "ok": true
+  },
+  {
+   "q": "宠物狗办证",
+   "cat": "out_of_scope",
+   "top": "",
+   "ok": true
+  }
+ ]
+}

@@ -18,6 +18,44 @@ from app.retrieval.index import INDEX, tokenize
 from app.retrieval.records import Clause
 
 MIN_SCORE = 3.0      # BM25 绝对分；低于它基本是"只共享了两个字"
+MIN_COVERAGE = 0.5   # 首条条款至少覆盖一半提问词，否则算"没找到"
+
+# 覆盖范围：只做上海。问题里出现别的城市，直接说没覆盖，不许拿上海条款凑。
+SUPPORTED_CITIES = {"上海"}
+OTHER_CITIES = (
+    "北京 天津 重庆 河北 山西 辽宁 吉林 黑龙江 江苏 浙江 安徽 福建 江西 山东 河南"
+    " 湖北 湖南 广东 海南 四川 贵州 云南 陕西 甘肃 青海 台湾 内蒙古 广西 西藏 宁夏 新疆"
+    " 香港 澳门 深圳 广州 杭州 南京 苏州 成都 武汉 西安 长沙 郑州 青岛 宁波 厦门 合肥"
+    " 济南 福州 昆明 贵阳 南昌 太原 石家庄 沈阳 哈尔滨 长春 兰州 西宁 银川 乌鲁木齐"
+).split()
+
+# 政策域：问题里一个都不沾，就不该在本库里找答案。
+DOMAIN_TERMS = (
+    "社保 社会保险 养老 退休 工伤 失业 生育 医疗 劳动 工资 加班 休假 请假 丧假 产假"
+    " 职称 培训 补贴 津贴 派遣 合同 档案 落户 户口 就业 招聘 缴费 参保 年金 待遇"
+    " 伤残 抚恤 认定 鉴定 技师 技能 职业 退休金 岗位 收入 补助 奖金 工时 休息"
+    " 假期 病假 婚假 产假 陪产假 职业病 公益性"
+).split()
+
+
+def detect_city(query: str) -> str | None:
+    for c in OTHER_CITIES:
+        if c in query:
+            return c
+    for c in SUPPORTED_CITIES:
+        if c in query:
+            return c
+    return None
+
+
+def refuse_reason(query: str) -> str | None:
+    """返回拒答理由；None 表示这个问题在本系统覆盖范围内。"""
+    city = detect_city(query)
+    if city and city not in SUPPORTED_CITIES:
+        return f"未覆盖{city}的政策（当前只接入上海）"
+    if not any(t in query for t in DOMAIN_TERMS):
+        return "不在覆盖范围内：本系统只回答劳动就业、社会保险、人事人才、工资福利类政策"
+    return None
 QUESTION_WORDS = {"哪些", "什么", "怎么", "如何", "多少", "是否", "能否", "可以",
                   "需要", "请问", "一下", "几天", "多久", "有没有"}
 
@@ -28,6 +66,7 @@ class Hit:
     score: float
     coverage: float = 0.0   # 查询词有多少比例真的出现在这条条款里
     versions: int = 1       # 同名文件的历史版本数（含本条）
+    _rank: float = 0.0      # 排序用：分数 × 效力加成
 
 
 def _load() -> tuple[bm25s.BM25, list[Clause]]:
@@ -39,6 +78,8 @@ def _load() -> tuple[bm25s.BM25, list[Clause]]:
 
 def search(query: str, k: int = 8, *, status: tuple[str, ...] | None = None,
            min_score: float = MIN_SCORE, min_coverage: float = 0.0) -> list[Hit]:
+    if refuse_reason(query):
+        return []
     retriever, clauses = _load()
     qt = [t for t in tokenize(query) if t not in QUESTION_WORDS]
     if not qt:
@@ -55,12 +96,29 @@ def search(query: str, k: int = 8, *, status: tuple[str, ...] | None = None,
         cov = len(set(qt) & ctext) / max(1, len(set(qt)))
         if cov < min_coverage:
             continue
-        out.append(Hit(c, float(s), round(cov, 2)))
+        # 现行有效优先：同年份文件文本高度相似、分数接近，靠状态打破平手
+        boost = 1.08 if c.status == "effective" else 1.0
+        # 标题命中加权：用户问的是"这件事"，文件标题写着这件事，比正文里顺带提一句更有分量
+        title_hits = len(set(qt) & set(tokenize(c.title)))
+        out.append(Hit(c, float(s), round(cov, 2),
+                       _rank=float(s) * boost + 0.6 * title_hits))
+    out.sort(key=lambda h: h._rank, reverse=True)
+    if not out or out[0].coverage < MIN_COVERAGE:
+        return []
     return _collapse(out)[:k]
 
 
+def _status_rank(status: str) -> int:
+    return {"effective": 3, "pending": 2, "unknown": 1}.get(status, 0)
+
+
 def _norm_title(t: str) -> str:
-    return "".join(ch for ch in t if ch not in " \u3000")
+    """同一政策不同年份的文件，标题只差前面的发文机关前缀，砍掉再比。"""
+    t = "".join(ch for ch in t if ch not in " \u3000")
+    i = t.find("关于")
+    if i > 0:
+        t = t[i:]
+    return t.rstrip("。")
 
 
 def _collapse(hits: list[Hit]) -> list[Hit]:
@@ -79,7 +137,13 @@ def _collapse(hits: list[Hit]) -> list[Hit]:
             by_title[key] = h
             order.append(key)
         else:
-            by_title[key].versions += 1
+            # 同名文件 = 同一个政策的历年版本，留现行的那份，而不是分数最高的那份
+            kept = by_title[key]
+            kept.versions += 1
+            if (_status_rank(h.clause.status), h.clause.effective_from or "") > \
+               (_status_rank(kept.clause.status), kept.clause.effective_from or ""):
+                h.versions = kept.versions
+                by_title[key] = h
         h.versions = 1
     return [by_title[k] for k in order]
 
