@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import argparse
 
-from app.retrieval.search import evidence_gap, search
+from app.retrieval.search import evidence_gap, search_result
 
 
 def main() -> None:
@@ -18,10 +18,13 @@ def main() -> None:
     ap.add_argument("--only-effective", action="store_true", help="只用现行有效条款")
     a = ap.parse_args()
 
-    hits = search(a.question, k=a.k, status=("effective",) if a.only_effective else None)
+    ans = search_result(a.question, k=a.k,
+                        status=("effective",) if a.only_effective else None)
+    hits = ans.hits
     print(f"问：{a.question}\n")
-    if not hits:
-        print("答：证据不足。" + (evidence_gap(a.question, hits) or ""))
+    if ans.refused:
+        print(f"答：{ans.reason}")
+        print(f"    检索范围：{ans.n_docs} 份文件 / {ans.n_candidates} 条候选条款")
         return
 
     for i, h in enumerate(hits, 1):
