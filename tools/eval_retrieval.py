@@ -1,33 +1,38 @@
-"""检索层评测：50 条冻结用例，只测机械可判定的东西。
+"""检索层评测：冻结用例 + 95% 区间 + 按 dev/test 分开看。
 
-四类用例：
-  literal      用政策里的词问（应该找得到）
-  paraphrase   用口语问，不含标题里的词（现在大概率找不到，这是要填的坑）
-  version      同名文件有多个版本（应该答现行那版）
-  out_of_scope 库里没有的主题 / 没接入的城市（应该拒答，而不是编）
+设计约束（见 eval/FROZEN.json）：
+- dev 用来调，test 只在发版前跑一次，不参与任何决策
+- 指标一律报 Wilson 区间，不报裸点估计
+- 每题结果落盘，供 eval_compare 做配对比较
 
-指标：
-  hit@1 / hit@3   第一条/前三条里有没有切题的文件（按标题关键词判）
-  MRR@10          正确文件排名的倒数均值
-  refusal_rate    out_of_scope 里正确拒答的比例（目标 100%）
-  false_answer    out_of_scope 里给出了条款的比例（目标 0，最危险的一格）
-  effective@1     version 类里第一条是"现行"的比例
-
-用法：python -m tools.eval_retrieval [--write]
+用法：
+    python -m tools.eval_retrieval --split dev --write
+    python -m tools.eval_retrieval --split test --write
 """
 from __future__ import annotations
 
 import argparse
 import json
+import math
 import subprocess
 import time
 from pathlib import Path
 
-from app.retrieval.search import search
+from app.retrieval.search import refuse_reason, search
 
 QUESTIONS = Path("eval/questions.json")
 REPORTS = Path("eval/reports")
 CATS = ("literal", "paraphrase", "version", "out_of_scope")
+
+
+def wilson(k: int, n: int, z: float = 1.96) -> tuple[float, float]:
+    if n == 0:
+        return (0.0, 0.0)
+    p = k / n
+    d = 1 + z * z / n
+    c = p + z * z / (2 * n)
+    m = z * math.sqrt(p * (1 - p) / n + z * z / (4 * n * n))
+    return ((c - m) / d, (c + m) / d)
 
 
 def rank_of(hits, kws) -> int:
@@ -37,84 +42,106 @@ def rank_of(hits, kws) -> int:
     return 0
 
 
-def run() -> dict:
-    qs = json.loads(QUESTIONS.read_text("utf-8"))
-    per = {c: {"n": 0, "hit1": 0, "hit3": 0, "mrr": 0.0, "cov": 0.0,
-               "refused": 0, "answered": 0, "effective1": 0} for c in CATS}
+def run(split: str) -> dict:
+    qs = [q for q in json.loads(QUESTIONS.read_text("utf-8"))
+          if split == "all" or q["split"] == split]
     rows = []
     for item in qs:
         cat, q = item["category"], item["q"]
         hits = search(q, k=10)
-        b = per[cat]
-        b["n"] += 1
+        row = {"id": item["id"], "q": q, "cat": cat, "split": item["split"],
+               "top": hits[0].clause.doc_no if hits else "",
+               "top_title": hits[0].clause.title if hits else "",
+               "status": hits[0].clause.status if hits else "",
+               "cov": round(hits[0].coverage, 2) if hits else 0.0,
+               "reason": refuse_reason(q) or ""}
         if cat == "out_of_scope":
-            if not hits:
-                b["refused"] += 1
-            else:
-                b["answered"] += 1
-            rows.append({"q": q, "cat": cat, "top": hits[0].clause.doc_no if hits else "",
-                         "ok": not hits})
+            row.update(rank=0, ok1=int(not hits), ok3=int(not hits), mrr=0.0,
+                       answered=int(bool(hits)))
+        else:
+            r = rank_of(hits, item["expect_title_kw"])
+            row.update(rank=r, ok1=int(r == 1), ok3=int(1 <= r <= 3),
+                       mrr=(1 / r if r else 0.0), answered=int(bool(hits)))
+        rows.append(row)
+    return {"split": split, "rows": rows}
+
+
+def summarize(rows: list[dict]) -> dict:
+    out = {}
+    for cat in CATS:
+        rs = [r for r in rows if r["cat"] == cat]
+        n = len(rs)
+        if not n:
             continue
-        r = rank_of(hits, item["expect_title_kw"])
-        b["hit1"] += r == 1
-        b["hit3"] += 1 <= r <= 3
-        b["mrr"] += 1 / r if r else 0.0
-        b["cov"] += hits[0].coverage if hits else 0.0
-        if cat == "version" and hits:
-            b["effective1"] += hits[0].clause.status == "effective"
-        rows.append({"q": q, "cat": cat, "rank": r,
-                     "top": hits[0].clause.doc_no if hits else "",
-                     "status": hits[0].clause.status if hits else "",
-                     "cov": round(hits[0].coverage, 2) if hits else 0.0})
-    return {"per": per, "rows": rows}
+        if cat == "out_of_scope":
+            ok = sum(r["ok1"] for r in rs)
+            lo, hi = wilson(ok, n)
+            out[cat] = {"n": n, "refused": ok, "refusal_rate": ok / n,
+                        "ci": [lo, hi], "answered": sum(r["answered"] for r in rs)}
+        else:
+            h1, h3 = sum(r["ok1"] for r in rs), sum(r["ok3"] for r in rs)
+            l1, u1 = wilson(h1, n)
+            l3, u3 = wilson(h3, n)
+            eff = sum(1 for r in rs if r["status"] == "effective")
+            out[cat] = {"n": n, "hit1": h1 / n, "hit1_ci": [l1, u1],
+                        "hit3": h3 / n, "hit3_ci": [l3, u3],
+                        "mrr": sum(r["mrr"] for r in rs) / n,
+                        "effective1": eff / n}
+    return out
 
 
 def report(res: dict) -> str:
-    L = ["# 检索评测报告", "", f"用例 {len(res['rows'])} 条（`eval/questions.json`，冻结）", "",
-         "| 类别 | n | hit@1 | hit@3 | MRR@10 | 首条平均覆盖率 | 拒答率 | 误答 | 首条现行 |",
-         "|---|---|---|---|---|---|---|---|---|"]
-    for c in CATS:
-        b = res["per"][c]
-        n = b["n"] or 1
-        if c == "out_of_scope":
-            L.append(f"| {c} | {b['n']} | — | — | — | — | "
-                     f"{b['refused']/n:.0%} | {b['answered']} | — |")
+    s = summarize(res["rows"])
+    L = [f"# 检索评测（{res['split']}，{len(res['rows'])} 条）", "",
+         "| 类别 | n | hit@1 (95%CI) | hit@3 (95%CI) | MRR | 拒答率 (95%CI) | 误答 | 首条现行 |",
+         "|---|---|---|---|---|---|---|---|"]
+    for cat in CATS:
+        b = s.get(cat)
+        if not b:
+            continue
+        if cat == "out_of_scope":
+            lo, hi = b["ci"]
+            L.append(f"| {cat} | {b['n']} | — | — | — | {b['refusal_rate']:.0%} ({lo:.0%}–{hi:.0%}) | {b['answered']} | — |")
         else:
-            eff = f"{b['effective1']/n:.0%}" if c == "version" else "—"
-            L.append(f"| {c} | {b['n']} | {b['hit1']/n:.0%} | {b['hit3']/n:.0%} | "
-                     f"{b['mrr']/n:.2f} | {b['cov']/n:.0%} | — | — | {eff} |")
-    miss = [r for r in res["rows"] if r["cat"] != "out_of_scope" and not r.get("rank")]
+            l1, u1 = b["hit1_ci"]; l3, u3 = b["hit3_ci"]
+            eff = f"{b['effective1']:.0%}" if cat == "version" else "—"
+            L.append(f"| {cat} | {b['n']} | {b['hit1']:.0%} ({l1:.0%}–{u1:.0%}) | "
+                     f"{b['hit3']:.0%} ({l3:.0%}–{u3:.0%}) | {b['mrr']:.2f} | — | — | {eff} |")
+    miss = [r for r in res["rows"] if r["cat"] != "out_of_scope" and not r["rank"]]
     wrong = [r for r in res["rows"] if r["cat"] == "out_of_scope" and r["top"]]
-    L += ["", f"## 没命中（{len(miss)} 条）", ""]
-    L += [f"- [{r['cat']}] {r['q']} → {r['top'] or '拒答'}" for r in miss]
-    L += ["", f"## 该拒答却给了条款（{len(wrong)} 条）", ""]
-    L += [f"- {r['q']} → {r['top']}" for r in wrong]
+    if miss:
+        L += ["", f"## 没命中（{len(miss)}）", ""] + [f"- [{r['cat']}] {r['q']} → {r['top'] or '拒答'}" for r in miss]
+    if wrong:
+        L += ["", f"## 该拒答却给了条款（{len(wrong)}）", ""] + [f"- {r['q']} → {r['top']}" for r in wrong]
     return "\n".join(L)
 
 
 def main() -> None:
     ap = argparse.ArgumentParser()
+    ap.add_argument("--split", default="dev", choices=("dev", "test", "all"))
     ap.add_argument("--write", action="store_true")
     a = ap.parse_args()
     t0 = time.time()
-    res = run()
+    res = run(a.split)
     md = report(res)
     print(md)
-    print(f"\n耗时 {time.time()-t0:.1f}s")
+    print(f"\n{len(res['rows'])} 条 / {time.time()-t0:.1f}s")
     if a.write:
         REPORTS.mkdir(parents=True, exist_ok=True)
         ts = time.strftime("%Y%m%d-%H%M%S")
+        frozen = json.loads(Path("eval/FROZEN.json").read_text("utf-8"))
         try:
             commit = subprocess.run(["git", "rev-parse", "--short", "HEAD"],
                                     capture_output=True, text=True).stdout.strip()
         except OSError:
             commit = "?"
-        meta = {"ts": ts, "commit": commit,
-                "index": str(Path("data/index/stats.json")),
-                "index_bytes": Path("data/index/bm25").stat().st_size if Path("data/index/bm25").exists() else 0}
-        (REPORTS / f"{ts}.md").write_text(md, "utf-8")
-        (REPORTS / f"{ts}.json").write_text(json.dumps({"meta": meta, **res}, ensure_ascii=False, indent=1), "utf-8")
-        print(f"已写入 eval/reports/{ts}.md")
+        meta = {"ts": ts, "commit": commit, "eval_version": frozen["version"],
+                "eval_sha256": frozen["sha256"], "split": a.split}
+        (REPORTS / f"{ts}-{a.split}.md").write_text(md, "utf-8")
+        (REPORTS / f"{ts}-{a.split}.json").write_text(
+            json.dumps({"meta": meta, "summary": summarize(res["rows"]), "rows": res["rows"]},
+                       ensure_ascii=False, indent=1), "utf-8")
+        print(f"→ eval/reports/{ts}-{a.split}.md")
 
 
 if __name__ == "__main__":

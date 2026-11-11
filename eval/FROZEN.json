@@ -1,0 +1,23 @@
+{
+ "version": "eval-v1",
+ "frozen_at": "2026-11-12",
+ "file": "eval/questions.json",
+ "sha256": "96b1aee20249c490be8aacf80f309224bebba603142243c860d65c0a9e94d477",
+ "total": 50,
+ "by_split": {
+  "dev": 30,
+  "test": 20
+ },
+ "by_category": {
+  "literal": 20,
+  "paraphrase": 10,
+  "version": 5,
+  "out_of_scope": 15
+ },
+ "rules": [
+  "test 集只在版本发布前跑一次，不得用于调阈值、改词典、选题",
+  "改一个用例必须在 eval/CHANGELOG.md 里写：为什么改、旧值是什么、谁定的",
+  "新增功能只允许追加用例，不得删改既有用例（除非用例本身错了，且要留旧结果）",
+  "任何指标必须报 95% 区间，且与上一版做配对比较"
+ ]
+}
