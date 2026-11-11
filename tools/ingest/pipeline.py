@@ -46,17 +46,18 @@ def ingest(url: str, *, slug: str | None = None, hint: dict | None = None) -> di
     从正文猜必然猜错，这不是正则不够好，是位置不对。
     """
     page = fetch(url)
-    kind, parsed = parse_any(page.content, page.content_type, url)
+    kind, parsed = parse_any(page.content, page.content_type, url, page.path)
     blocks: list[Block] = [Block(i, b.kind, b.text, b.page) for i, b in enumerate(parsed.blocks)]
     atts = []
     for a in parsed.attachments[:MAX_ATT]:
         try:
             f = fetch(a, referer=url)
-            akind, aparsed = parse_any(f.content, f.content_type, a)
+            akind, aparsed = parse_any(f.content, f.content_type, a, f.path)
             for b in aparsed.blocks:
                 blocks.append(Block(len(blocks), b.kind, b.text, b.page))
             atts.append({"url": a, "kind": akind, "sha256": f.sha256,
-                         "chars": len(aparsed.text), "blocks": len(aparsed.blocks)})
+                         "chars": len(aparsed.text), "blocks": len(aparsed.blocks),
+                         "extract": aparsed.extract, "ocr_conf": aparsed.ocr_conf})
         except Exception as e:  # 附件失败不能拖垮整份文件，但要记下来
             atts.append({"url": a, "error": type(e).__name__})
 
@@ -82,6 +83,8 @@ def ingest(url: str, *, slug: str | None = None, hint: dict | None = None) -> di
         "parser_version": PARSER_VERSION,
         "attachments": atts,
         "retrieved_via": "crawl",
+        "extract": parsed.extract,
+        "ocr_conf": parsed.ocr_conf,
         "effective_from": iso(m_from.group(1) if m_from else None),
         "effective_to": iso(hint.get("valid_until") or (m_to.group(1) if m_to else None)),
         "stats": {"blocks": len(blocks), "chars": len(text), "clauses": len(clauses),

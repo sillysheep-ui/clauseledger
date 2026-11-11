@@ -36,6 +36,21 @@ def main() -> None:
     print(f"| 附件解析失败 | {sum(att_err.values())} {dict(att_err)} |")
     print(f"| 平均附件数 | {sum(len(d['attachments']) for d in docs) / n:.2f} |")
 
+    print("\n## 抽取路径（文本是怎么来的）\n")
+    atts = [a for d in docs for a in d['attachments']]
+    import collections as _c
+    print("| 路径 | 附件数 | 平均字符 | 说明 |")
+    print("|---|---|---|---|")
+    for path, note in (("native", "原生文本层"), ("ocr", "渲染 + Vision OCR"),
+                       ("textutil", ".doc 转文本"), ("unsupported", "读不出来，已标记")):
+        sub = [a for a in atts if a.get('extract') == path]
+        avg = (sum(a.get('chars') or 0 for a in sub) / len(sub)) if sub else 0
+        print(f"| {path} | {len(sub)} | {avg:.0f} | {note} |")
+    ocr = [a for a in atts if a.get('extract') == 'ocr' and a.get('ocr_conf')]
+    if ocr:
+        cs = sorted(a['ocr_conf'] for a in ocr)
+        print(f"\nOCR 置信度：{cs[0]:.2f} ~ {cs[-1]:.2f}（中位 {cs[len(cs)//2]:.2f}），低于 0.5 的块已丢弃。")
+
     print("\n## 正文与条款\n")
     chars = [d['stats']['chars'] for d in docs]
     clauses = [d['stats']['clauses'] for d in docs]

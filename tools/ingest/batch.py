@@ -36,6 +36,27 @@ def ext_of(url: str | None) -> str | None:
     return base.rsplit(".", 1)[-1].lower()[:5] if "." in base else None
 
 
+def read_version(path: Path) -> str | None:
+    try:
+        return json.loads(path.read_text("utf-8")).get("parser_version")
+    except Exception:
+        return None
+
+
+def is_empty(path: Path) -> bool:
+    """0 条款，或附件里有 unsupported / 全零字符 —— 这些是解析器的锅，值得重跑。"""
+    try:
+        d = json.loads(path.read_text("utf-8"))
+    except Exception:
+        return True
+    atts = d.get("attachments", [])
+    if any(a.get("kind") == "doc_unsupported" for a in atts):
+        return True
+    if atts and all((a.get("chars") or 0) == 0 for a in atts):
+        return True
+    return d.get("stats", {}).get("clauses", 0) == 0
+
+
 def slug_of(doc_no: str | None, title: str, url: str) -> str:
     import re
     base = doc_no or title[:24] or url.rsplit("/", 1)[-1]
@@ -47,6 +68,11 @@ def main() -> None:
     ap.add_argument("--column", default="rsj-sh-gov-cn-tgwgfx-17726")
     ap.add_argument("--limit", type=int, default=0)
     ap.add_argument("--dry-run", action="store_true")
+    ap.add_argument("--force", action="store_true", help="全部重跑（换解析器版本后归一化）")
+    ap.add_argument("--target-version", default=None,
+                    help="只重跑不是这个 parser_version 的记录，完成续跑")
+    ap.add_argument("--redo-empty", action="store_true",
+                    help="重跑「0 条款」或「附件全是扫描件/.doc」的文档（换了解析器时用）")
     ap.add_argument("--workers", type=int, default=3,
                     help="并发数。每请求自带 1s 间隔，3 并发约 2-3 req/s，对政府站点算克制")
     args = ap.parse_args()
@@ -65,7 +91,17 @@ def main() -> None:
     todo = []
     for it in items:
         name = slug_of(it.get("doc_no"), it.get("title", ""), it["url"])
-        if (PROCESSED / f"{name}.json").exists():
+        rec_path = PROCESSED / f"{name}.json"
+        need = False
+        if not rec_path.exists():
+            need = True
+        elif args.force:
+            need = True
+        elif args.target_version:
+            need = read_version(rec_path) != args.target_version
+        elif args.redo_empty and is_empty(rec_path):
+            need = True
+        if not need:
             skipped += 1
             continue
         todo.append((name, it))
