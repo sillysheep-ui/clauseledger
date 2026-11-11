@@ -41,3 +41,4 @@ eval_out/
 # 本地环境
 .venv/
 .uv-cache/
+data/watch/
