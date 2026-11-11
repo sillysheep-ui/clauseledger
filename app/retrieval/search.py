@@ -8,6 +8,8 @@
 """
 from __future__ import annotations
 
+import re
+
 import json
 from dataclasses import dataclass
 from pathlib import Path
@@ -146,7 +148,7 @@ def search_result(query: str, k: int = 8, *, status: tuple[str, ...] | None = No
     if out[0].coverage < MIN_COVERAGE:
         return Answer([], f"首条条款只覆盖 {out[0].coverage:.0%} 的提问词", "insufficient",
                       n_docs, len(out))
-    return Answer(_collapse(out)[:k], "", "ok", n_docs, len(out))
+    return Answer(_prefer_effective(_collapse(out))[:k], "", "ok", n_docs, len(out))
 
 
 def _status_rank(status: str) -> int:
@@ -163,7 +165,7 @@ def _norm_title(t: str) -> str:
 
 
 def _collapse(hits: list[Hit]) -> list[Hit]:
-    """两份事：同一份文件只留最相关的一条；同名文件（逐年延期的"关于调整…的通知"）
+    """同一份文件只留最相关的一条；同名文件（逐年延期的"关于调整…的通知"）
     合并成一条并记下版本数，否则 top-5 会被 2016/2017/2018 三个版本占满。"""
     seen_doc: set[str] = set()
     by_title: dict[str, Hit] = {}
@@ -175,18 +177,43 @@ def _collapse(hits: list[Hit]) -> list[Hit]:
         seen_doc.add(c.doc_no)
         key = _norm_title(c.title) or c.doc_no
         if key not in by_title:
+            h.versions = 1
             by_title[key] = h
             order.append(key)
         else:
-            # 同名文件 = 同一个政策的历年版本，留现行的那份，而不是分数最高的那份
             kept = by_title[key]
             kept.versions += 1
             if (_status_rank(h.clause.status), h.clause.effective_from or "") > \
                (_status_rank(kept.clause.status), kept.clause.effective_from or ""):
                 h.versions = kept.versions
                 by_title[key] = h
-        h.versions = 1
     return [by_title[k] for k in order]
+
+
+def _family_norm(t: str) -> str:
+    """把"关于2018年调整…的通知"里的年份/序号抹掉，用于判同族。"""
+    t = _norm_title(t or "")
+    t = re.sub(r"20\d{2}|19\d{2}|〔\d{4}〕|第?[一二三四五六七八九十]+次", "", t)
+    return t
+
+
+def _prefer_effective(hits: list[Hit]) -> list[Hit]:
+    """同一族里既有失效又有现行时，把现行的提到前面——但不删除任何条目，
+    否则会把原本排在第 2、第 3 的正确条款一起弄丢（实测掉 13pp）。"""
+    import difflib
+    fam = [_family_norm(h.clause.title) for h in hits]
+    out = list(hits)
+    for i in range(len(out)):
+        if _status_rank(out[i].clause.status) >= 3:
+            continue
+        for j in range(len(out)):
+            if i == j or _status_rank(out[j].clause.status) < 3:
+                continue
+            if difflib.SequenceMatcher(None, fam[i], fam[j]).ratio() >= 0.75:
+                out.insert(i, out.pop(j))
+                fam.insert(i, fam.pop(j))
+                break
+    return out
 
 
 def evidence_gap(query: str, hits: list[Hit]) -> str | None:
