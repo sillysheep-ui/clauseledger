@@ -45,7 +45,7 @@ B. 海北州未接入——该州门户我们没能自动取到原文。
 ## 三处披露
 
 1. **入口横幅**（进入即见，不用点开）
-   `已接入 309/333 个城市（语料版本 cv-20261111-1），24 个未接入`
+   `已接入 313/337 个城市（含 4 个直辖市；语料版本 cv-20261111-1），24 个未接入`
 2. **输入即时校验**：用户输入城市时先查覆盖，`blocked` 直接拦住，不发请求
 3. **答案页脚**：每次回答附 `coverage_snapshot`（覆盖数据 hash + 语料版本）
 
@@ -67,7 +67,7 @@ B. 海北州未接入——该州门户我们没能自动取到原文。
 
 | 文件 | 作用 |
 |---|---|
-| `data/coverage.json` | 覆盖数据（333 城，含 blocked 原因与 caveat） |
+| `data/coverage.json` | 覆盖数据（333 地级 + 4 直辖市 = 337，含 blocked 原因与 caveat） |
 | `tools/scan/build_coverage.py` | 由门户扫描结果生成，可重跑 |
 | `app/domain/coverage.py` | `CoverageIndex.check(city, matter)` / `.disclosure()` |
 | `tests/test_coverage.py` | 5 条断言，其中一条专守"没查 ≠ 查了没有" |

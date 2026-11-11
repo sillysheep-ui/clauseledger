@@ -46,6 +46,14 @@ def main() -> None:
             item.update(status="blocked", reason=why, detail=detail,
                         caveat="未接入不代表当地没有相关政策，只代表我们没能自动取到")
         out["cities"][key] = item
+    # 直辖市不在"地级行政区"名单里，但是共同的目标城市，单独登记（2026-11-11 实测均 200）
+    for name, url, chars in (("北京", "https://www.beijing.gov.cn/", 5285),
+                             ("上海", "https://www.shanghai.gov.cn/", 3599),
+                             ("天津", "https://www.tj.gov.cn/", 3346),
+                             ("重庆", "https://www.cq.gov.cn/", 3505)):
+        out["cities"][name] = {"province": name, "checked_at": now, "status": "reachable",
+                               "url": url, "chars": chars, "matters": {}, "departments": {},
+                               "kind": "municipality"}
     ok = sum(1 for c in out["cities"].values() if c["status"] == "reachable")
     out["totals"] = {"cities_total": len(out["cities"]), "cities_reachable": ok,
                      "cities_blocked": len(out["cities"]) - ok,
