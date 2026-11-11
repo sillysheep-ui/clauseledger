@@ -42,3 +42,4 @@ eval_out/
 .venv/
 .uv-cache/
 data/watch/
+data/scan/
