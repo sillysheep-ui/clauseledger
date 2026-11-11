@@ -12,6 +12,7 @@ import time
 from dataclasses import asdict, dataclass, field
 from datetime import datetime, timezone
 from pathlib import Path
+from urllib.parse import urljoin
 
 import httpx
 from bs4 import BeautifulSoup
@@ -58,7 +59,7 @@ def parse_rows(html: str, base: str) -> list[Item]:
         tds = [_norm(td.get_text(" ", strip=True)) for td in tr.find_all("td")]
         title = _norm(a.get("title") or a.get_text(" ", strip=True))
         href = a["href"]
-        url = href if href.startswith("http") else base.rstrip("/") + "/" + href.lstrip("./")
+        url = href if href.startswith("http") else urljoin(base, href)
         doc_no = tds[1] if len(tds) > 1 else ""
         issued = tds[2] if len(tds) > 2 else ""
         valid = tds[3] if len(tds) > 3 else ""
@@ -128,6 +129,7 @@ def save(snap: Snapshot, root: Path) -> Path:
 
 if __name__ == "__main__":
     import sys
+
     base = sys.argv[1] if len(sys.argv) > 1 else "https://rsj.sh.gov.cn/tgwgfx_17726/index.html"
     mp = int(sys.argv[2]) if len(sys.argv) > 2 else None
     snap = fetch_column(base, max_pages=mp)
