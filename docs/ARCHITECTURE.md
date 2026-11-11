@@ -244,9 +244,10 @@ normalize → load_profile → [clarify] ⇢ interrupt
           → [gate_action] ⇢ interrupt → act → finalize
 ```
 
-- 状态真源：**LangGraph checkpoint（PostgresSaver）是唯一真源**，`runs/steps` 是事件投影，不反向写。
-- 幂等：每个节点写 `idempotency_keys(node, run_id, input_hash)`，重入直接返回上次结果。
-- 中断点三个，全部 `interrupt()` + `Command(resume=...)`，恢复后从断点继续，不重跑已完成节点。
+- **checkpoint 是恢复源，不是审计源**：`run_events` 才是审计真源，只追加。两者不一致时以事件为准，并记一条告警（详见 `FOUNDATION.md` §2）。
+- **恢复粒度是 super-step 边界**：LangGraph 只会从 checkpoint 恢复，被 `interrupt()` 打断的节点**从头重跑**，不会从 `interrupt()` 那一行接着走。因此节点的全部副作用必须幂等，且 interrupt 之前不能有写操作。
+- 幂等：每个节点入口写 `node_attempt(run_id, node, input_hash)`，重入直接返回上次结果；外部写操作带 `Idempotency-Key`。
+- 中断点三个，全部 `interrupt()` + `Command(resume=...)`；多个 interrupt 按索引严格匹配，不可条件跳过、不可包在循环里。
 
 ---
 
