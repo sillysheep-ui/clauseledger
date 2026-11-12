@@ -42,7 +42,7 @@
 | CRUD-RAG | 2024 | 中文 RAG 四类任务 | ROUGE/BLEU/BERTScore/RAGQuestEval | 检索 recall/precision | 36,166 问；Create/Read/Update/Delete | [2401.17043](https://arxiv.org/abs/2401.17043) |
 | AQA（Attributed QA） | 2022 | 带归因的 QA | attributable accuracy（AIS） | AutoAIS 与人工相关 | AIS 与 AutoAIS 系统级 Pearson 0.96；与 EM 仅 0.45 | [2212.08037](https://arxiv.org/abs/2212.08037) |
 | ALCE | 2023 | 长文 QA + 引用 | citation recall、citation precision | correctness、fluency | ELI5 最好模型仍有 50% 缺完整支撑；κ=0.698/0.525 | [2305.14627](https://arxiv.org/abs/2305.14627) |
-| AttrScore | 2023 | 归因三分类评测 | macro-F1（三分类） | 每类 F1、accuracy | GPT-4 81–83%；微调 FLAN-T5-770M 超 ChatGPT | [2305.06311](https://arxiv.org/abs/2305.06311) |
+| AttrScore | 2023 | 归因三分类评测 | 每类 F1 + micro-F1（=accuracy） | micro-F1、跨领域 | GPT-4 81–83%；微调 FLAN-T5-770M 超 ChatGPT | [2305.06311](https://arxiv.org/abs/2305.06311) |
 | RAGTruth | 2024 | RAG 幻觉语料/检测 | span-level F1 | response-level F1 | 近 18k 响应；span F1：QA 58.2、Writing 38.8 | [2401.00396](https://arxiv.org/abs/2401.00396) |
 | FActScore | 2023 | 长文事实精度 | FActScore（原子事实支持率） | 与人工相关、自动估计误差 | InstructGPT 42%、ChatGPT 58%、PerplexityAI 71% | [2305.14251](https://arxiv.org/abs/2305.14251) |
 | SelfCheckGPT | 2023 | 黑盒幻觉检测 | 句级 AUC-PR | 段落级 Pearson | WikiBio 1,908 句；NonFact AUC-PR 85.63 | [2303.08896](https://arxiv.org/abs/2303.08896) |
@@ -97,7 +97,7 @@
 - **任务与数据集**：中文段落检索与重排；307K 查询、2.3M 段落（来自 1.8M 文档）、50K 测试查询；4 级人工相关性。
 - **主指标**：检索 **MRR@10、Recall@50、Recall@1K**；重排 **MRR@10、nDCG@20、nDCG@100**。
 - **次指标**：不同相关性等级（Level 2/3 视为相关）的分数、按查询类型拆分。
-- **关键数字**：BM25 的 Recall@50 仅 **0.4918**，而同口径 MS-MARCO 约 **0.700**——中文段落检索明显更难；DPTDR 报告 0.5285/0.7423/0.9211（原文表，具体列名 `待核`）。
+- **关键数字**：BM25 的 Recall@50 仅 **0.4918**，而同口径 MS-MARCO 约 **0.700**——中文段落检索明显更难。
 - **它解决什么评测问题**：给中文检索一个大规模、四级相关性、带重排标注的基准；MRR 强调"第一个相关段落排多高"，Recall@50/@1K 强调"相关段落有没有进候选"。
 - **失效点**：①中文分词/段落切分影响召回；②MRR@10 只看第一个相关，忽略其余相关段落；③四级相关性在计算 nDCG 时需要明确 gain（原文用 `2^rel-1` 还是 `rel` 要按论文，`待核`）；④测试集与训练集同分布，不能代表政务政策这种长条款、跨版本语料。
 
@@ -107,7 +107,7 @@
 - **任务与数据集**：8 类任务（retrieval、reranking、clustering、classification、pair classification、STS、summarization、bitext mining），58 数据集、112 语言、33 模型；retrieval 子集复用 BEIR，每类最多 15 个数据集。
 - **主指标**：retrieval 用 **nDCG@10**；其他任务各用其惯用指标（accuracy、Spearman 等）。
 - **次指标**：8 类任务平均分、按语言/领域拆分。
-- **关键数字**：58 数据集/112 语言/33 模型；retrieval 子集覆盖 15 个数据集（论文口径）。
+- **关键数字**：58 数据集/112 语言/33 模型；retrieval 子集复用 BEIR，具体数据集数按 BEIR 口径（不另造数）。
 - **它解决什么评测问题**：把"嵌入模型好不好"从单一检索分数扩展成多任务画像；让同一个模型在 retrieval/STS/classification 上的取舍可见。
 - **失效点**：①排行榜分数受数据集选择、提示/模板、归一化影响；②retrieval 子集与 BEIR 高度重叠，不是独立证据；③多语言覆盖不等于中文政务领域覆盖；④"平均分"会掩盖某个任务崩溃。**选 embedding 时看 retrieval 子集的分项，不要只看总平均。**
 
@@ -285,7 +285,7 @@
 - **次指标**：AutoAIS 与人工 AIS 的系统级相关；与 EM/F1 的对比。
 - **关键数字**：人工 AIS 与 AutoAIS 的系统级 Pearson **0.96**；与 EM 仅 **0.45**。
 - **它解决什么评测问题**：证明"答案对"和"有归因"是两件事；EM 高的系统 AIS 不一定高，反之亦然。
-- **失效点**：①AIS 要求"完全支持"，对部分支持/多段组合支持不友好；②AutoAIS 是 NLI，对隐含推理/法律条件句弱；③只允许一个引用段落，真实 RAG 常需多段；④"可解释"由人判，主观性高。
+- **失效点**：①AIS 要求"完全支持"，对部分支持/多段组合支持不友好；②AutoAIS 是 NLI，对隐含推理/法律条件句弱；③任务通常只允许一个引用段落，真实 RAG 常需多段；④"可解释"由人判，主观性高。
 
 ### 5.2 ALCE：citation recall / precision 的标准定义
 
@@ -306,11 +306,11 @@
   - **attributable**：引用完全支持陈述；
   - **extrapolatory**：引用信息不足，陈述超出引用；
   - **contradictory**：陈述与引用矛盾。
-- **主指标**：**macro-F1**（三分类）；同时报每类 F1 与 micro-F1（=accuracy）。
+- **主指标**：**每类 F1 + micro-F1**（三分类；论文明确说 micro-F1 等价于 overall accuracy）。
 - **次指标**：prompt 与微调两种设定；跨领域泛化。
 - **关键数字**：GPT-4 在 GenSearch 上 **81–83%**，最高约 **85%**；微调 FLAN-T5-770M 超过 ChatGPT；Vicuna 零样本 34.6/41.4 → 微调 66.0/71.3（两列具体指标 `待核`）。
 - **它解决什么评测问题**：把"引用支持"从二分类扩展为"支持/外推/矛盾"，能区分"引了但不充分"与"引了但相反"。
-- **失效点**：①三分类仍是文本支持，不判法律适用；②训练数据由 GPT-4 合成，继承其偏差；③extrapolatory 与 contradictory 边界主观；④macro-F1 在类别不平衡时会被小类拖低，需同时报每类。
+- **失效点**：①三分类仍是文本支持，不判法律适用；②训练数据由 GPT-4 合成，继承其偏差；③extrapolatory 与 contradictory 边界主观；④micro-F1 会被大类主导，需同时报每类 F1。
 
 ### 5.4 引用指标家族对照
 
@@ -427,7 +427,7 @@ RAG 场景最常发生的是第二、三种；只测第一种会漏掉"引对段
 ### 7.5 ∞Bench：100K+ 的 12 个子任务
 
 - **论文/年份**：∞Bench: Extending Long Context Evaluation Beyond 100K Tokens，2024（ACL 2024）。
-- **任务与数据集**：12 个子任务：En/Zh.Sum、En/Zh.QA、En.MC、En.Dia、Code.Debug、Code.Run、Math.Calc、Math.Find、Retrieve.PassKey/Number/KV；平均长度 100K+ token。
+- **任务与数据集**：12 个子任务：En.Sum、En.QA、Zh.QA、En.MC、En.Dia、Code.Debug、Code.Run、Math.Calc、Math.Find、Retrieve.PassKey/Number/KV；平均长度 100K+ token。
 - **主指标**：**accuracy / EM**（QA、检索、代码、数学等）；摘要用 **ROUGE-L-Sum**。
 - **次指标**：按任务/语言拆分；与短上下文基线对比。
 - **关键数字**：GPT-4 平均 **45.63**、Claude **37.06**、Kimi **34.73**、YaRN **19.96**；Code.Debug 直接答 **15.74%**，先复述相关代码后 **39.59%**。
@@ -486,6 +486,7 @@ RAG 场景最常发生的是第二、三种；只测第一种会漏掉"引对段
 | TRACe Completeness | 被用相关 token / 相关 token | 0–1 | RAGBench | 无通用阈值 |
 | TRACe Adherence | 答案是否完全被上下文支持（布尔/词级） | 0–1 | RAGBench | 长答案易被判 0；看分任务 |
 | Claim Recall（RAGChecker） | 参考 claim 被检索覆盖的比例 | 0–1 | RAGChecker | 无通用阈值；诊断用 |
+| Context Utilization（RAGChecker） | 检索块覆盖且被响应蕴含的参考 claim / 检索块覆盖的参考 claim | 0–1 | RAGChecker | 越高越好；原文称与整体 F1 强相关 |
 | Context Precision（RAGChecker） | 检索块中相关块 / k | 0–1 | RAGChecker | 与 RAGAS 同名不同义，引用时写清出处 |
 | Faithfulness（RAGChecker） | 响应 claim 被上下文蕴含 / 响应 claim | 0–1 | RAGChecker | 无通用阈值；claim 抽取敏感 |
 | Hallucination（RAGChecker） | 上下文不蕴含的错误 claim / 响应 claim | 0–1，越低越好 | RAGChecker | 与 RAGTruth 的 span F1 不同 |
@@ -495,7 +496,7 @@ RAG 场景最常发生的是第二、三种；只测第一种会漏掉"引对段
 | Citation Precision（ALCE） | 真正支持陈述的引用 / 总引用 | 0–1 | ALCE、Self-RAG | 不惩罚冗余引用；需与 recall 同报 |
 | AIS / attributable accuracy | 输出完全被引用证据支持且可解释的比例 | 0–1 | AQA、ARES | 人工金标；AutoAIS 是近似 |
 | AutoAIS | NLI 自动判"输出是否被证据支持" | 0–1 | AQA | 与人工系统级 Pearson 0.96；个体仍会错 |
-| AttrScore | 三分类（attributable/extrapolatory/contradictory）的 F1 | 0–1 | AttrScore | macro-F1 需与每类 F1 同报 |
+| AttrScore | 三分类（attributable/extrapolatory/contradictory）的 F1 | 0–1 | AttrScore | 每类 F1 + micro-F1（=accuracy）同报 |
 | RAGTruth Span F1 | 幻觉片段与人工标注的 span 级 F1 | 0–1 | RAGTruth | QA 58.2、Writing 38.8；任务差异大 |
 | RAGTruth Response F1 | 整条响应是否有幻觉的 F1 | 0–1 | RAGTruth | 长响应会被稀释 |
 | FActScore | 被支持的原子事实 / 总原子事实 | 0–1 | FActScore | InstructGPT 0.42、ChatGPT 0.58、PerplexityAI 0.71 |
@@ -510,6 +511,7 @@ RAG 场景最常发生的是第二、三种；只测第一种会漏掉"引对段
 | Supporting Fact EM/F1 | 句级支撑事实与标注的重合 | 0–1 | HotpotQA、MultiHop-RAG | 句级，不是要件级 |
 | Joint EM/F1 | 答案与支撑事实同时正确的联合指标 | 0–1 | HotpotQA | 比单独指标低很多 |
 | Effective Length（RULER） | 仍达阈值（Llama2-7B@4K=85.6%）的最大长度 | token 数 | RULER | 阈值人为；看退化曲线 |
+| wAvg（RULER） | 13 个任务的加权平均准确率 | 0–1 | RULER | 权重按任务；单点不如曲线 |
 | Accuracy by position | 按证据位置分组的准确率 | 0–1 | Lost in the Middle | U 形；中间最差 |
 | LCC | 代码编辑的 Levenshtein 相似度 | 0–1 | LongBench | 代码专用 |
 | Cohen's κ | 两名标注者超出随机一致的程度 | -1–1 | ALCE、AttrScore、RAGAS | 0.61–0.80 substantial；>0.80 almost perfect（Landis & Koch 惯例） |
@@ -527,6 +529,7 @@ RAG 场景最常发生的是第二、三种；只测第一种会漏掉"引对段
 | AURC | risk–coverage 曲线下面积 | 汇总，不作主指标 |
 | ECE | 预测置信度与准确率的校准误差 | 判断"unknown"置信度是否可信 |
 | Brier score | 预测概率与 0/1 结果的均方误差 | 四类概率校准 |
+| Citation verifiability | 引用条文存在且 span 能在原文精确匹配的引用 / 总引用 | 机械门禁；可与 LLM 判定解耦 |
 
 ---
 
@@ -537,7 +540,7 @@ RAG 场景最常发生的是第二、三种；只测第一种会漏掉"引对段
 **机制上为什么坏**：它们奖励 token/片段重叠，不奖励语义等价。政策文本里"应当"与"必须"、"可以"与"原则上可以"只差一个词，法律含义可能相反；反过来，完全改写但正确的答案会被判低分。
 
 **证据**：
-- RAGChecker 的 meta-eval 中，ROUGE-L 与人工的 Pearson 约 **43.10**、BLEU 约 **35.14**（远低于 claim 级 61.93；具体表值 `待核`）。
+- RAGChecker 的 meta-eval 中，ROUGE-L/BLEU 与人工的相关显著低于 claim 级的 **61.93**（原文表；具体表值 `待核`，不在正文里硬写）。
 - AQA 中 EM 与人工 AIS 的系统级 Pearson 仅 **0.45**，而 AutoAIS 与人工 AIS 达 **0.96**。
 - CRUD-RAG 仍用 ROUGE/BLEU，是因为中文长文生成缺少更好的自动指标；这不代表它们适合判定型任务。
 
@@ -550,7 +553,7 @@ RAG 场景最常发生的是第二、三种；只测第一种会漏掉"引对段
 - RAG 的检索单位是 **chunk**，qrels 的单位可能是 **document/paragraph**；chunk 切分改变命中。
 - nDCG@10/Recall@50 的 cutoff 是人为的；证据在 11–50 名时 nDCG@10 完全看不到。
 
-**证据**：BEIR 的 TREC-COVID 在补标注后分数变化是经典案例；RAGChecker 明确指出 retrieval metrics 对"标注的 chunk"和"刚性 chunking"敏感。T2Ranking 的 BM25 Recall@50 仅 0.4918，说明中文段落检索的候选召回本身就难。
+**证据**：BEIR 的 TREC-COVID 在补标注后分数变化是经典案例；RAGChecker 也把检索指标建立在 claim/chunk 标注上，chunk 切分或标注变化会传导到分数。T2Ranking 的 BM25 Recall@50 仅 0.4918，说明中文段落检索的候选召回本身就难。
 
 **替代**：报告 qrels 来源/标注完整性；用 **Recall@k（k 足够大）+ nDCG@10** 两个口径；chunk 级评测时同时报 document 级命中；对判定型任务定义 **条文级 qrels**，不要用段落 chunk 代替条文。
 
@@ -567,7 +570,7 @@ RAG 场景最常发生的是第二、三种；只测第一种会漏掉"引对段
 - 答案被某段支持，但那段是**无关段落** → faithfulness 高，context relevance 可能低，但二者都不直接罚"引错"。
 - 答案的每个 claim 都被支持，但**结论**（如 satisfied）是规则误用 → faithfulness 仍然高。
 
-**证据**：RAGAS 原文的三个指标与人工 pairwise 一致率虽高（0.95/0.78/0.70），但论文明确不评 attribution；ALCE 的 citation precision 才测"引用是否支持陈述"。Magesh et al. 2405.20362 的 "misgrounded" 案例（引对段落但法域/时效错）正是 faithfulness 的盲区。
+**证据**：RAGAS 的三个指标里没有 citation/attribution 项；ALCE 的 citation precision 才测"引用是否支持陈述"。Magesh et al. 2405.20362 的 "misgrounded" 案例（引对段落但法域/时效错）正是 faithfulness 的盲区。
 
 **替代**：citation precision/recall（ALCE/AIS）+ 条文级核验；faithfulness 只作为"文本支持"的诊断项。
 
@@ -747,9 +750,9 @@ RAG 场景最常发生的是第二、三种；只测第一种会漏掉"引对段
 **`待核` 清单（不要在正式材料里当确定事实）**：
 
 - RETRO 的 ICML 2022 venue；Self-RAG 的 ICLR 2024 venue；RAGAS 的 EACL 2024 Demo venue；RAGTruth 的 ACL 2024 venue；MultiHop-RAG / RAGBench / CRUD-RAG / AQA 的 venue。
-- T2Ranking 表 3 的列名与 DPTDR 三个数的对应关系；nDCG gain 公式。
+- T2Ranking 的 nDCG gain 公式（原文用 `2^rel-1` 还是 `rel` 需按表确认）。
 - ∞Bench Zh.QA 的平均长度（原文表出现 2068.6K，疑为 206.8K 排版错误）。
-- RAGChecker 的 ROUGE-L/BLEU 与人工 Pearson 的具体表值（正文只给 claim 级 61.93；43.10/35.14 来自表格，需再对一次表号）。
+- RAGChecker 的 ROUGE-L/BLEU 与人工 Pearson 的具体表值（正文只给 claim 级 61.93；表值未取）。
 - AttrScore 的 Vicuna 两列具体指标名；GPT-4 "最高约 85%" 的准确出处。
 - RAGTruth 的 overall span/response F1（本文只列分任务值，未合成 overall）。
 - CRAG 的 human F1（论文正文说人工一致性用 F1，但具体数值在附录/表中，未取）。
