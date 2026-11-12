@@ -59,8 +59,10 @@ def validate(raw: dict) -> dict:
     if not url.startswith(("http://", "https://")):
         raise EntryError(f"缺少证据 URL：{url!r}")
 
+    # 发文日期允许缺，但必须明说"不知道"。宁可在报告里显示缺日期，
+    # 也不要拿施行日期凑数——两者差几周，考古文号时会差出一年。
     issued_at = (raw.get("issued_at") or "").strip()
-    if not RE_DATE.match(issued_at):
+    if issued_at and not RE_DATE.match(issued_at):
         raise EntryError(f"发文日期需 YYYY-MM-DD：{issued_at!r}")
 
     valid_until = (raw.get("valid_until") or "").strip() or None
@@ -74,8 +76,10 @@ def validate(raw: dict) -> dict:
     # 成文日期常常只在纸面文件上，公报页只有出版日。与其猜，不如记清楚来源：
     # 后面算"文件年龄"时，gazette 日期最多比成文日期晚一期公报（数周）。
     date_source = (raw.get("date_source") or "document").strip()
-    if date_source not in {"document", "gazette", "database"}:
-        raise EntryError(f"date_source 只能是 document/gazette/database：{date_source!r}")
+    if date_source not in {"document", "gazette", "database", "unknown"}:
+        raise EntryError(f"date_source 只能是 document/gazette/database/unknown：{date_source!r}")
+    if not issued_at and date_source != "unknown":
+        raise EntryError("没有发文日期时，date_source 必须是 unknown")
 
     return {
         "doc_no": doc_no,
