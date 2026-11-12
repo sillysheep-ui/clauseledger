@@ -1,0 +1,259 @@
+# 2026 年非上海生源应届普通高校毕业生进沪就业落户评分规则
+#
+# 来源：沪教委学〔2026〕13号 附件 4（PDF 第 21–26 页）
+#       https://www.shanghai.gov.cn/cmsres/c0/c0be2153e4e04371a7bd856e099f83fc/03cad02918ba513e483ac2037250f613.pdf
+#
+# 这份文件是**人从 PDF 抄下来的**，不是模型抽的。抄写规则：
+#   1. 只抄「分值 + 条件」两样，解释性括注不抄（它们不是判据）；
+#   2. 每一项都带 page 与原文片段，供核对；
+#   3. 附录类（高校名单、重点学科目录）不在本文，见 meta.unresolved。
+#
+# 为什么是 YAML 不是代码：规则每年会改（联席会议每年调整），改动应该是
+# 改数据 + 重新核对，而不是改 Python 再想一遍边界。
+
+meta:
+  doc_no: "沪教委学〔2026〕13号"
+  annex: "附件4"
+  title: "2026年非上海生源应届普通高校毕业生进沪就业申请上海市户籍评分办法"
+  standard_score: 72
+  as_of: "2026-04-27"
+  applies_to: "非上海生源应届普通高校毕业生"
+  parser_version: "0.3.1"
+  # 这些是评分必需、但我们没有结构化进来的东西——缺它们时必须报 unknown，
+  # 不许默认成 0 分。
+  unresolved:
+    - id: school_lists
+      note: "附录1/3/4 世界一流大学建设高校、一类/二类高校名单未解析；school_tier 必须由用户或外部名单给出"
+      pages: [27, 30]
+    - id: key_disciplines
+      note: "附录5 上海市重点发展领域所需学科（专业）未解析；employer_key_field 必须由用户给出"
+      pages: [40]
+
+# 计分方式：每项独立，先求「确定得分」，再求「未知项的上限」，最后跟 72 比。
+# 一个关键约定：**unknown 不是 0 分**。只有在「上限都够不到 72」时才允许说不满足。
+direct_rules:
+  - id: degree.phd
+    label: "博士研究生：符合基本申报条件即可落户"
+    page: 21
+    when: {degree: phd}
+
+groups:
+  - id: basic
+    label: "一、毕业生要素分 —（一）基本要素"
+    items:
+      - id: degree.master
+        label: "硕士、研究生"
+        page: 21
+        points: 24
+        when: {degree: master}
+      - id: degree.bachelor
+        label: "学士、本科生"
+        page: 22
+        points: 21
+        when: {degree: bachelor}
+      - id: school.first
+        label: "第一类高校及研究生培养单位"
+        page: 22
+        points: 15
+        when: {school_tier: 1}
+      - id: school.second
+        label: "第二类高校及研究生培养单位"
+        page: 22
+        points: 12
+        when: {school_tier: 2}
+      - id: school.other
+        label: "其他高校及研究生培养单位"
+        page: 22
+        points: 8
+        when: {school_tier: 3}
+      - id: school.in_shanghai
+        label: "最高学历阶段在上海高校就读，另加"
+        page: 22
+        points: 2
+        when: {school_in_shanghai: true}
+      - id: gpa.a
+        label: "学习成绩一级（前 25%）"
+        page: 22
+        points: 8
+        when: {gpa_rank: a}
+      - id: gpa.b
+        label: "学习成绩二级（26%–50%）"
+        page: 22
+        points: 6
+        when: {gpa_rank: b}
+      - id: gpa.c
+        label: "学习成绩三级（51%–75%）"
+        page: 22
+        points: 4
+        when: {gpa_rank: c}
+      - id: gpa.d
+        label: "学习成绩四级（76%–100%）"
+        page: 22
+        points: 2
+        when: {gpa_rank: d}
+      - id: foreign.cet6
+        label: "CET-6 ≥425 或专业八级"
+        page: 22
+        points: 8
+        when: {foreign: cet6_or_tem8}
+      - id: foreign.cet4
+        label: "CET-4 ≥425 或专业四级"
+        page: 23
+        points: 7
+        when: {foreign: cet4_or_tem4}
+      - id: foreign.major_pass
+        label: "外语类、艺术类、体育类专业外语课程合格"
+        page: 23
+        points: 7
+        when: {foreign: major_course_pass}
+      - id: computer.grad
+        label: "计算机水平：毕业研究生"
+        page: 23
+        points: 7
+        when: {computer: grad}
+      - id: computer.sci_high
+        label: "计算机水平：理科类高级或免此项"
+        page: 23
+        points: 7
+        when: {computer: sci_high}
+      - id: computer.arts_mid
+        label: "计算机水平：文科类中级或省级二级"
+        page: 23
+        points: 7
+        when: {computer: arts_mid}
+      - id: computer.sci_mid
+        label: "计算机水平：理科类中级或省级二级"
+        page: 23
+        points: 6
+        when: {computer: sci_mid}
+      - id: computer.arts_low
+        label: "计算机水平：文科类初级或省级一级"
+        page: 23
+        points: 6
+        when: {computer: arts_low}
+      - id: computer.art_sport
+        label: "计算机水平：艺术类、体育类相关课程合格"
+        page: 23
+        points: 6
+        when: {computer: art_sport}
+
+  - id: guided
+    label: "一、毕业生要素分 —（二）导向要素"
+    note: "荣誉称号与竞赛获奖可以累计，但两项合计最高 15 分（见 competition.others 之后）"
+    items:
+      - id: honor.national
+        label: "荣誉称号：国家级"
+        page: 23
+        points: 10
+        when: {honor_national: true}
+      - id: honor.province
+        label: "荣誉称号：省（自治区、直辖市）级"
+        page: 23
+        points: 5
+        when: {honor_province: true}
+      - id: honor.school
+        label: "荣誉称号：学校级（每次 1 分，不超过 2 分）"
+        page: 23
+        points: 2
+        when: {honor_school: true}
+        note: "按上限 2 分计；实际每次 1 分"
+      - id: competition.national_first
+        label: "全国性比赛一等奖"
+        page: 24
+        points: 10
+        when: {competition: national_first}
+      - id: competition.national_second
+        label: "全国性比赛二等奖"
+        page: 24
+        points: 8
+        when: {competition: national_second}
+      - id: competition.national_third
+        label: "全国性比赛三等奖"
+        page: 24
+        points: 6
+        when: {competition: national_third}
+      - id: competition.local_first
+        label: "地方赛区一等奖"
+        page: 24
+        points: 5
+        when: {competition: local_first}
+      - id: competition.local_second
+        label: "地方赛区二等奖"
+        page: 24
+        points: 3
+        when: {competition: local_second}
+      - id: competition.local_third
+        label: "地方赛区三等奖"
+        page: 24
+        points: 1
+        when: {competition: local_third}
+      - id: patent.invention
+        label: "科研创新：发明专利（首次申请时的发明人）"
+        page: 24
+        points: 5
+        when: {patent: true}
+      - id: service.west
+        label: "国家就业项目：西部计划服务期满"
+        page: 25
+        points: 5
+        when: {service_west: true}
+
+  - id: employer
+    label: "二、用人单位要素分"
+    items:
+      - id: employer.contract
+        label: "用人单位要素基本分：签订一年及以上劳动/聘用合同（劳务派遣除外）"
+        page: 25
+        points: 7
+        when: {employer_contract: true}
+      - id: employer.key_field
+        label: "引进重点领域人才：录用上海市重点发展领域所需学科毕业生"
+        page: 25
+        points: 6
+        when: {employer_key_field: true}
+      - id: employer.newtown_public
+        label: "重点区域：五个新城、南北转型区域内教育卫生等公益事业单位"
+        page: 26
+        points: 3
+        when: {employer_newtown_public: true}
+      - id: employer.major_project
+        label: "承担国家和上海经济社会发展重大项目，且专业与行业匹配"
+        page: 26
+        points: 3
+        when: {employer_major_project: true}
+      - id: employer.remote_public
+        label: "远郊地区教育、卫生、农业等社会公益事业单位"
+        page: 26
+        points: 3
+        when: {employer_remote_public: true}
+      - id: employer.school
+        label: "上海市中小学、幼儿园"
+        page: 26
+        points: 2
+        when: {employer_school: true}
+      - id: employer.pe_teacher
+        label: "上海市中小学体育专任教师、幼儿园专任教师"
+        page: 26
+        points: 1
+        when: {employer_pe_teacher: true}
+
+# 特殊直落条件（不参与评分，满足即落户）
+special:
+  - id: undergrad_top
+    label: "本科阶段为清华大学、北京大学及在沪世界一流大学建设高校的应届毕业生"
+    page: 25
+    when: {undergrad_top: true}
+  - id: school.newtown_bachelor
+    label: "在沪「双一流」建设高校应届本科毕业生，在五个新城、南北转型区域用人单位工作"
+    page: 26
+    when: {newtown_bachelor: true}
+
+caps:
+  # 荣誉称号与竞赛获奖可以累计加分，最高不超过 15 分
+  - id: honor_and_competition
+    items: [honor.national, honor.province, honor.school,
+            competition.national_first, competition.national_second, competition.national_third,
+            competition.local_first, competition.local_second, competition.local_third]
+    max: 15
+    page: 24
+    note: "同类奖励取最高分；荣誉称号和竞赛获奖可以累计，最高不超过15分"

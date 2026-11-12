@@ -31,9 +31,11 @@ from .pipeline import OUT, ingest
 ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_LIST = ROOT / "data" / "fixtures" / "manual_adds.json"
 
-# 只接受上海市人社局的规范性文件编号；别的体系（沪府办、沪教委）走各自通道，
-# 免得把不同发文机关的编号混进同一个命名空间。
-RE_SHB_GFX = re.compile(r"^沪人社规[〔（(\[]\s*(\d{4})\s*[〕）)\]]\s*第?\s*(\d+)\s*号$")
+# 上海发文机关的文号统一形态：沪 + 机关简称 + 〔年〕 + 序号 + 号。
+# 早期只放行「沪人社规」，理由是不想让不同机关的编号混进同一个命名空间；
+# 但文号本身带机关前缀（沪教委学 / 沪府办 / 沪人社规），全串才是键，不会撞。
+# 现在放开到市级机关，是为了把「沪教委学〔2026〕13号」（落户评分办法）收进来。
+RE_SHB_GFX = re.compile(r"^沪[\u4e00-\u9fa5]{1,8}[〔（(\[]\s*(\d{4})\s*[〕）)\]]\s*第?\s*(\d+)\s*号$")
 RE_DATE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 
 
@@ -49,7 +51,7 @@ def validate(raw: dict) -> dict:
     """
     doc_no = (raw.get("doc_no") or "").strip()
     if not RE_SHB_GFX.match(doc_no):
-        raise EntryError(f"文号不合规（需 沪人社规〔YYYY〕N号）：{doc_no!r}")
+        raise EntryError(f"文号不合规（需 沪<机关>〔YYYY〕N号）：{doc_no!r}")
 
     title = (raw.get("title") or "").strip()
     if len(title) < 4:

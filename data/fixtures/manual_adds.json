@@ -1,132 +1,142 @@
 [
- {
-  "doc_no": "沪人社规〔2020〕1号",
-  "title": "持有《上海市居住证》人员申办本市常住户口办法实施细则",
-  "url": "https://www.shanghai.gov.cn/nw48968/20200929/0001-48968_64813.html",
-  "issued_at": "2020-09-29",
-  "date_source": "gazette",
-  "valid_until": null,
-  "source": "official",
-  "note": "政府公报全文页，正文首行即文号；日期取公报出版日"
- },
- {
-  "doc_no": "沪人社规〔2020〕24号",
-  "title": "上海市人力资源社会保障局关于优化本市居住证转办常住户口政策的通知",
-  "url": "https://www.shanghai.gov.cn/202102gfxwj/20210129/57347917492147899980f342bb85d3f0.html",
-  "issued_at": "2021-01-29",
-  "date_source": "gazette",
-  "valid_until": null,
-  "source": "official",
-  "note": "二〇二一年第二期公报·部门规范性文件；日期取公报出版日"
- },
- {
-  "doc_no": "沪人社规〔2020〕25号",
-  "title": "上海市人力资源社会保障局关于印发《留学回国人员申办上海常住户口实施细则》的通知",
-  "url": "https://www.shanghai.gov.cn/202102gfxwj/20210129/8b43148eec5b433d8fcbb4a6e6e2618c.html",
-  "issued_at": "2021-01-29",
-  "date_source": "gazette",
-  "valid_until": null,
-  "source": "official",
-  "note": "同上期公报；另有备案审查页 WSDetails.aspx?ID=NML0000003108"
- },
- {
-  "doc_no": "沪人社规〔2020〕27号",
-  "title": "上海市人力资源社会保障局关于印发《上海市引进人才申办本市常住户口办法实施细则》的通知",
-  "url": "https://www.shanghai.gov.cn/202102gfxwj/20210129/50b3db9d77694ba09b3870fda5f96e81.html",
-  "issued_at": "2021-01-29",
-  "date_source": "gazette",
-  "valid_until": null,
-  "source": "official",
-  "note": "同上期公报"
- },
- {
-  "doc_no": "沪人社规〔2022〕3号",
-  "title": "上海市人力资源和社会保障局关于具有本市户籍留学人员其持外国护照子女享受优惠政策的通知",
-  "url": "http://service.shanghai.gov.cn/XingZhengWenDangKuJyh/XZGFDetails.aspx?docid=REPORT_NDOC_008252",
-  "issued_at": "2022-01-28",
-  "date_source": "database",
-  "valid_until": "2027-02-28",
-  "source": "official",
-  "note": "市行政规范性文件数据库详情页：文件编号/公布日期/施行日期/有效期至"
- },
- {
-  "doc_no": "沪人社规〔2022〕5号",
-  "title": "上海市人力资源和社会保障局、上海市财政局关于本市原参加小城镇社会保险的被征地人员纳入职工基本养老保险若干问题处理意见的通知",
-  "url": "http://service.shanghai.gov.cn/XingZhengWenDangKuJyh/XZGFDetails.aspx?docid=REPORT_NDOC_008651",
-  "issued_at": "2022-03-01",
-  "date_source": "database",
-  "valid_until": "2027-03-31",
-  "source": "official",
-  "note": "数据库详情页"
- },
- {
-  "doc_no": "沪人社规〔2022〕6号",
-  "title": "上海市人力资源和社会保障局等六部门关于切实做好本市被征地人员就业和社会保障办理工作的通知",
-  "url": "http://service.shanghai.gov.cn/XingZhengWenDangKuJyh/XZGFDetails.aspx?docid=REPORT_NDOC_008652",
-  "issued_at": "2022-03-04",
-  "date_source": "database",
-  "valid_until": "2027-03-31",
-  "source": "official",
-  "note": "数据库详情页；正文注明〔2020〕3号同时废止"
- },
- {
-  "doc_no": "沪人社规〔2022〕7号",
-  "title": "上海市人力资源和社会保障局、上海市医疗保障局关于本市征地养老人员若干问题处理意见的通知",
-  "url": "http://service.shanghai.gov.cn/XingZhengWenDangKuJyh/XZGFDetails.aspx?docid=REPORT_NDOC_008653",
-  "issued_at": "2022-02-28",
-  "date_source": "database",
-  "valid_until": "2027-03-31",
-  "source": "official",
-  "note": "数据库详情页"
- },
- {
-  "doc_no": "沪人社规〔2022〕35号",
-  "title": "上海市人力资源和社会保障局关于延长《关于印发〈关于服务具有全球影响力的科技创新中心建设实施更加开放的国内人才引进政策的实施办法〉的通知》有效期的通知",
-  "url": "http://service.shanghai.gov.cn/XingZhengWenDangKuJyh/XZGFDetails.aspx?docid=REPORT_NDOC_009285",
-  "issued_at": "2022-10-28",
-  "date_source": "database",
-  "valid_until": null,
-  "source": "official",
-  "note": "数据库详情页；将沪人社力发〔2015〕41号延至 2027-10-31"
- },
- {
-  "doc_no": "沪人社规〔2023〕8号",
-  "title": "上海市白玉兰人才计划浦江项目实施办法",
-  "url": "http://service.shanghai.gov.cn/XingZhengWenDangKuJyh/XZGFDetails.aspx?docid=230627135406DIJOtg4YfgsukX17IR6",
-  "issued_at": "2023-06-06",
-  "date_source": "database",
-  "valid_until": "2028-05-31",
-  "source": "official",
-  "note": "数据库详情页"
- },
- {
-  "doc_no": "沪人社规〔2023〕23号",
-  "title": "上海市人力资源和社会保障局关于宣布废止《上海市浦江人才计划管理办法》的通知",
-  "url": "http://service.shanghai.gov.cn/XingZhengWenDangKuJyh/XZGFDetails.aspx?docid=2310171414047mUfMOyY1IRdf6MQWdN",
-  "issued_at": "2023-09-08",
-  "date_source": "database",
-  "valid_until": null,
-  "source": "official",
-  "note": "数据库详情页；废止〔2020〕29号"
- },
- {
-  "doc_no": "沪人社规〔2017〕24号",
-  "title": "关于本市养老机构内部医疗机构纳入医保联网结算范围的意见",
-  "url": "https://ybj.sh.gov.cn/zxzc/20170529/0038-2900.html",
-  "issued_at": "2017-05-30",
-  "date_source": "document",
-  "valid_until": null,
-  "source": "official",
-  "note": "市医保局最新政策详情页，正文首行标题+文号；A 级"
- },
- {
-  "doc_no": "沪人社规〔2017〕10号",
-  "title": "关于本市被征地人员纳入职工基本医疗保险有关事项的通知",
-  "url": "http://renshe.jiading.cn/zcfg/sjwj/content_432742",
-  "issued_at": "",
-  "date_source": "unknown",
-  "valid_until": "2022-03-31",
-  "source": "mirror",
-  "note": "嘉定区人社局转载市局文件，正文标注文号；B 级，页面无发文日期，不猜"
- }
+  {
+    "doc_no": "沪人社规〔2020〕1号",
+    "title": "持有《上海市居住证》人员申办本市常住户口办法实施细则",
+    "url": "https://www.shanghai.gov.cn/nw48968/20200929/0001-48968_64813.html",
+    "issued_at": "2020-09-29",
+    "date_source": "gazette",
+    "valid_until": null,
+    "source": "official",
+    "note": "政府公报全文页，正文首行即文号；日期取公报出版日"
+  },
+  {
+    "doc_no": "沪人社规〔2020〕24号",
+    "title": "上海市人力资源社会保障局关于优化本市居住证转办常住户口政策的通知",
+    "url": "https://www.shanghai.gov.cn/202102gfxwj/20210129/57347917492147899980f342bb85d3f0.html",
+    "issued_at": "2021-01-29",
+    "date_source": "gazette",
+    "valid_until": null,
+    "source": "official",
+    "note": "二〇二一年第二期公报·部门规范性文件；日期取公报出版日"
+  },
+  {
+    "doc_no": "沪人社规〔2020〕25号",
+    "title": "上海市人力资源社会保障局关于印发《留学回国人员申办上海常住户口实施细则》的通知",
+    "url": "https://www.shanghai.gov.cn/202102gfxwj/20210129/8b43148eec5b433d8fcbb4a6e6e2618c.html",
+    "issued_at": "2021-01-29",
+    "date_source": "gazette",
+    "valid_until": null,
+    "source": "official",
+    "note": "同上期公报；另有备案审查页 WSDetails.aspx?ID=NML0000003108"
+  },
+  {
+    "doc_no": "沪人社规〔2020〕27号",
+    "title": "上海市人力资源社会保障局关于印发《上海市引进人才申办本市常住户口办法实施细则》的通知",
+    "url": "https://www.shanghai.gov.cn/202102gfxwj/20210129/50b3db9d77694ba09b3870fda5f96e81.html",
+    "issued_at": "2021-01-29",
+    "date_source": "gazette",
+    "valid_until": null,
+    "source": "official",
+    "note": "同上期公报"
+  },
+  {
+    "doc_no": "沪人社规〔2022〕3号",
+    "title": "上海市人力资源和社会保障局关于具有本市户籍留学人员其持外国护照子女享受优惠政策的通知",
+    "url": "http://service.shanghai.gov.cn/XingZhengWenDangKuJyh/XZGFDetails.aspx?docid=REPORT_NDOC_008252",
+    "issued_at": "2022-01-28",
+    "date_source": "database",
+    "valid_until": "2027-02-28",
+    "source": "official",
+    "note": "市行政规范性文件数据库详情页：文件编号/公布日期/施行日期/有效期至"
+  },
+  {
+    "doc_no": "沪人社规〔2022〕5号",
+    "title": "上海市人力资源和社会保障局、上海市财政局关于本市原参加小城镇社会保险的被征地人员纳入职工基本养老保险若干问题处理意见的通知",
+    "url": "http://service.shanghai.gov.cn/XingZhengWenDangKuJyh/XZGFDetails.aspx?docid=REPORT_NDOC_008651",
+    "issued_at": "2022-03-01",
+    "date_source": "database",
+    "valid_until": "2027-03-31",
+    "source": "official",
+    "note": "数据库详情页"
+  },
+  {
+    "doc_no": "沪人社规〔2022〕6号",
+    "title": "上海市人力资源和社会保障局等六部门关于切实做好本市被征地人员就业和社会保障办理工作的通知",
+    "url": "http://service.shanghai.gov.cn/XingZhengWenDangKuJyh/XZGFDetails.aspx?docid=REPORT_NDOC_008652",
+    "issued_at": "2022-03-04",
+    "date_source": "database",
+    "valid_until": "2027-03-31",
+    "source": "official",
+    "note": "数据库详情页；正文注明〔2020〕3号同时废止"
+  },
+  {
+    "doc_no": "沪人社规〔2022〕7号",
+    "title": "上海市人力资源和社会保障局、上海市医疗保障局关于本市征地养老人员若干问题处理意见的通知",
+    "url": "http://service.shanghai.gov.cn/XingZhengWenDangKuJyh/XZGFDetails.aspx?docid=REPORT_NDOC_008653",
+    "issued_at": "2022-02-28",
+    "date_source": "database",
+    "valid_until": "2027-03-31",
+    "source": "official",
+    "note": "数据库详情页"
+  },
+  {
+    "doc_no": "沪人社规〔2022〕35号",
+    "title": "上海市人力资源和社会保障局关于延长《关于印发〈关于服务具有全球影响力的科技创新中心建设实施更加开放的国内人才引进政策的实施办法〉的通知》有效期的通知",
+    "url": "http://service.shanghai.gov.cn/XingZhengWenDangKuJyh/XZGFDetails.aspx?docid=REPORT_NDOC_009285",
+    "issued_at": "2022-10-28",
+    "date_source": "database",
+    "valid_until": null,
+    "source": "official",
+    "note": "数据库详情页；将沪人社力发〔2015〕41号延至 2027-10-31"
+  },
+  {
+    "doc_no": "沪人社规〔2023〕8号",
+    "title": "上海市白玉兰人才计划浦江项目实施办法",
+    "url": "http://service.shanghai.gov.cn/XingZhengWenDangKuJyh/XZGFDetails.aspx?docid=230627135406DIJOtg4YfgsukX17IR6",
+    "issued_at": "2023-06-06",
+    "date_source": "database",
+    "valid_until": "2028-05-31",
+    "source": "official",
+    "note": "数据库详情页"
+  },
+  {
+    "doc_no": "沪人社规〔2023〕23号",
+    "title": "上海市人力资源和社会保障局关于宣布废止《上海市浦江人才计划管理办法》的通知",
+    "url": "http://service.shanghai.gov.cn/XingZhengWenDangKuJyh/XZGFDetails.aspx?docid=2310171414047mUfMOyY1IRdf6MQWdN",
+    "issued_at": "2023-09-08",
+    "date_source": "database",
+    "valid_until": null,
+    "source": "official",
+    "note": "数据库详情页；废止〔2020〕29号"
+  },
+  {
+    "doc_no": "沪人社规〔2017〕24号",
+    "title": "关于本市养老机构内部医疗机构纳入医保联网结算范围的意见",
+    "url": "https://ybj.sh.gov.cn/zxzc/20170529/0038-2900.html",
+    "issued_at": "2017-05-30",
+    "date_source": "document",
+    "valid_until": null,
+    "source": "official",
+    "note": "市医保局最新政策详情页，正文首行标题+文号；A 级"
+  },
+  {
+    "doc_no": "沪人社规〔2017〕10号",
+    "title": "关于本市被征地人员纳入职工基本医疗保险有关事项的通知",
+    "url": "http://renshe.jiading.cn/zcfg/sjwj/content_432742",
+    "issued_at": "",
+    "date_source": "unknown",
+    "valid_until": "2022-03-31",
+    "source": "mirror",
+    "note": "嘉定区人社局转载市局文件，正文标注文号；B 级，页面无发文日期，不猜"
+  },
+  {
+    "doc_no": "沪教委学〔2026〕13号",
+    "title": "上海市教育委员会等关于做好2026年非上海生源应届普通高校毕业生进沪就业工作的通知",
+    "url": "https://www.shanghai.gov.cn/cmsres/c0/c0be2153e4e04371a7bd856e099f83fc/03cad02918ba513e483ac2037250f613.pdf",
+    "issued_at": "2026-04-27",
+    "date_source": "document",
+    "valid_until": null,
+    "source": "official",
+    "note": "市政府 CMS 直接托管 PDF（52 页）；正文第 11 页含『落户标准分为72分』，附件4 为评分办法（第 21–26 页）；日期取文件印发日"
+  }
 ]
