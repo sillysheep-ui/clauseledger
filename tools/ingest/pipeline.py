@@ -76,6 +76,10 @@ def ingest(url: str, *, slug: str | None = None, hint: dict | None = None) -> di
         "doc_no_source": "list" if hint.get("doc_no") else ("text" if m_doc else None),
         "meta_hint": hint or None,
         "title": hint.get("title") or parsed.title,
+        # 列表页的元数据必须落到顶层：之前只留在 meta_hint 里，
+        # 结果 560 份文档的 issued_at 全是空的，等于没有发文日期。
+        "issued_at": iso(hint.get("issued_at")),
+        "valid_until": iso(hint.get("valid_until")),
         "url": url,
         "fetched_at": datetime.now(CST).strftime("%Y-%m-%dT%H:%M:%S%z"),
         "page_kind": kind,
