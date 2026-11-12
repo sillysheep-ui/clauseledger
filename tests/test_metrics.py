@@ -156,3 +156,43 @@ class TestCaseOutcomes:
 
     def test_empty(self):
         assert sum(case_outcome_summary([]).values()) == 0
+
+
+# --- 弃权指标 ---------------------------------------------------------------
+
+from app.eval.metrics import (  # noqa: E402
+    assert_no_fabricated_no_policy,
+    aurc,
+    clopper_pearson_upper,
+    risk_coverage,
+)
+
+
+def test_zero_failure_upper_bound_is_181pct():
+    """15 条全过不等于高可靠：单侧 95% 上界 18.1%。"""
+    assert abs(clopper_pearson_upper(0, 15) - 0.1810) < 0.001
+    assert clopper_pearson_upper(0, 100) < 0.03
+
+
+def test_risk_coverage_answers_least_confident_last():
+    pairs = [(0.9, True), (0.8, True), (0.5, False), (0.4, False)]
+    r = risk_coverage(pairs, coverages=(0.25, 0.5, 1.0))
+    assert r[0.25].p == 1.0      # 只答最自信的 1 条
+    assert r[0.5].p == 1.0       # 前 2 条都对
+    assert r[1.0].p == 0.5       # 全答：两条错
+
+
+def test_aurc_better_than_random_when_confident():
+    good = [(0.9, True)] * 8 + [(0.1, False)] * 2
+    bad = [(0.9, True), (0.9, False)] * 5
+    assert aurc(good) < aurc(bad)
+
+
+def test_no_policy_requires_real_search():
+    ok = {"kind": "no_policy", "searched": {"n_docs": 3, "n_queries": 2}}
+    assert_no_fabricated_no_policy([ok])
+    bad = {"kind": "no_policy", "searched": {"n_docs": 0, "n_queries": 0}}
+    with pytest.raises(AssertionError):
+        assert_no_fabricated_no_policy([bad])
+    # 其它结局不受这条约束
+    assert_no_fabricated_no_policy([{"kind": "answer", "searched": {"n_docs": 0}}])

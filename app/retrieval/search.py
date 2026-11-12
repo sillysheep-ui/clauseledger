@@ -8,10 +8,11 @@
 """
 from __future__ import annotations
 
+import hashlib
 import re
 
 import json
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 
 import bm25s
@@ -85,10 +86,17 @@ class Answer:
     kind: str = "ok"          # ok | not_covered | out_of_domain | insufficient
     n_docs: int = 0           # 本次实际检索覆盖的文档数
     n_candidates: int = 0     # 闸门之前召回并通过分数线的候选数
+    # 拒答必须能自证"我查过"：没查就说"没有这条政策"，是本系统最不能犯的错。
+    searched: dict = field(default_factory=dict)
 
     @property
     def refused(self) -> bool:
         return bool(self.reason)
+
+    @property
+    def outcome(self) -> str:
+        """五类结局之一。报告按这五类分开计数，不合并成一个"拒答率"。"""
+        return "answer" if self.kind == "ok" else self.kind
 
 
 @dataclass
@@ -98,6 +106,26 @@ class Hit:
     coverage: float = 0.0   # 查询词有多少比例真的出现在这条条款里
     versions: int = 1       # 同名文件的历史版本数（含本条）
     _rank: float = 0.0      # 排序用：分数 × 效力加成
+
+
+_META: dict | None = None
+
+
+def index_meta() -> dict:
+    """索引身份：报告里每个数字都要能对上"哪一版索引、哪一版语料"。"""
+    global _META
+    if _META is None:
+        stats = json.loads((INDEX / "stats.json").read_text("utf-8"))
+        h = hashlib.sha256((INDEX / "clauses.jsonl").read_bytes()).hexdigest()[:12]
+        _META = {
+            "index_version": h,
+            "corpus_snapshot": f"docs={stats['docs']},clauses={stats['clauses']}",
+        }
+    return _META
+
+
+def _searched(n_docs: int, n_queries: int) -> dict:
+    return {**index_meta(), "n_docs": n_docs, "n_queries": n_queries}
 
 
 def _load() -> tuple[bm25s.BM25, list[Clause]]:
@@ -118,11 +146,13 @@ def search_result(query: str, k: int = 8, *, status: tuple[str, ...] | None = No
     reason = refuse_reason(query)
     if reason:
         kind = "not_covered" if reason.startswith(("未覆盖", "未接入")) else "out_of_domain"
-        return Answer([], reason, kind, n_docs=0)
+        # 连索引都没进：n_queries=0。这种结局绝不能是 no_policy（那是"查过没有"）。
+        return Answer([], reason, kind, n_docs=0, searched=_searched(0, 0))
     retriever, clauses = _load()
     qt = [t for t in tokenize(query) if t not in QUESTION_WORDS]
     if not qt:
-        return Answer([], "问题里没有可用于检索的词", "insufficient")
+        return Answer([], "问题里没有可用于检索的词", "insufficient",
+                      searched=_searched(0, 0))
     idx, scores = retriever.retrieve([qt], k=min(len(clauses), max(k * 4, 40)))
     out: list[Hit] = []
     for i, s in zip(idx[0], scores[0]):
@@ -144,11 +174,13 @@ def search_result(query: str, k: int = 8, *, status: tuple[str, ...] | None = No
     out.sort(key=lambda h: h._rank, reverse=True)
     n_docs = len({h.clause.doc_no for h in out})
     if not out:
-        return Answer([], "没有条款达到相关性下限", "insufficient", n_docs, 0)
+        return Answer([], "没有条款达到相关性下限", "insufficient", n_docs, 0,
+                      searched=_searched(n_docs, len(qt)))
     if out[0].coverage < MIN_COVERAGE:
         return Answer([], f"首条条款只覆盖 {out[0].coverage:.0%} 的提问词", "insufficient",
-                      n_docs, len(out))
-    return Answer(_prefer_effective(_collapse(out))[:k], "", "ok", n_docs, len(out))
+                      n_docs, len(out), searched=_searched(n_docs, len(qt)))
+    return Answer(_prefer_effective(_collapse(out))[:k], "", "ok", n_docs, len(out),
+                  searched=_searched(n_docs, len(qt)))
 
 
 def _status_rank(status: str) -> int:

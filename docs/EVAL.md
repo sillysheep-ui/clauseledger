@@ -153,6 +153,44 @@ eval_out/2026-11-11T02-15-00Z/
 
 ---
 
+## 4.5 弃权：不要只报一个「拒答率」
+
+一个数会把四件代价相反的事混在一起：正确说"没接入"、正确说"查过没有"、该答不答、**没查就说没有**。所以先分结局，再谈比例。
+
+| 结局 | 含义 | 判错的代价 |
+|---|---|---|
+| `answer` | 有答案 | — |
+| `not_covered` | 这个城市/部门没接入（**关于索引的判断，不是关于世界的**） | 中 |
+| `no_policy` | 检索过、范围内确实没有 | 中 |
+| `out_of_domain` | 不属本系统职责 | 低 |
+| `insufficient` | 检索了但证据不足 | 中 |
+| `clarify` | 先补信息（问清再答） | 低 |
+
+**四条硬断言**（任何一条不为 0，本轮结果作废）：
+
+1. 假 `not_covered` = 0（明明有语料却说没接入）
+2. 假 `no_policy` = 0（`no_policy` 但 `searched.n_docs=0` 或 `n_queries=0`）
+3. `no_policy` 未查 manifest = 0
+4. 库里有却答"没有" = 0
+
+第 2 条已落成代码：`assert_no_fabricated_no_policy()`。`Answer.searched` 带 `n_docs / n_queries / index_version / corpus_snapshot`，所以每条拒答都能自证"我查过"。
+
+主指标换成 **risk@coverage**：coverage = 0.3 / 0.5 / 0.7 / 0.9 四点上的选择性风险 + AURC。单一准确率会掩盖"答了多少"——把覆盖率从 80% 拉到 90% 付了多少错误，才是要回答的问题。
+
+## 4.6 引用：三层，别只查"字符串在不在"
+
+| 层 | 问什么 | 用什么判 | 门槛 |
+|---|---|---|---|
+| **L1 可定位（CLR）** | 引用能在原文精确找到吗 | `doc_id + page + block_index + char_offset + parser_version` | 100% |
+| **L2 能支撑（CSR）** | 这段引文真的支撑这句结论吗 | 人工双标 200 条算 κ，再训/校准 judge | ≥0.90，κ≥0.6 |
+| **L3 能适用（AC）** | 版本、地域、主体对得上吗 | 元数据规则 + `as_of` 比对 | ≥0.95 |
+
+**URL 返回 200 不等于引用可验证**——200 只说明链接活着。ALCE 的段落级 citation precision 人机一致性 κ 也只有 0.525，不能当天条。
+
+`misgrounded_rate`（引文正确但被用在了错误结论上）单列，它比"引用不存在"更难发现。
+
+---
+
 ## 5. 统计口径
 
 | 问题 | 做法 |
@@ -170,7 +208,14 @@ wilson_interval(15, 20)      # (0.531, 0.888)
 pass_k(3, 2, 2)              # 0.333
 mcnemar_exact(b=2, c=12)     # p < 0.05
 false_satisfied_indices(gold, pred)   # 致命错误单列
+risk_coverage([(0.9, True), (0.4, False)])   # {0.3: Rate(...), ...}
+aurc([(0.9, True), (0.4, False)])
+clopper_pearson_upper(0, 15) # 0.181 —— 15 条全过的真实上限
+assert_no_fabricated_no_policy(records)      # 零检索的 no_policy 直接抛
 ```
+
+共 31 个单测。另外 `tests/test_search_evidence.py` 守一条更基本的规矩：
+**没接入的城市不能留下"查过"的痕迹**（`not_covered` 的 `n_queries` 必须为 0）。
 
 ---
 

@@ -170,3 +170,85 @@ def case_outcome_summary(outcomes: Sequence[str]) -> dict[str, int]:
         raise ValueError(f"未知的用例结局: {sorted(unknown)}")
     counted = Counter(outcomes)
     return {k: counted.get(k, 0) for k in CASE_OUTCOMES}
+
+
+# --- 弃权（拒答）评测 ---------------------------------------------------
+#
+# 一个"拒答率"是把四件代价相反的事混成一个数：正确说没接入、正确说
+# 查过没有、该答不答、没查就说没有。所以先分成结局类型，再谈比例。
+
+REFUSAL_OUTCOMES = (
+    "answer",        # 有答案
+    "not_covered",   # 该城市/部门还没接入——关于索引的判断，不是关于世界的
+    "no_policy",     # 检索过、范围内确实没有——必须带 searched 证据
+    "out_of_domain", # 问题不属本系统职责
+    "insufficient",  # 检索了但证据不足
+    "clarify",       # 需要先补信息（问清再答）
+)
+
+
+def assert_no_fabricated_no_policy(records: Sequence[dict]) -> None:
+    """硬断言：说"查过没有"必须真的查过。
+
+    records 每条至少含 kind、searched{n_docs,n_queries}。
+    零检索就宣称 no_policy，是这套系统里最不可接受的错误——它把
+    "我们没查"包装成"世界上没有"。
+    """
+    bad = []
+    for i, r in enumerate(records):
+        if r.get("kind") != "no_policy":
+            continue
+        s = r.get("searched") or {}
+        if not (s.get("n_docs", 0) > 0 and s.get("n_queries", 0) > 0):
+            bad.append((i, s))
+    if bad:
+        raise AssertionError(f"零检索的 no_policy：{bad[:5]}（共 {len(bad)} 条）")
+
+
+def risk_coverage(pairs: Sequence[tuple[float, bool]],
+                  coverages: Sequence[float] = (0.3, 0.5, 0.7, 0.9)) -> dict[float, Rate]:
+    """在固定覆盖率上取风险：按置信度降序，只答前 c 比例，看错多少。
+
+    pairs = [(置信度, 是否正确)]。单一准确率会掩盖"答了多少"，
+    这条曲线才回答"多答 10 个百分点要付多少错误"。
+    """
+    if not pairs:
+        return {c: Rate(0, 0, 0.0, 0.0) for c in coverages}
+    ordered = sorted(pairs, key=lambda p: p[0], reverse=True)
+    out: dict[float, Rate] = {}
+    for c in coverages:
+        n = max(1, round(len(ordered) * c))
+        kept = ordered[:n]
+        out[c] = rate(sum(1 for _, ok in kept if ok), n)
+    return out
+
+
+def aurc(pairs: Sequence[tuple[float, bool]]) -> float:
+    """风险-覆盖曲线下面积（越小越好）。随机系统的 AURC ≈ 整体错误率。"""
+    if not pairs:
+        return 0.0
+    ordered = sorted(pairs, key=lambda p: p[0], reverse=True)
+    errs, total = 0, 0.0
+    for i, (_, ok) in enumerate(ordered, 1):
+        errs += 0 if ok else 1
+        total += errs / i
+    return total / len(ordered)
+
+
+def clopper_pearson_upper(k: int, n: int, alpha: float = 0.05) -> float:
+    """零失败时的单侧上界：k=0,n=15 给 18.1%——"15 条全过"不等于高可靠。"""
+    if n <= 0:
+        raise ValueError("n 必须为正")
+    if k >= n:
+        return 1.0
+    lo = 0.0
+    # 二分求解 P(X<=k | p)=alpha 的 p
+    hi = 1.0
+    for _ in range(80):
+        mid = (lo + hi) / 2
+        cdf = sum(math.comb(n, i) * mid**i * (1 - mid) ** (n - i) for i in range(k + 1))
+        if cdf > alpha:
+            lo = mid
+        else:
+            hi = mid
+    return hi

@@ -1242,7 +1242,7 @@ answer_on_missing_rate = P(answer             | gold.index_has=false) = 0
 **规定：**
 
 ```text
-ECE   = Σ_m (|B_m|/n) · |acc(B_m) - conf(B_m)|      # 15 个等频 bin
+ECE   = Σ_m (|B_m|/n) · |acc(B_m) - conf(B_m)|      # 默认 15 个等宽 bin；等频需注明
 Brier = (1/n) Σ_i (p_i - y_i)^2
 ```
 
