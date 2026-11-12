@@ -71,12 +71,19 @@ def validate(raw: dict) -> dict:
     if source not in {"official", "mirror"}:
         raise EntryError(f"source 只能是 official/mirror：{source!r}")
 
+    # 成文日期常常只在纸面文件上，公报页只有出版日。与其猜，不如记清楚来源：
+    # 后面算"文件年龄"时，gazette 日期最多比成文日期晚一期公报（数周）。
+    date_source = (raw.get("date_source") or "document").strip()
+    if date_source not in {"document", "gazette", "database"}:
+        raise EntryError(f"date_source 只能是 document/gazette/database：{date_source!r}")
+
     return {
         "doc_no": doc_no,
         "title": title,
         "url": url,
         "issued_at": issued_at,
         "valid_until": valid_until,
+        "date_source": date_source,
         "source": source,
         "note": (raw.get("note") or "").strip(),
     }
@@ -139,6 +146,7 @@ def run(path: Path, dry_run: bool = False) -> int:
         rec["retrieved_via"] = f"manual:{e['source']}"
         rec["doc_no_source"] = "manual"
         rec["manual_note"] = e["note"]
+        rec["issued_at_source"] = e["date_source"]
         name = re.sub(r"[^\w\u4e00-\u9fff]+", "-", e["doc_no"])[:60]
         (OUT / f"{name}.json").write_text(
             json.dumps(rec, ensure_ascii=False, indent=1), "utf-8"

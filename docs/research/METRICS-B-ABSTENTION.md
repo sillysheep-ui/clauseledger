@@ -31,7 +31,7 @@
 
 | 工作 | 年份 | 解决什么 | 核心指标 | 关键数字 | 链接 |
 |---|---|---|---|---|---|
-| El-Yaniv & Wiener, *Selective Prediction* | 2010 | 把“拒答”形式化为 risk–coverage | selective risk `R(f;φ)=R(f)/φ(f)`；coverage `φ=P(f≠⊥)`；AURC | `AURC=∫R(c)dc`；定义论文，无实验 | [JMLR](https://jmlr.csail.mit.edu/papers/volume11/el-yaniv10a/el-yaniv10a.html) |
+| El-Yaniv & Wiener, *On the Foundations of Noise-free Selective Classification* | 2010 | 把“拒答”形式化为 risk–coverage | selective risk `R(f;φ)=R(f)/φ(f)`；coverage `φ=P(f≠⊥)`；AURC | `AURC=∫R(c)dc`；定义论文，无实验 | [JMLR](https://jmlr.csail.mit.edu/papers/v11/el-yaniv10a.html) |
 | Geifman & El-Yaniv, *Selective Classification* | 2017 | 用置信度阈值做选择性分类 | `coverage@selective risk`；Softmax Response；SC-SVM | 99.9% 保证 2% 错误时 coverage≈60% | [arXiv](https://arxiv.org/abs/1705.08500) |
 | Guo et al., *On Calibration of Modern Neural Networks* | 2017 | 神经网络置信度校准 | `ECE=Σ_m(#B_m/n)·abs(acc(B_m)-conf(B_m))` | 常用 15 bins；温度缩放 | [arXiv](https://arxiv.org/abs/1706.04599) |
 | Kamath et al., *Selective QA under Domain Shift* | 2020 | 域偏移下的选择性问答 | `answered@accuracy`；risk–coverage | 80% 准确率下回答 56%，裸 softmax 48% | [arXiv](https://arxiv.org/abs/2006.09462) |
@@ -52,6 +52,7 @@
 | SelfAware | 2023 | LLM 自知识/“知道自己不知道” | `self-knowledge F1`（不确定性检测） | 1,032 不可答 + 2,337 可答；20 LLM；GPT-4 75.47% | [arXiv](https://arxiv.org/abs/2305.18153) |
 | Chinese SimpleQA | 2024 | 中文事实性 + “未尝试”口径 | `CO/NA/IN/CGA/F-score` | 3,000 题；o1-preview 63.8%、Doubao 61.9% | [arXiv](https://arxiv.org/abs/2411.07140) |
 | ALCE | 2023 | 引用召回/精确 | `recall=(1/#S)Σ1[C_i≠∅∧φ(concat(C_i),s_i)=1]`；`precision=mean 1[c relevant]` | 50% 生成缺完整引用支撑；κ .698/.525；85.1/77.6 | [arXiv](https://arxiv.org/abs/2305.14627) |
+| RAGAS | 2023/2024 | RAG 忠实性/相关性三元组 | `Faithfulness=\vert V\vert/\vert S\vert`；answer/context relevance | 与人工 pairwise 一致率 0.95/0.78/0.70；不评 citation | [arXiv](https://arxiv.org/abs/2309.15217) |
 | Attributed QA | 2022/2023 | Attributed QA 与 AutoAIS | `AIS`；`AutoAIS`（NLI） | Pearson AIS-EM .45；AIS-AutoAIS .96 | [arXiv](https://arxiv.org/abs/2212.08037) |
 | AIS | 2021/2023 | 归因的严格定义 | `AIS(s,t,P)=1` iff 泛听众能确认“According to P, s” | 定义论文；不判事实真伪 | [arXiv](https://arxiv.org/abs/2112.12870) |
 | AttrScore | 2023 | 归因错误三分类 | 3-class micro-F1 | GPT-4 81–83%；12 领域；错误类型 30.6%/79.4% | [arXiv](https://arxiv.org/abs/2305.06311) |
@@ -116,7 +117,7 @@ E-AURC             = AURC - AURC_oracle
 
 **经典结果与适用性：**
 
-- **El-Yaniv & Wiener 2010**（JMLR 11:1605–1641）：定义 selective risk、coverage、risk–coverage、AURC；证明最优拒答器是对后验风险阈值化。→ **可直接抄**：这是我们所有拒答指标的母语；但它是二分类框架，多分类/生成式要定义 `ℓ`（EM、F1、claim 级错误、人工 0/1）。
+- **El-Yaniv & Wiener 2010**（*On the Foundations of Noise-free Selective Classification*，JMLR 11:1605–1641）：定义 selective risk、coverage、risk–coverage、AURC；证明最优拒答器是对后验风险阈值化。→ **可直接抄**：这是我们所有拒答指标的母语；但它是二分类框架，多分类/生成式要定义 `ℓ`（EM、F1、claim 级错误、人工 0/1）。
 - **Geifman & El-Yaniv 2017**（arXiv:1705.08500）：Selective Classification；Softmax Response 是强基线；在 ImageNet top-5 上，以 99.9% 概率保证 2% 错误率时 coverage 约 60%。→ **可抄**：用“给定 risk 目标，报 coverage”的表述；但 softmax 在 LLM 上通常过自信，不能直接当置信度。
 - **Kamath et al. 2020**（arXiv:2006.09462）：Selective QA under Domain Shift；在 80% 准确率目标下，校准后的系统回答 56%，裸 softmax 只回答 48%；OOD 需要训练校准器。→ **可抄**：域偏移（中文政务的城市/年份切片）必须单独校准，不能拿 ID 阈值直接用。
 - **Angelopoulos et al. 2024**（arXiv:2208.02814）：Conformal Risk Control；`λ̂=inf{λ:(n/(n+1))R̂_n(λ)+1/(n+1)≤α}`；n=100、α=10% 时，覆盖集内最多 9 个错误（公式推算）。→ **可抄**：如果要对“错误率≤α”给有限样本保证，用 CRC；但它要求可交换性，城市/年份分层后样本太少，保证会变松。它是“风险保证”，不是“每层都达标”的替代品。
@@ -258,8 +259,8 @@ clarify
 
 ```text
 coverage_by_cell(cell) = #pred=answer / #gold_cell
-false_not_covered_rate = P(pred=refuse_not_covered | gold.index_has=true)
-false_no_policy_rate   = P(pred=refuse_no_policy   | gold.world_has=true)
+false_not_covered_rate = P(pred=refuse_not_covered | gold.in_scope=true ∧ gold.index_has=true)
+false_no_policy_rate   = P(pred=refuse_no_policy   | gold.in_scope=true ∧ ¬(gold.index_has=true ∧ gold.world_has=false))
 fabricated_no_policy   = P(pred=refuse_no_policy   | searched.n_docs=0)
 answer_on_missing_rate = P(pred=answer             | gold.index_has=false)
 reason_macro_F1        = macro-F1 over {answer, not_covered, no_policy, out_of_scope, clarify}
@@ -268,7 +269,7 @@ reason_macro_F1        = macro-F1 over {answer, not_covered, no_policy, out_of_s
 **硬断言（不是“越低越好”的软指标）：**
 
 - `false_not_covered_rate = 0`：语料里明明有，系统却说“没接入”，这是检索/阅读失败，不是能力边界。
-- `false_no_policy_rate = 0`：世界上明明有规定，系统却说“查过，没有”，这是虚假陈述。
+- `false_no_policy_rate = 0`：只有“库里有文件、文件确实没规定”这一格允许说 `no_policy`；世界上明明有规定，或库里根本没有文件，都不能说“查过，没有”。
 - `fabricated_no_policy = 0`：`n_docs=0` 时不允许说“查过了”；没有检索证据的 `no_policy` 一律判编造。
 - `answer_on_missing_rate = 0`：`index_has=false` 时不允许给确定性答案；要么 `not_covered`，要么明确说“无法确认”。
 
@@ -324,11 +325,11 @@ reader_miss_rate    = #(gold_doc ∈ top_k ∧ pred≠answer) / #(gold_doc ∈ t
 
 这部分研究的是**参数化知识**下的弃权，不是检索覆盖。可以借它的测量方法，但不能把它当 RAG 拒答的替代品。
 
-- **Kadavath et al. 2022**（arXiv:2207.05221）：让模型自评“这个答案对不对”得到 `P(True)`，自评“我知不知道”得到 `P(IK)`；在合适格式下，大模型的校准较好，`P(IK)` 跨任务有部分泛化。→ **可抄**：把 `P(True)`/`P(IK)` 作为**辅助置信度**，与检索分数、引用覆盖一起做门控；不要单独用它决定是否拒答。
+- **Kadavath et al. 2022**（[arXiv:2207.05221](https://arxiv.org/abs/2207.05221)）：让模型自评“这个答案对不对”得到 `P(True)`，自评“我知不知道”得到 `P(IK)`；在合适格式下，大模型的校准较好，`P(IK)` 跨任务有部分泛化。→ **可抄**：把 `P(True)`/`P(IK)` 作为**辅助置信度**，与检索分数、引用覆盖一起做门控；不要单独用它决定是否拒答。
 - **SelfAware 2023**（arXiv:2305.18153）：1,032 条不可答 + 2,337 条可答，5 类；20 个 LLM；用不确定性检测的 F1 衡量 self-knowledge；GPT-4 75.47%，仍低于人类。→ **可抄**：用“不可答/可答配对”测自知识；但它的不可答是“百科上没有”，不是“我们的语料没有”。
-- **Just Ask for Calibration 2023**（arXiv:2305.14975）：RLHF-LLM 的 verbalized confidence 通常比 conditional probability 校准更好；在 TriviaQA/SciQ/TruthfulQA 上 ECE 相对降约 50%。→ **可抄**：同时收“口述置信度”和“序列 logprob”，在 dev 上比较谁更校准；不要假设 logprob 一定更好。
-- **Can LLMs Express Their Uncertainty? 2023/2024**（arXiv:2306.13063）：黑盒 confidence elicitation；LLM 口述置信度普遍过度自信；规模提升校准/失败预测。→ **可抄**：把“置信度”当待校准信号，不要当真实概率。
-- **Semantic Uncertainty 2023**（arXiv:2302.09664）：对语义等价输出聚类后算 semantic entropy；比 baseline 更预测 QA 正确性。→ **可抄**：生成式回答可以用 semantic entropy 做“是否该弃答”的信号；但它需要多次采样，成本高，且不解决“语料没有”。
+- **Just Ask for Calibration 2023**（[arXiv:2305.14975](https://arxiv.org/abs/2305.14975)）：RLHF-LLM 的 verbalized confidence 通常比 conditional probability 校准更好；在 TriviaQA/SciQ/TruthfulQA 上 ECE 相对降约 50%。→ **可抄**：同时收“口述置信度”和“序列 logprob”，在 dev 上比较谁更校准；不要假设 logprob 一定更好。
+- **Can LLMs Express Their Uncertainty? 2023/2024**（[arXiv:2306.13063](https://arxiv.org/abs/2306.13063)）：黑盒 confidence elicitation；LLM 口述置信度普遍过度自信；规模提升校准/失败预测。→ **可抄**：把“置信度”当待校准信号，不要当真实概率。
+- **Semantic Uncertainty 2023**（[arXiv:2302.09664](https://arxiv.org/abs/2302.09664)）：对语义等价输出聚类后算 semantic entropy；比 baseline 更预测 QA 正确性。→ **可抄**：生成式回答可以用 semantic entropy 做“是否该弃答”的信号；但它需要多次采样，成本高，且不解决“语料没有”。
 - **Chinese SimpleQA 2024**（arXiv:2411.07140）：3,000 题、6 主题/99 子主题；指标 `CO/NA/IN/CGA/F-score`；`NA` 是“未尝试”，不是“明确拒答”。→ **可抄**：中文评测要单列 `NA`，不要把“没答”直接算错；但要区分 `NA`（没尝试/没答全）与 `refuse`（明确说不知道）。
 
 **LLM 弃权的常用指标：**
@@ -478,7 +479,7 @@ citation precision = (1/|C|) Σ_j 1[ c_j is relevant ]
 
 ### 2.4 AttrScore：把“支撑”拆成三类
 
-**论文：** AttrScore: A Robust and Generous Metric for Evaluating Attribution，2023/EMNLP Findings，arXiv:2305.06311。
+**论文：** Automatic Evaluation of Attribution by Large Language Models（方法名 AttrScore，也常被称作 Attribution Score），2023/EMNLP Findings，arXiv:2305.06311。
 
 **任务：** 输入 `(q, a, x)`（问题、答案、证据），输出三类：
 
@@ -503,7 +504,7 @@ citation precision = (1/|C|) Σ_j 1[ c_j is relevant ]
 
 ### 2.5 VeriScore：claim 级事实性，不是引用级
 
-**论文：** VeriScore: Evaluating Verifiability in Generative Search Engines，2024，arXiv:2406.19276。
+**论文：** VeriScore: Evaluating the Factuality of Verifiable Claims in Long-Form Text Generation，2024，arXiv:2406.19276。
 
 **任务：** 把长回答拆成原子 claim，逐条判断能否由检索证据支持；评“回答是否可验证”，不评“引了哪条”。
 
@@ -566,7 +567,7 @@ F1@K = 2PR / (P + R)                # S=0 时 F1=0
 
 **CitaLaw 2024（arXiv:2412.14556）** 是中文法律引用的直接先例：
 
-- 首个中文法律引用 benchmark；Layperson 500 题 + Practitioner 500 题，共 **1,000 题**；语料约 **500,000** 文档（法条+判例）；
+- 论文称首个中文法律引用 benchmark；Layperson 500 题 + Practitioner 500 题，共 **1,000 题**；语料约 **500,000** 文档（法条+判例）；
 - 2 个开放域 + 7 个法律 LLM；
 - 三段论三维：大前提（法条 NLI 蕴含句子）、小前提（事实/违法行为）、结论（法律决定），并测与用户问题的一致性；
 - 与人工判断的 Cohen's κ = **0.7876**（Qwen2 标注 vs 人）；DISC-LawLLM 作 NLI。
@@ -636,7 +637,7 @@ stale_rate       = #(source.repealed_at ≤ as_of ∨ version ≠ current_versio
 | AIS | 人工/ AutoAIS | 来源是否支撑答案 | 来源本身真假 |
 | AttrScore | 3 类分类 | 完全支持/外推/矛盾 | 时效/管辖 |
 | VeriScore | `F1@K` | 回答 claim 的事实性 | 引了哪条 |
-| RAGAS Faithfulness | `|V|/|S|` | 回答是否忠于 context | 引用归属（会漏“引 A 结论来自 B”） |
+| RAGAS Faithfulness | `\vert V\vert/\vert S\vert` | 回答是否忠于 context | 引用归属（会漏“引 A 结论来自 B”） |
 | `misgrounded_rate` | L1∧L2∧¬L3 | 引用真实但不适用 | 文本不支撑（那是 L2） |
 | `stale_rate` | 失效/旧版占比 | 版本时效 | 是否支撑、是否适用主体 |
 
@@ -654,7 +655,7 @@ stale_rate       = #(source.repealed_at ≤ as_of ∨ version ≠ current_versio
 | 工作 | 年份 | 领域/任务 | 核心指标（公式级） | 关键数字 | 对中文政务的适用性 |
 |---|---|---|---|---|---|
 | CRUD-RAG | 2024 | 中文新闻 RAG；Create/Read/Update/Delete 四任务 | 检索 `Recall@k`、`Precision@k`；生成 `ROUGE-L`、`BLEU`、`BERTScore`、`RAGQuestEval` | 30 万篇→>8 万篇；4 任务 | 可借任务分解；新闻非政务，不评引用/拒答 |
-| DomainRAG | 2024 | 中文高校招生；6 项能力 | 各能力数据集上的答案准确率/忠实性；具体 judge 口径待核 | 6 能力/共享语料 | 最接近中文领域 RAG 评测设计；非政务 |
+| DomainRAG | 2024 | 中文高校招生；6 项能力 | `EM`（gold 被预测包含）、`EMS`（严格相等）、`F1`、`ROUGE-L`、`GE`（GPT-4 judge） | 6 能力/共享语料 | 最接近中文领域 RAG 评测设计；非政务 |
 | RGB | 2024 | 中英 RAG；noise/negative rejection/integration/counterfactual | `accuracy`、`rejection rate`、`noise robustness` | 4 能力/6 LLM；negative rejection 弱 | 中文 RAG 拒答参考；不评引用 |
 | T2Ranking | 2023 | 中文 passage ranking | `nDCG@k=DCG@k/IDCG@k`、`MRR@k`、`Recall@k`；4 级相关 | >300K queries/>2M passages | 可借分级相关/假阴性缓解；非政务 |
 | C-MTEB | 2023 | 中文 embedding 评测；6 类任务/35 数据集 | 检索 `nDCG@10`；分类/聚类/STS 各自准确率/相关系数；总分为任务平均 | 6/35；比先前 SOTA 最高 +10% | 用来选 embedding；不是端到端 RAG |
@@ -714,13 +715,18 @@ RAGQuestEval          = 用 QA 对反查生成文本是否覆盖参考答案要�
 5. **Time-sensitive problems**：分年度/批次的政策时效；
 6. **Multi-document interactions**：跨文档整合。
 
-**指标：** 每项能力一个数据集，论文按能力分别报告答案准确率/忠实性；没有把所有能力压成一个统一综合分（具体 judge prompt、阈值**待核**）。如果写进我们的规范，建议统一成：
+**指标：** 每项能力一个数据集；论文 4.2 用四种指标，不压成一个统一总分：
 
 ```text
-accuracy_ability   = #correct answers / #questions          # 每个能力子集
-faithfulness       = #claims supported by retrieved evidence / #claims
-rejection_rate     = #refused / #unanswerable               # 仅不可答子集
+EM   = 1[gold answer is contained in prediction]
+EMS  = 1[prediction == gold answer]          # 严格相等
+F1   = token-level F1                         # term matching
+ROUGE-L = longest-common-subsequence F-measure
+GE   = GPT-4 judge score                      # 长答案（conversational / multi-doc）
 ```
+
+- `EM/EMS/F1/ROUGE-L` 用于短答案/结构化题；`GE` 用于多轮与跨文档长答案，让 GPT-4 判“预测是否与参考答案一致”（具体分制/提示词**待核**）。
+- 关键：**不造“RAG 总分”**，按能力分开报；这比一个综合分更能定位失败。
 
 → 这正是我们该学的：**不要造一个“RAG 总分”**，按能力分开报。
 
@@ -766,7 +772,7 @@ noise_robustness = accuracy under noisy retrieved set
 ```text
 nDCG@k = DCG@k / IDCG@k
 DCG@k  = Σ_{i=1..k} (2^{rel_i}-1) / log2(i+1)
-MRR@k  = (1/|Q|) Σ_q 1/rank_q
+MRR@k  = (1/|Q|) Σ_q 1[rank_q ≤ k] / rank_q
 Recall@k = #queries with ≥1 relevant passage in top-k / #queries
 ```
 
@@ -807,15 +813,28 @@ Recall@k = #queries with ≥1 relevant passage in top-k / #queries
 3. 主治医师资格考试；
 4. 真实临床病例。
 
-**指标：** `accuracy`（按部分/科目分节）；评知识/推理，不是 RAG 引用/拒答。→ **一句话适用性：** 可作为医疗领域能力基线；不能直接迁移到政务，也不测“引用是否可验证”。
+**指标：**
+
+```text
+accuracy = #correct answers / #questions          # 按四部分/科目分节
+```
+
+评知识/推理，不是 RAG 引用/拒答。→ **一句话适用性：** 可作为医疗领域能力基线；不能直接迁移到政务，也不测“引用是否可验证”。
 
 #### Huatuo-26M
 
-**论文：** Huatuo-26M: A Large-scale Chinese Medical Question Answering Dataset，2023，arXiv:2305.01526。
+**论文：** Huatuo-26M, a Large-scale Chinese Medical QA Dataset，2023，arXiv:2305.01526。
 
 **任务：** **26M** 中文医疗 QA 对；可作 RAG 外部知识库；论文给检索/生成 baseline。
 
-**指标：** 检索 `Recall@k`；生成 `BLEU/ROUGE` 等；不是引用评测。→ **一句话适用性：** 语料规模参考；医疗 QA 的“正确答案”不等于“可引用证据”，不能拿它当 citation benchmark。
+**指标：**
+
+```text
+retrieval Recall@k = #queries with ≥1 relevant QA doc in top-k / #queries
+generation BLEU/ROUGE = n-gram overlap against reference answers
+```
+
+不是引用评测。→ **一句话适用性：** 语料规模参考；医疗 QA 的“正确答案”不等于“可引用证据”，不能拿它当 citation benchmark。
 
 **中文医疗 RAG 评测的空白：** MedBench 评知识，Huatuo 给语料；两者都不评“引用是否定位/支撑/适用”，也不评“没检索到 vs 医学上无定论”。如果要做医疗 RAG，需要临床医生参与标注 L3（指南版本/适用人群），不能只用考试 accuracy。
 
@@ -825,7 +844,7 @@ Recall@k = #queries with ≥1 relevant passage in top-k / #queries
 
 #### POLIS-Bench
 
-**论文：** POLIS-Bench: A Bilingual Benchmark for Government Policy Tasks，2025，arXiv:2511.04705。
+**论文：** POLIS-Bench: Towards Multi-Dimensional Evaluation of LLMs for Bilingual Policy Tasks in Governmental Scenarios，2025，arXiv:2511.04705。
 
 **任务：** 双语政务政策；三个任务：
 
@@ -833,17 +852,29 @@ Recall@k = #queries with ≥1 relevant passage in top-k / #queries
 2. **Solution Generation**：按政策给方案；
 3. **Compliance Judgment**：合规判断。
 
-**规模/指标：** 每任务 1,000 题，共 **3,000**；>10 个 LLM；dual metric = semantic similarity + LLM-judge accuracy；有 evidence span；具体权重/阈值**待核**。
+**规模/指标：** 每任务 1,000 题，共 **3,000**；>10 个 LLM；dual metric = semantic similarity + LLM-judge accuracy；有 evidence span；具体权重/阈值**待核**。形式化：
+
+```text
+semantic_similarity = cos(emb(answer), emb(reference))
+accuracy            = #LLM-judge correct / #questions
+```
 
 **一句话适用性：** 目前最接近“中文政务政策 RAG 任务”的公开 benchmark；但它评“任务答案对不对”，不评“引用是否可验证”“该不该拒答”。**不能把它当 citation/abstention benchmark。**
 
 #### PolicyBench / PolicyLLM
 
-**论文：** PolicyBench/PolicyLLM，2026/ACL 2026 Findings，arXiv:2604.12995。
+**论文：** PolicyLLM: Towards Excellent Comprehension of Public Policy for Large Language Models（benchmark 名 PolicyBench），2026/ACL 2026 Findings，arXiv:2604.12995。
 
 **任务：** 21K cases，美中跨体系政策理解；Bloom 三层：Memorization / Understanding / Application；PolicyMoE 模型。
 
-**指标：** 各层 `accuracy`。→ **一句话适用性：** 闭卷政策理解，不是 RAG；可借“三层认知难度”设计题目，但不能用来证明检索/引用能力。
+**指标：**
+
+```text
+accuracy_layer = #correct at layer / #questions at layer
+                  # layer ∈ {Memorization, Understanding, Application}
+```
+
+→ **一句话适用性：** 闭卷政策理解，不是 RAG；可借“三层认知难度”设计题目，但不能用来证明检索/引用能力。
 
 #### MSGABench
 
@@ -851,7 +882,14 @@ Recall@k = #queries with ≥1 relevant passage in top-k / #queries
 
 **任务：** 中文政务 LLM 评测框架 + MSGABench 数据集；15 个 LLM。
 
-**指标：** `accuracy` / `reliability`；关键数字：部分模型在轻微输入变化下 **<35%** accuracy；GPT-4 reliability **>95%**；论文发现过度谨慎/任务回避。→ **一句话适用性：** 证明“中文政务 benchmark 存在”，但它不是 RAG 引用可验证性评测；“过度谨慎”也不等于“正确拒答”。
+**指标：**
+
+```text
+accuracy   = #correct / #questions
+reliability = pass rate under minor input perturbations
+```
+
+关键数字：部分模型在轻微输入变化下 **<35%** accuracy；GPT-4 reliability **>95%**；论文发现过度谨慎/任务回避。→ **一句话适用性：** 证明“中文政务 benchmark 存在”，但它不是 RAG 引用可验证性评测；“过度谨慎”也不等于“正确拒答”。
 
 #### CitaLaw（法律，不是政务）
 
@@ -864,7 +902,7 @@ Recall@k = #queries with ≥1 relevant passage in top-k / #queries
 - **没有**公开的“中文政务 RAG 引用可验证性 + 拒答”benchmark；
 - **没有**公开的“中文政务检索 qrels”（T2Ranking/DuRetrieval 都不是政务）。
 
-这不是“ literature 没做好”，而是政务数据的管辖碎片化、时效性强、标注需要业务专家，公开成本高。我们的 313/337 城市语料反而是一个稀缺资产；应该把它做成可复现的内部 benchmark。
+这不是“文献没做好”，而是政务数据的管辖碎片化、时效性强、标注需要业务专家，公开成本高。我们的 313/337 城市语料反而是一个稀缺资产；应该把它做成可复现的内部 benchmark。
 
 ---
 
@@ -914,16 +952,17 @@ Recall@k = #queries with ≥1 relevant passage in top-k / #queries
 2. **答案指标**：accuracy / faithfulness，但失败可能来自语料缺失、检索没召回、阅读器不会用，三者混在一起。
 3. **语料规模**：文档数、token 数、城市数；这是“投入”，不是“覆盖”。
 
-**必须先区分四个“coverage”：**
+**必须先区分五个“coverage”：**
 
 | 名称 | 分母 | 回答的问题 | 常见误用 |
 |---|---|---|---|
 | `source_coverage` | 目标语料全集 `U`（城市×政策类型×年份） | 我们接入了多少“应该接入”的来源 | 用“文档数”代替；用“城市数”代替“政策类型覆盖” |
-| `corpus_recall` | 可回答问题集 `Q_answerable` | 有答案的问题里，gold 证据在语料中的比例 | 用 retrieval recall 代替；后者还要求“被检索到” |
-| `retrieval_recall@k` | 有 gold doc 的问题 `Q_gold` | gold doc 是否进入 top-k | 把“语料没有”算成“检索失败” |
-| `answer_coverage` | 全部问题 `Q` | 系统实际答对/敢答的比例 | 和 selective prediction 的 coverage 混淆 |
+| `corpus_recall` | 现实世界有答案的问题集 `Q_world`（`world_has=true`，含 `ANSWERABLE` 与 `NOT_COVERED`） | 世界有答案的问题里，gold 证据在语料中的比例 | 用 retrieval recall 代替；后者还要求“被检索到” |
+| `retrieval_recall@k` | gold 已入语料的问题 `Q_index`（`index_has=true`） | gold doc 是否进入 top-k | 把“语料没有”算成“检索失败” |
+| `answer_coverage` | 全部问题 `Q` | `#correct/#all`；系统答对了多少 | 和 selective prediction 的 coverage 混淆 |
+| `answered_rate` | 全部问题 `Q` | `#answered/#all`；系统敢答多少 | 把“敢答”当“答对” |
 
-选择性预测里的 `coverage` 是“回答了多少），不是“语料覆盖了多少”。两个词都叫 coverage，但分母完全不同；报告里必须写全称，不要只写“覆盖率”。
+选择性预测里的 `coverage` 是“回答了多少”，不是“语料覆盖了多少”。两个词都叫 coverage，但分母完全不同；报告里必须写全称，不要只写“覆盖率”。
 
 ---
 
@@ -958,7 +997,7 @@ bpref = (1/R) Σ_{r∈R} ( 1 - |n ranked above r| / min(R, N) )
 | UAEval `Out-of-Database` | 按类 `Acceptable Ratio` | 模型在“库外”题上的表现 | 库外但世界有 vs 库外且世界无；没有 2×2 |
 | DomainRAG `denoising/time-sensitive` | 各能力数据集准确率 | 噪声/时效能力 | 语料覆盖度；没有“未接入”金标 |
 | RAGChecker / RAGBench | claim-level entailment / TRACe | 检索与生成的细粒度诊断 | 语料完整性；它们以给定 context 为边界 |
-| `source_coverage`（自建） | `|ingested sources|/|U|` | 应该接入的来源接入了多少 | 接入的来源是否真的能答；需要配合 `corpus_recall` |
+| `source_coverage`（自建） | `\vert ingested sources\vert/\vert U\vert` | 应该接入的来源接入了多少 | 接入的来源是否真的能答；需要配合 `corpus_recall` |
 
 **关键结论：** 没有任何一个现成指标是“语料完整性”的一阶测量。最接近的是 retrieval recall + qrels，但它的分母是“已标注问题”，不是“世界上的所有政策”。RAGAS context recall 更不是：它的分母是参考答案的 claim，语料没有参考文档时，它甚至无法构造。
 
@@ -984,28 +1023,31 @@ source_coverage = |ingested ∩ U| / |U|
 
 **用我们自己的例子：** 入口横幅写“已接入 313/337 个城市（含 4 个直辖市；语料版本 cv-20261111-1），24 个未接入”。
 
-- 这是 **城市级** `source_coverage = 313/337 = 92.9%`；按 337 个城市算，Wilson 95% CI 约 **[89.7%, 95.2%]**（按公式计算，非论文数字）。
+- 这是 **城市级** `source_coverage = 313/337 = 92.9%`；按 337 个城市算，Wilson 95% CI 约 **[89.6%, 95.2%]**（按公式计算，非论文数字）。
 - 它**不是**政策级覆盖：一个城市“已接入”可能只覆盖社保，不覆盖公积金/落户/补贴；如果按“城市×政策类型”算，分母可能是 337×6=2,022 个格子，覆盖率会明显低于 92.9%。
 - 因此横幅必须写“已接入 313/337 个城市”，不能写“语料覆盖率 92.9%”；后者会被误解为“所有政策都覆盖了 92.9%”。
 
 #### （2）`corpus_recall`：问题级语料召回
 
 ```text
-corpus_recall = #questions with gold evidence in corpus / #answerable questions
+corpus_recall = #Q with gold evidence in corpus / #Q_world
+              # Q_world = {q : gold.world_has=true} = ANSWERABLE ∪ NOT_COVERED
 ```
 
-- 分母是“可回答问题”，不是“所有问题”；不可答题不应该拉低语料召回。
+- 分母是“现实世界有答案的问题”，**不是“所有问题”**；`NO_POLICY`（`world_has=false`）不应该拉低语料召回，也不应该算进分子。
+- `NO_POLICY` 单独报 `no_policy_evidence_recall`：能否在语料中定位到“规定空白”所依据的文件；它衡量的是“无规定”结论的证据基础，不是答案召回。
 - 需要 `gold_doc_ids` 和 `corpus_snapshot`；同一问题换快照要重算。
-- 按 `ANSWERABLE` / `NO_POLICY` / `NOT_COVERED` 分层报；`NO_POLICY` 的 gold 证据在语料里，但答案是“无规定”，所以它也算 `corpus_recall` 的分子。
+- 按 `ANSWERABLE` / `NOT_COVERED`（`world_has=true`）分层报；`NOT_COVERED` 的分子为 0，正好量化“世界有、我们没接入”。
 - 如果 `corpus_recall` 低，但 `retrieval_recall` 高，说明“语料有、检索没召回”；如果两者都低，说明“语料没接入”。
 
 #### （3）`retrieval_recall@k` 与 `unjudged_rate`
 
 ```text
-retrieval_recall@k = #queries with ≥1 gold doc in top-k / #queries_with_gold
+retrieval_recall@k = #queries with ≥1 gold doc in top-k / #queries_with_gold_in_corpus
 unjudged_rate      = #retrieved docs not in qrels / #retrieved docs
 ```
 
+- `retrieval_recall@k` 的分母只含 `gold.index_has=true` 的问题；`NOT_COVERED`（库无、世界有）先由 `corpus_recall` 记为语料缺失，不能算成检索失败。
 - `unjudged_rate` 高，说明 qrels 不完整，recall 不可信；先补标，再报 recall。
 - 多路召回（BM25/embedding/LLM query rewrite）+ 人工抽检，降低 pooling bias。
 - 报 `bpref` 作为不完整判断下的稳健指标。
@@ -1061,9 +1103,9 @@ answer_delta   = answer_rate(t+1) - answer_rate(t)   # 同一题集、同一模�
 
 语料覆盖度低会带来假阴性（该答的答不了）；数据污染会带来假阳性（没检索也能答对，或评测题在预训练里）。
 
-- **污染综述 2024/TMLR 2025**（arXiv:2404.00699）：系统梳理训练数据与评测集重叠的检测方法（n-gram、embedding、表现异常、成员推断等）。→ **适用性：** 用来设计“政务题是否在预训练里”的检查；不能证明没有污染，只能降低风险。
-- **LiveBench 2024/ICLR 2025 Spotlight**（arXiv:2406.19314）：频繁更新题目、客观自动评分、contamination-limited。→ **适用性：** 借“滚动更新 + 截止日期”的思路；政务可以用“模型 cutoff 之后发布的新政策”造题。
-- **PoisonedRAG 2024/USENIX Security 2025**（arXiv:2402.07867）：向知识库注入少量恶意文本即可诱导目标答案；RAG 知识库是新攻击面。→ **适用性：** 语料覆盖度之外，还要测“语料被污染/被对抗”时的引用可靠性；这不是 completeness，但同属“语料质量”。
+- **污染综述 2024/TMLR 2025**（[arXiv:2404.00699](https://arxiv.org/abs/2404.00699)）：系统梳理训练数据与评测集重叠的检测方法（n-gram、embedding、表现异常、成员推断等）。→ **适用性：** 用来设计“政务题是否在预训练里”的检查；不能证明没有污染，只能降低风险。
+- **LiveBench 2024/ICLR 2025 Spotlight**（[arXiv:2406.19314](https://arxiv.org/abs/2406.19314)）：频繁更新题目、客观自动评分、contamination-limited。→ **适用性：** 借“滚动更新 + 截止日期”的思路；政务可以用“模型 cutoff 之后发布的新政策”造题。
+- **PoisonedRAG 2024/USENIX Security 2025**（[arXiv:2402.07867](https://arxiv.org/abs/2402.07867)）：向知识库注入少量恶意文本即可诱导目标答案；RAG 知识库是新攻击面。→ **适用性：** 语料覆盖度之外，还要测“语料被污染/被对抗”时的引用可靠性；这不是 completeness，但同属“语料质量”。
 
 **可落地的两个指标：**
 
@@ -1083,9 +1125,10 @@ citation_only_rate  = #correct answers with valid citation / #correct answers
 
 | 指标 | 公式 | 分母 | 用途 | 陷阱 |
 |---|---|---|---|---|
-| `source_coverage` | `|ingested∩U|/|U|` | 目标全集 `U` | 接入进度 | 用城市数代替政策类型；分母不写清 |
-| `corpus_recall` | `#Q with gold evidence in corpus/#Q_answerable` | 可回答问题 | 语料是否够答 | 需要 gold doc；换快照要重算 |
-| `retrieval_recall@k` | `#Q with gold in top-k/#Q_gold` | 有 gold 的问题 | 检索召回 | 语料缺失会伪装成检索失败 |
+| `source_coverage` | `\vert ingested∩U\vert/\vert U\vert` | 目标全集 `U` | 接入进度 | 用城市数代替政策类型；分母不写清 |
+| `corpus_recall` | `#Q with gold evidence in corpus/#Q_world` | `world_has=true` 的问题 | 语料是否够答 | 需要 gold doc；换快照要重算 |
+| `no_policy_evidence_recall` | `#NO_POLICY with supporting docs/#NO_POLICY` | `NO_POLICY` 问题 | “无规定”结论是否有文件依据 | 不能当答案召回；需人工确认空白 |
+| `retrieval_recall@k` | `#Q with gold in top-k/#Q_index` | gold 已入语料的问题 | 检索召回 | 语料缺失会伪装成检索失败 |
 | `unjudged_rate` | `#unjudged retrieved/#retrieved` | 检索结果 | qrels 完整性 | 高则 recall 不可信 |
 | `bpref` | 见 §4.2 | 已判相关/不相关 | 不完整判断下的稳健排序 | 仍依赖已判集合 |
 | `no_source_rate` | `#failures with gold absent/#failures` | 失败样本 | 语料缺失诊断 | 需要 gold 和语料快照 |
@@ -1101,7 +1144,8 @@ citation_only_rate  = #correct answers with valid citation / #correct answers
 **必须报：**
 
 - `source_coverage`（城市级 + 城市×政策类型级，分开报）；
-- `corpus_recall`（按 ANSWERABLE/NO_POLICY 分层）；
+- `corpus_recall`（按 ANSWERABLE / NOT_COVERED 分层）；
+- `no_policy_evidence_recall`（“无规定”结论能否在语料中找到支持文件）；
 - `retrieval_recall@k` + `unjudged_rate` + `bpref`；
 - `no_source_rate` / `retrieval_miss_rate` / `reader_miss_rate`；
 - `coverage_delta` + `answer_delta`（接入前后同题集）；
@@ -1143,7 +1187,7 @@ citation_only_rate  = #correct answers with valid citation / #correct answers
 
 ---
 
-### 5.2 拒答必须分四类，并用四条硬断言做发布门禁
+### 5.2 拒答必须分四类、澄清单列，并用四条硬断言做发布门禁
 
 **规定：** 每个回答只能标一个：
 
@@ -1154,15 +1198,15 @@ answer / refuse_not_covered / refuse_no_policy / refuse_out_of_scope / clarify
 金标必须有 `in_scope`、`index_has`、`world_has`、`gold_doc_ids`、`as_of`、`region`。四条硬断言：
 
 ```text
-false_not_covered_rate = P(refuse_not_covered | gold.index_has=true)  = 0
-false_no_policy_rate   = P(refuse_no_policy   | gold.world_has=true)  = 0
+false_not_covered_rate = P(refuse_not_covered | gold.in_scope=true ∧ gold.index_has=true)  = 0
+false_no_policy_rate   = P(refuse_no_policy   | gold.in_scope=true ∧ ¬(gold.index_has=true ∧ gold.world_has=false)) = 0
 fabricated_no_policy   = P(refuse_no_policy   | searched.n_docs=0)    = 0
 answer_on_missing_rate = P(answer             | gold.index_has=false) = 0
 ```
 
 **报告：** 每条断言报 `k/n`、精确二项 95% 上界、失败样例（至少 5 条）。只要有一条 >0，发布门禁不通过；不允许用平均分“抵消”。
 
-**为什么：** 这四条分别对应“有证据却说没接入”“世界上有却说没规定”“没查却说查过”“没证据却硬答”；它们不是精度问题，是虚假陈述。**怎么验：** 从生产日志抽 100 条拒答，人工复核 `searched.n_docs/n_queries` 与 `gold.index_has/world_has`；四条各算一次。
+**为什么：** 这四条分别对应“有证据却说没接入”“不满足 no_policy 金标却说查过没有”“没查却说查过”“没证据却硬答”；它们不是精度问题，是虚假陈述。**怎么验：** 从生产日志抽 100 条拒答，人工复核 `searched.n_docs/n_queries` 与 `gold.index_has/world_has`；四条各算一次。
 
 ---
 
@@ -1244,12 +1288,17 @@ misgrounded_rate = #(locatable=1 ∧ sufficient=1 ∧ applicable=0) / #citations
 ```text
 source_coverage_city   = #cities with any ingested source / #target_cities
 source_coverage_cell   = #(city, policy_type) cells with source / #target_cells
-corpus_recall          = #Q with gold evidence in corpus / #Q_answerable
+corpus_recall          = #Q with gold evidence in corpus / #Q_world
+                         # Q_world = {q : gold.world_has=true} = ANSWERABLE ∪ NOT_COVERED
+no_policy_evidence_recall = #NO_POLICY Q with supporting docs in corpus / #NO_POLICY Q
+retrieval_recall@k     = #Q with gold in top-k / #Q_index
+                         # Q_index = {q : gold.index_has=true}
 unjudged_rate          = #retrieved docs not in qrels / #retrieved docs
 bpref                  = (1/R) Σ_r (1 - |n above r|/min(R,N))
 ```
 
 - 不允许只写“覆盖率 92.9%”；必须写“城市级 313/337，政策格子级 x/y”。
+- `corpus_recall` 的分母只含 `world_has=true`；`NO_POLICY` 不进分母，另报 `no_policy_evidence_recall`。
 - 每次换语料快照，重算 `corpus_recall` 与 `coverage_delta`；报告里带 `corpus_snapshot`。
 - `unjudged_rate > 20%` 时，`retrieval_recall` 标“不可信”，先补 qrels 或改报 bpref。
 - 新接入城市必须做“同题集前后对比”，报 `coverage_delta` 与 `answer_delta`，不能只报“新增 N 个城市”。
@@ -1319,7 +1368,7 @@ model_version / prompt_version / index_version / corpus_snapshot
 
 ### 7.1 怎么核的
 
-- **链接/元数据：** 通过 arXiv API、arXiv 论文 HTML、Semantic Scholar、DOI resolver 核对标题、作者、年份、arXiv ID/DOI；截至 **2026-11-12**。
+- **链接/元数据：** 通过 arXiv API、arXiv 论文 HTML、Semantic Scholar/Crossref 元数据、DOI 解析记录核对标题、作者、年份、arXiv ID/DOI；截至 **2026-11-12**。本环境直接 `curl https://doi.org/...` 对 3 个 DOI 返回 `000`（网络限制，非链接失效）；其标题/年份/作者改由 Semantic Scholar/Crossref 元数据核对，canonical DOI 保留。
 - **数字：** 优先取论文摘要/表格/正文明确写出的数字；由公式推算的，文中标“公式推算”或“按公式计算”（例如 CRC 的 9 个错误、Wilson 区间、CP 上界）。
 - **没有编数字：** 凡是摘要/正文没有明确给出、只在二手博客看到的数字，一律不写；改为“待核”。
 - **2026 年论文：** arXiv:2604.12995、2609.17546、2609.35794、2610.28340 等是 2026 年预印本/会议论文；引用时按“预印本/会议论文”看待，不当作多年复现的稳定结论。
@@ -1330,7 +1379,7 @@ model_version / prompt_version / index_version / corpus_snapshot
 | 项目 | 待核内容 | 当前处理 |
 |---|---|---|
 | DuRetrieval 规模 | HF 卡 `corpus 100,001 / queries 2,000` 与坊间“100k queries/12M passages”冲突 | 正文只按 HF 卡引用，标“规模待核”；不写 12M |
-| DomainRAG 指标 | 六项能力各自的 judge prompt、阈值、是否用 GPT-4 评分 | 正文只写“按能力报告准确率/忠实性，具体口径待核”；不写统一总分 |
+| DomainRAG 指标 | `GE` 的具体分制/提示词；六项能力是否使用同一 judge | 正文写 `EM/EMS/F1/ROUGE-L/GE`；`GE` 分制待核；不写统一总分 |
 | POLIS-Bench 权重 | semantic similarity 与 accuracy 的聚合权重/阈值 | 正文写“dual metric，权重待核” |
 | UAEval4RAG `Joint` 权重 | 论文正文的 `w1/w2` 是否固定 | 只写 `Joint=w1·Correctness+w2·Acceptable`，不写 0.7/0.3 |
 | Legal warrant pilot | pilot 的具体样本量、标注一致性、指标 | 正文写“pilot 很小，指标未标准化” |
