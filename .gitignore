@@ -48,3 +48,5 @@ data/scan/
 # 采集派生结构（可由 raw 重算）
 data/processed/
 data/index/
+data/logs/
+data/reports/
