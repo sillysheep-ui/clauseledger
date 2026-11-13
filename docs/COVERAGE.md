@@ -90,3 +90,34 @@ blocked 原因分三类，用户看到的解释必须不同：
 
 - `matters` 全部为空 → 现在**所有可达城市都是 `partial`**，因为条款库还没建。这会在 M1 之后逐城填。
 - 24 个 blocked：`discovery_gap` 18、`identity_mismatch` 5、`waf_blocked` 1。
+
+## 探测方式必须记下来：`method` / `last_status`
+
+每条城市记录现在带三个字段，说明**这次是怎么试的、试到哪一步**：
+
+| 字段 | 含义 | 取值 |
+|---|---|---|
+| `method` | 用什么方式拿到的/试的 | `httpx`（直连）/ `browser`（浏览器两段式） |
+| `last_status` | 最后一次看到的 HTTP 状态码 | 200 / 412 / 521 / `null`（连接层失败） |
+| `attempts` | 这个城市试过几个入口 | 整数 |
+
+**为什么必须区分**：`httpx` 拿不到 ≠ 拿不到。实测 39 个城市只有浏览器能过（`method=browser`），包括成都、合肥这类 412/521 站点。
+
+**当前口径下的结论**：
+- 313 可达：`httpx` 274 + `browser` 39
+- 24 blocked：**全部只试过 `httpx`（`method=httpx`），没有一个经过浏览器验证**
+
+所以严格说，这 24 个是「**直连拿不到**」，不是「拿不到」。要下"不可达"的结论，必须先跑一次浏览器。
+
+## 失败台账
+
+`tools/ingest/ledger.py` 把多次运行的 `data/manifests/ingest-*.jsonl` 按文件汇总到 `data/registry/attempts.jsonl`：
+
+| 字段 | 含义 |
+|---|---|
+| `attempts` | 一共试过几次 |
+| `first_failed` / `last_tried` / `last_ok` | 首次失败、最后一次尝试、最后一次成功 |
+| `last_status` / `last_stage` / `last_error` | 最后失败的状态码、阶段（httpx/browser）、原因 |
+| `state` | `ok` / `ok_after_retry` / `never_ok` |
+
+实测：**560 份文件里 59 份失败过后来成功，0 份从未成功**——这就是"失败不等于不可达"的直接证据。
