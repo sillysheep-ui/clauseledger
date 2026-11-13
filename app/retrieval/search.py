@@ -17,6 +17,7 @@ from pathlib import Path
 
 import bm25s
 
+from app.domain.registry import DocRegistry
 from app.retrieval.index import INDEX, tokenize
 from app.retrieval.records import Clause
 
@@ -88,6 +89,8 @@ class Answer:
     n_candidates: int = 0     # 闸门之前召回并通过分数线的候选数
     # 拒答必须能自证"我查过"：没查就说"没有这条政策"，是本系统最不能犯的错。
     searched: dict = field(default_factory=dict)
+    # 已知存在、但我们没拿到的文件——用它把"查不到"和"没有"分开说。
+    gap: dict | None = None
 
     @property
     def refused(self) -> bool:
@@ -109,6 +112,21 @@ class Hit:
 
 
 _META: dict | None = None
+_REG: DocRegistry | None = None
+REGISTRY = Path("data/registry/docs.jsonl")
+
+
+def _registry() -> DocRegistry:
+    global _REG
+    if _REG is None:
+        _REG = DocRegistry.load(REGISTRY) if REGISTRY.exists() else DocRegistry.empty()
+    return _REG
+
+
+def _gap(qt: list[str]) -> dict | None:
+    e = _registry().best_gap(set(qt))
+    return {"doc_no": e.doc_no, "title": e.title, "status": e.status,
+            "text": e.explain()} if e else None
 
 
 def index_meta() -> dict:
@@ -175,10 +193,10 @@ def search_result(query: str, k: int = 8, *, status: tuple[str, ...] | None = No
     n_docs = len({h.clause.doc_no for h in out})
     if not out:
         return Answer([], "没有条款达到相关性下限", "insufficient", n_docs, 0,
-                      searched=_searched(n_docs, len(qt)))
+                      searched=_searched(n_docs, len(qt)), gap=_gap(qt))
     if out[0].coverage < MIN_COVERAGE:
         return Answer([], f"首条条款只覆盖 {out[0].coverage:.0%} 的提问词", "insufficient",
-                      n_docs, len(out), searched=_searched(n_docs, len(qt)))
+                      n_docs, len(out), searched=_searched(n_docs, len(qt)), gap=_gap(qt))
     return Answer(_prefer_effective(_collapse(out))[:k], "", "ok", n_docs, len(out),
                   searched=_searched(n_docs, len(qt)))
 

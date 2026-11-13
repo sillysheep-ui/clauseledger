@@ -25,6 +25,8 @@ def main() -> None:
     if ans.refused:
         print(f"答：{ans.reason}")
         print(f"    检索范围：{ans.n_docs} 份文件 / {ans.n_candidates} 条候选条款")
+        if ans.gap:
+            print(f"    已知但没取到：{ans.gap['text']}")
         return
 
     for i, h in enumerate(hits, 1):
