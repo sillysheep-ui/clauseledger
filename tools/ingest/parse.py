@@ -9,9 +9,11 @@ from bs4 import BeautifulSoup
 
 CN = re.compile(r"[\u4e00-\u9fff]")
 SCAN_PAGE_CHARS = 50
+BLOCK_TAGS = ("h1", "h2", "h3", "h4", "p", "table", "li", "div")
+CRUMB = ("您现在的位置", "当前位置", "相关链接", "首页 >", "首页>")
 
 # 解析器版本：偏移量只在同一版本内有效，换版本必须重算引用
-PARSER_VERSION = "0.3.1"
+PARSER_VERSION = "0.3.2"
 
 
 @dataclass
@@ -35,8 +37,33 @@ class Parsed:
         return "\n".join(b.text for b in self.blocks)
 
 
+TAG = re.compile(r"</?[a-zA-Z][^<>]{0,200}>")
+
+
 def _clean(s: str) -> str:
-    return re.sub(r"[\u00a0\u3000]+", " ", s).strip()
+    """去不换行空格、去正文里残留的 HTML 标签。
+
+    有些页面把模板源码当文本节点吐出来（`<div class="Xun-tong">`），
+    lxml 反转义后就变成正文的一部分——不清掉，它会一路污染到检索和引用。
+    """
+    s = TAG.sub(" ", s or "")
+    s = re.sub(r"[\u00a0\u3000]+", " ", s)
+    return re.sub(r"\s{2,}", " ", s).strip()
+
+
+def _table_rows(tbl) -> list[str]:
+    """表格按行切成 `a | b | c`。
+
+    一行一块，而不是整表一块：整表成块会把几十行压成一条，条款切分看不见行，
+    检索也只能匹配到最长的那一条。按行切开，既不重复单元格，又保住匹配粒度。
+    """
+    rows = []
+    for tr in tbl.find_all("tr"):
+        cells = [_clean(td.get_text(" ", strip=True)) for td in tr.find_all(["td", "th"])]
+        cells = [c for c in cells if c]
+        if sum(len(CN.findall(c)) for c in cells) >= 2:
+            rows.append(" | ".join(cells))
+    return rows
 
 
 def parse_html(data: bytes, base_url: str) -> Parsed:
@@ -68,22 +95,43 @@ def parse_html(data: bytes, base_url: str) -> Parsed:
 
     blocks: list[Block] = []
 
+    def _walk(el):
+        """按文档顺序走，但**不钻进 <table>**——表格只取一次，不取它的单元格。"""
+        for ch in el.children:
+            name = getattr(ch, "name", None)
+            if name is None:
+                continue
+            if name in ("h1", "h2", "h3", "h4", "p", "table", "li", "div"):
+                yield ch
+                if name != "table":
+                    yield from _walk(ch)
+            else:
+                yield from _walk(ch)
+
     def own_text(el) -> str:
         """只取该元素自己的文字，不含子块级元素的文字——避免父子重复计数。"""
         return " ".join(str(x) for x in el.find_all(string=True, recursive=False)).strip()
 
-    for el in root.find_all(["h1", "h2", "h3", "h4", "p", "table", "li", "div"], recursive=True):
-        if el.name == "li" and el.find_parent("table"):
+    for el in _walk(root):
+        if el.name == "table":
+            # 表格只吃一次就停：以前递归再进单元格，同一批字会以
+            # `序号`/`文件名称`/`文号` 各成一块的形式重复一遍。
+            for row in _table_rows(el):
+                if not row.startswith(CRUMB):
+                    blocks.append(Block(len(blocks), "table", row))
             continue
-        if el.name == "div":
+        elif el.name == "div":
             # 页面把正文直接写在 div 里（上海人社就是这样），但 div 套 div 会重复
             has_block_child = el.find(["p", "div", "table", "li"], recursive=False) is not None
             txt = _clean(own_text(el) if has_block_child else el.get_text(" ", strip=True))
+            kind = "para"
         else:
             txt = _clean(el.get_text(" ", strip=True))
+            kind = "head" if el.name in ("h1", "h2", "h3", "h4") else "para"
         if len(CN.findall(txt)) < 2:
             continue
-        kind = "head" if el.name in ("h1", "h2", "h3", "h4") else ("table" if el.name == "table" else "para")
+        if txt.startswith(CRUMB) or re.search(r"(?:class|href|src)=|<[a-zA-Z/]", txt):
+            continue   # 面包屑与模板源码残片：不是正文
         blocks.append(Block(len(blocks), kind, txt))
 
     atts = []
@@ -144,15 +192,32 @@ def parse_pdf(data: bytes, path: str | None = None) -> Parsed:
 
 def parse_docx(data: bytes) -> Parsed:
     import docx
+    from docx.table import Table
+    from docx.text.paragraph import Paragraph
 
     d = docx.Document(io.BytesIO(data))
     blocks: list[Block] = []
-    for p in d.paragraphs:
-        txt = _clean(p.text)
-        if len(CN.findall(txt)) < 2:
-            continue
-        style = (p.style.name or "").lower()
-        blocks.append(Block(len(blocks), "head" if "heading" in style else "para", txt))
+    for child in d.element.body.iterchildren():
+        tag = child.tag.rsplit("}", 1)[-1]
+        if tag == "p":
+            p = Paragraph(child, d)
+            txt = _clean(p.text)
+            if len(CN.findall(txt)) < 2:
+                continue
+            style = (p.style.name or "").lower()
+            blocks.append(Block(len(blocks), "head" if "heading" in style else "para", txt))
+        elif tag == "tbl":
+            # Word 表格里的字在 `paragraphs` 里一个字都取不到——
+            # 沪人社规〔2022〕20号 的三个 docx 附件就是因此抽成 0 字。
+            rows = []
+            for row in Table(child, d).rows:
+                cells = [_clean(c.text) for c in row.cells]
+                cells = [c for c in dict.fromkeys(cells) if c]
+                if cells:
+                    rows.append(" | ".join(cells))
+            txt = "\n".join(rows)
+            if len(CN.findall(txt)) >= 2:
+                blocks.append(Block(len(blocks), "table", txt))
     return Parsed(blocks)
 
 

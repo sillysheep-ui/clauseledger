@@ -14,13 +14,13 @@
  "fetched_at": "2026-11-11T19:44:49+0800",
  "page_kind": "html",
  "page_sha256": "48d1e7285e55f399832a9efb447a2b323370fd4f26b0c09daaaa58e3dfb6cfe6",
- "parser_version": "0.3.1",
+ "parser_version": "0.3.2",
  "attachments": [
   {
    "url": "https://rsj.sh.gov.cn/cmsres/d5/d561fa2ddd0444a7b2eaf9f9b00f7869/220523b1cdde6efa3f1db23ad55edd60.pdf",
    "kind": "pdf",
    "sha256": "165da4089b5a991e89013ccc08d7dd36a79e9a9e53feaabb60e91dbd87e45330",
-   "chars": 2982,
+   "chars": 2975,
    "blocks": 122,
    "extract": "native",
    "ocr_conf": null
@@ -33,7 +33,7 @@
  "effective_to": "2031-12-31",
  "stats": {
   "blocks": 164,
-  "chars": 5689,
+  "chars": 5682,
   "clauses": 74,
   "by_level": {
    "3": 36,
@@ -848,12 +848,12 @@
    "path": "第十八条",
    "label": "第十八条",
    "level": 3,
-   "text": "第十八条 本办法自2027年1月1日起施行，有效期至2031年\n12月31日。\n上海市人力资源和社会保障局办公室        2026年11月 5日印发",
+   "text": "第十八条 本办法自2027年1月1日起施行，有效期至2031年\n12月31日。\n上海市人力资源和社会保障局办公室 2026年11月 5日印发",
    "page": 7,
    "block_index": 161,
    "char_offset": 0,
    "start": 5612,
-   "end": 5689
+   "end": 5682
   }
  ],
  "blocks": [
@@ -1839,7 +1839,7 @@
    "i": 163,
    "kind": "para",
    "page": 8,
-   "text": "上海市人力资源和社会保障局办公室        2026年11月 5日印发"
+   "text": "上海市人力资源和社会保障局办公室 2026年11月 5日印发"
   }
  ],
  "issued_at": "2026-11-05",

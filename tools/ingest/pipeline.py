@@ -107,3 +107,77 @@ def ingest(url: str, *, slug: str | None = None, hint: dict | None = None) -> di
     name = slug or re.sub(r"[^\w\u4e00-\u9fff]+", "-", (rec["doc_no"] or parsed.title[:24]))[:60]
     (OUT / f"{name}.json").write_text(json.dumps(rec, ensure_ascii=False, indent=1), "utf-8")
     return rec
+
+
+def _raw_file(sha: str | None) -> Path | None:
+    """按内容哈希找回落盘原件。一个哈希目录只放一个文件（早期就是这样落的）。"""
+    if not sha:
+        return None
+    d = Path("data/raw") / sha[:12]
+    if not d.is_dir():
+        return None
+    for f in sorted(d.iterdir()):
+        if f.is_file():
+            return f
+    return None
+
+
+def reparse(rec: dict) -> dict:
+    """用落盘原件重新解析，**不重抓**。
+
+    为什么要单独一条路：重抓会拿到改版后的页面，前后两份记录就不是同一份证据了，
+    解析器改动的收益也就无从比较。原件在 `data/raw/<sha12>/`，按哈希取回即可。
+    只覆盖"派生字段"（blocks / clauses / stats / 抽取路径），元数据与人工补录值一律不动。
+    """
+    url = rec.get("url") or ""
+    page_file = _raw_file(rec.get("page_sha256"))
+    if page_file is None:
+        raise RuntimeError(f"原件缺失：{rec.get('page_sha256')}")
+
+    # 必须把落盘路径传给解析器：扫描件 PDF 要靠它渲染成图再 OCR。
+    # 只传 bytes 的话 pypdfium2 无处开门，OCR 静默跳过——103 份扫描件会变成 0 字。
+    kind, parsed = parse_any(page_file.read_bytes(), "", url, str(page_file))
+    blocks = [Block(i, b.kind, b.text, b.page) for i, b in enumerate(parsed.blocks)]
+    atts = []
+    for a in rec.get("attachments") or []:
+        sha = a.get("sha256")
+        af = _raw_file(sha)
+        if af is None:
+            atts.append(dict(a))
+            continue
+        akind, aparsed = parse_any(af.read_bytes(), "", a.get("url") or "", str(af))
+        for b in aparsed.blocks:
+            blocks.append(Block(len(blocks), b.kind, b.text, b.page))
+        atts.append({**a, "kind": akind, "chars": len(aparsed.text),
+                     "blocks": len(aparsed.blocks), "extract": aparsed.extract,
+                     "ocr_conf": aparsed.ocr_conf})
+
+    blocks = drop_nav(blocks)
+    text = "\n".join(b.text for b in blocks)
+    clauses = split_clauses(blocks)
+    m_from = RE_EFF_FROM.search(text)
+    m_to = RE_EFF_TO.search(text)
+
+    out = dict(rec)
+    out.update({
+        "parser_version": PARSER_VERSION,
+        "attachments": atts,
+        "extract": parsed.extract,
+        "ocr_conf": parsed.ocr_conf,
+        "stats": {"blocks": len(blocks), "chars": len(text), "clauses": len(clauses),
+                  "by_level": {str(k): sum(1 for c in clauses if c.level == k)
+                               for k in sorted({c.level for c in clauses})}},
+        "clauses": [
+            {"path": c.path, "label": c.label, "level": c.level, "text": c.text,
+             "page": c.page, "block_index": c.block_index, "char_offset": c.char_offset,
+             "start": c.start, "end": c.end}
+            for c in clauses
+        ],
+        "blocks": [{"i": b.index, "kind": b.kind, "page": b.page, "text": b.text} for b in blocks],
+    })
+    # 只补空，不覆盖：人工补录/回填得来的日期优先级高于正文正则
+    if not out.get("effective_from"):
+        out["effective_from"] = iso(m_from.group(1) if m_from else None)
+    if not out.get("effective_to"):
+        out["effective_to"] = iso(m_to.group(1) if m_to else None)
+    return out
