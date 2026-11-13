@@ -12,10 +12,17 @@
 from __future__ import annotations
 
 import hashlib
+import os
+import re
 import time
 from pathlib import Path
 
 RAW = Path("data/raw")
+
+# 浏览器装在仓库里（~/Library/Caches 在本机被沙箱拒），用相对路径省得每次 export
+LOCAL_BROWSERS = Path(".pw-browsers")
+if LOCAL_BROWSERS.exists() and "PLAYWRIGHT_BROWSERS_PATH" not in os.environ:
+    os.environ["PLAYWRIGHT_BROWSERS_PATH"] = str(LOCAL_BROWSERS.resolve())
 
 # 这些状态码表明"对方在考验客户端"，值得换浏览器再试
 CHALLENGE_STATUS = {403, 412, 418, 429, 503, 521, 522, 524}
@@ -24,6 +31,18 @@ CHALLENGE_STATUS = {403, 412, 418, 429, 503, 521, 522, 524}
 def should_try_browser(status: int | None) -> bool:
     """None = 网络层异常，浏览器也救不了，不必试。"""
     return status in CHALLENGE_STATUS
+
+
+def cjk(text: str) -> int:
+    return len(re.findall(r"[\u4e00-\u9fa5]", text))
+
+
+def substantive(html: str, min_chars: int = 200) -> bool:
+    """判据不是"字节够不够"，是"有没有正文"。
+
+    踩过的坑：7 KB 的挑战页也能过 200 字节，但中文字只有 5 个。
+    """
+    return cjk(html) >= min_chars
 
 
 def _save(content: bytes, url: str) -> tuple[str, Path]:
@@ -48,16 +67,18 @@ def fetch_with_browser(url: str, *, wait: float = 5.0, settle: float = 2.0,
             status = resp.status if resp else 0
             pg.wait_for_timeout(int(wait * 1000))
             html = pg.content()
-            if len(html) < min_chars:          # 第二段：带 cookie 再来一次
+            if not substantive(html, min_chars):   # 第二段：带 cookie 再来一次
                 try:
                     pg.reload(wait_until="domcontentloaded", timeout=45_000)
                 except Exception:              # noqa: BLE001 挑战脚本会自己跳转
                     pass
                 pg.wait_for_timeout(int(settle * 1000))
                 html = pg.content()
-            if len(html) < min_chars:
-                raise RuntimeError(f"browser got {len(html)} bytes (status={status})")
-            return status or 200, html.encode("utf-8"), "text/html; charset=utf-8"
+            if not substantive(html, min_chars):
+                raise RuntimeError(f"browser got {len(html)} bytes but only "
+                                   f"{cjk(html)} 汉字 (status={status})")
+            # 首包可能是挑战页（4xx），但最终拿到了正文 → 这一趟是成功的
+            return 200, html.encode("utf-8"), "text/html; charset=utf-8"
         finally:
             br.close()
 

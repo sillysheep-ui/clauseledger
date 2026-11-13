@@ -95,12 +95,18 @@ def fetch(url: str, *, referer: str | None = None, pause: float = 1.0,
     raise FetchError(url, status=status, attempts=attempts, last=last)
 
 
-def fetch_smart(url: str, *, allow_browser: bool = True, **kw) -> Fetched:
-    """先 httpx；遇到"在考验客户端"的状态码，换浏览器走两段式。
+def fetch_smart(url: str, *, allow_browser: bool = True, allow_chrome: bool = True,
+                **kw) -> Fetched:
+    """三档升级：httpx → 无头 Chromium → 真 Chrome（CDP）。
 
-    两种失败必须分开：
-      stage="httpx"   —— httpx 不行，浏览器没试或没成功
-      stage="browser" —— 浏览器也拿不到，这才是真的不可达
+    为什么要三档：同一份页面，三种客户端拿到的结果不同，说明拦的**不是 IP，是客户端身份**。
+      httpx      快、可批量，但一眼被认出不是浏览器（412/521）。
+      Chromium   真跑 JS，能过一部分挑战；但指纹仍是自动化，瑞数/加速乐会循环。
+      真 Chrome  指纹是真的，实测成都、兰州可取；代价是必须 --no-sandbox，只在本机用。
+
+    失败时要能说清"卡在哪一档"，所以 stage 一路带出去：
+      stage="httpx"   —— 连浏览器都没试（不可重试的状态码，或关掉了）
+      stage="browser" —— 两档浏览器都失败，这才是真的拿不到
     """
     from tools.ingest.browser import browser_fetch, should_try_browser
 
@@ -109,9 +115,20 @@ def fetch_smart(url: str, *, allow_browser: bool = True, **kw) -> Fetched:
     except FetchError as e:
         if not allow_browser or not should_try_browser(e.status):
             raise
+        errs = [f"httpx={e.status}"]
         try:
             status, content, ctype, h, p = browser_fetch(url, pause=kw.get("pause", 1.0))
             return Fetched(url, status, content, ctype, h, p, attempts=1, via="browser")
         except Exception as be:  # noqa: BLE001
-            raise FetchError(url, status=e.status, attempts=e.attempts, stage="browser",
-                             last=f"httpx={e.status}; browser={str(be)[:120]}") from be
+            errs.append(f"browser={str(be)[:100]}")
+
+        if allow_chrome:
+            try:
+                from tools.ingest.cdp import real_chrome_fetch
+                status, content, ctype, h, p = real_chrome_fetch(url, pause=kw.get("pause", 1.0))
+                return Fetched(url, status, content, ctype, h, p, attempts=1, via="chrome")
+            except Exception as ce:  # noqa: BLE001
+                errs.append(f"chrome={str(ce)[:100]}")
+
+        raise FetchError(url, status=e.status, attempts=e.attempts, stage="browser",
+                         last="; ".join(errs)) from e
