@@ -15,6 +15,7 @@ from pathlib import Path
 
 from tools.ingest.fetch import fetch
 from tools.ingest.parse import parse_any
+from tools.ingest.fetch import FetchError
 from tools.ingest.pipeline import ingest
 
 CST = timezone(timedelta(hours=8))
@@ -117,6 +118,10 @@ def main() -> None:
             atts = [ext_of(a.get("url")) for a in rec.get("attachments", [])]
             return {"doc_no": rec["doc_no"], "ok": True, "secs": round(time.time() - t1, 1),
                     "page_kind": rec["page_kind"], "atts": atts, **rec["stats"]}
+        except FetchError as e:            # 抓取失败：把状态码与重试次数一并留下
+            return {"doc_no": it.get("doc_no"), "ok": False, "secs": round(time.time() - t1, 1),
+                    "error": "FetchError", "http_status": e.status,
+                    "attempts": e.attempts, "msg": e.last}
         except Exception as e:
             return {"doc_no": it.get("doc_no"), "ok": False, "secs": round(time.time() - t1, 1),
                     "error": type(e).__name__, "msg": str(e)[:200]}
