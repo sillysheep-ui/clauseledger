@@ -15,6 +15,24 @@ CST = timezone(timedelta(hours=8))
 WAF = {400, 403, 405, 412, 521, 502, 503}
 
 
+def probe_of(rec: dict) -> dict:
+    """这次是怎么试的、试到哪一步。
+
+    `method` 必须是"试过什么"，不是"结论"：
+      httpx      只直连过，没起浏览器 —— 结论不算数，应该再试
+      browser    直连不行、浏览器也试过 —— 可以判不可达
+      unknown    这次扫描没记录方式
+    """
+    tried = rec.get("tried") or []
+    statuses = [t.get("status") for t in tried if isinstance(t.get("status"), int)]
+    method = rec.get("via") or rec.get("method") or "httpx"
+    method = {"province2": "browser"}.get(method, method)   # 省级导航第二跳用的浏览器
+    last = rec.get("http_status")
+    if last is None:
+        last = statuses[-1] if statuses else None
+    return {"method": method, "last_status": last, "attempts": len(tried)}
+
+
 def reason_of(rec: dict) -> tuple[str, str]:
     tried = rec.get("tried") or []
     codes = {t.get("status") for t in tried if isinstance(t.get("status"), int)}
@@ -37,6 +55,7 @@ def main() -> None:
     for r in src:
         key = normalize_city(r["name"])
         item = {"province": prov.get(r.get("province", ""), ""), "checked_at": now}
+        item.update(probe_of(r))
         if r["status"] == "ok":
             item.update(status="reachable", url=r.get("ok_url"), chars=r.get("chars"),
                         matters={}, departments={})
@@ -53,7 +72,8 @@ def main() -> None:
                              ("重庆", "https://www.cq.gov.cn/", 3505)):
         out["cities"][name] = {"province": name, "checked_at": now, "status": "reachable",
                                "url": url, "chars": chars, "matters": {}, "departments": {},
-                               "kind": "municipality"}
+                               "kind": "municipality",
+                               "method": "httpx", "last_status": 200, "attempts": 1}
     ok = sum(1 for c in out["cities"].values() if c["status"] == "reachable")
     out["totals"] = {"cities_total": len(out["cities"]), "cities_reachable": ok,
                      "cities_blocked": len(out["cities"]) - ok,
