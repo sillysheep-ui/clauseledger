@@ -35,17 +35,21 @@ class Fetched:
     sha256: str
     path: Path | None
     attempts: int = 1
+    via: str = "httpx"          # httpx | browser
 
 
 class FetchError(RuntimeError):
     """抓取失败，但把"为什么失败"结构化地带出去。"""
 
-    def __init__(self, url: str, *, status: int | None, attempts: int, last: Exception | str):
+    def __init__(self, url: str, *, status: int | None, attempts: int, last: Exception | str,
+                 stage: str = "httpx"):
         self.url = url
         self.status = status
         self.attempts = attempts
+        self.stage = stage
         self.last = str(last)[:200]
-        super().__init__(f"fetch failed {url} (status={status}, attempts={attempts}): {self.last}")
+        super().__init__(f"fetch failed {url} (status={status}, attempts={attempts}, "
+                         f"stage={stage}): {self.last}")
 
 
 def sha(data: bytes) -> str:
@@ -89,3 +93,25 @@ def fetch(url: str, *, referer: str | None = None, pause: float = 1.0,
         if attempt < attempts:
             time.sleep(pause * (2 ** (attempt - 1)) * (1 + random.random() * 0.2))
     raise FetchError(url, status=status, attempts=attempts, last=last)
+
+
+def fetch_smart(url: str, *, allow_browser: bool = True, **kw) -> Fetched:
+    """先 httpx；遇到"在考验客户端"的状态码，换浏览器走两段式。
+
+    两种失败必须分开：
+      stage="httpx"   —— httpx 不行，浏览器没试或没成功
+      stage="browser" —— 浏览器也拿不到，这才是真的不可达
+    """
+    from tools.ingest.browser import browser_fetch, should_try_browser
+
+    try:
+        return fetch(url, **kw)
+    except FetchError as e:
+        if not allow_browser or not should_try_browser(e.status):
+            raise
+        try:
+            status, content, ctype, h, p = browser_fetch(url, pause=kw.get("pause", 1.0))
+            return Fetched(url, status, content, ctype, h, p, attempts=1, via="browser")
+        except Exception as be:  # noqa: BLE001
+            raise FetchError(url, status=e.status, attempts=e.attempts, stage="browser",
+                             last=f"httpx={e.status}; browser={str(be)[:120]}") from be

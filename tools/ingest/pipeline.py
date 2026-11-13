@@ -11,7 +11,7 @@ from datetime import datetime, timezone, timedelta
 from pathlib import Path
 
 from tools.ingest.clause import split_clauses
-from tools.ingest.fetch import fetch, sha
+from tools.ingest.fetch import fetch, fetch_smart, sha
 from tools.ingest.parse import PARSER_VERSION, Block, parse_any
 
 CST = timezone(timedelta(hours=8))
@@ -45,7 +45,7 @@ def ingest(url: str, *, slug: str | None = None, hint: dict | None = None) -> di
     文号优先用列表页的值：正文里的文号多是**引用别人**（国发〔2021〕7号），
     从正文猜必然猜错，这不是正则不够好，是位置不对。
     """
-    page = fetch(url)
+    page = fetch_smart(url)
     kind, parsed = parse_any(page.content, page.content_type, url, page.path)
     blocks: list[Block] = [Block(i, b.kind, b.text, b.page) for i, b in enumerate(parsed.blocks)]
     atts = []
@@ -87,6 +87,7 @@ def ingest(url: str, *, slug: str | None = None, hint: dict | None = None) -> di
         "parser_version": PARSER_VERSION,
         "attachments": atts,
         "retrieved_via": "crawl",
+        "fetch_via": getattr(page, "via", "httpx"),
         "extract": parsed.extract,
         "ocr_conf": parsed.ocr_conf,
         "effective_from": iso(m_from.group(1) if m_from else None),
