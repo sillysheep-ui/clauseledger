@@ -5,7 +5,7 @@ import io
 import re
 from dataclasses import dataclass, field
 
-from bs4 import BeautifulSoup
+from bs4 import BeautifulSoup, Comment
 
 CN = re.compile(r"[\u4e00-\u9fff]")
 SCAN_PAGE_CHARS = 50
@@ -109,8 +109,14 @@ def parse_html(data: bytes, base_url: str) -> Parsed:
                 yield from _walk(ch)
 
     def own_text(el) -> str:
-        """只取该元素自己的文字，不含子块级元素的文字——避免父子重复计数。"""
-        return " ".join(str(x) for x in el.find_all(string=True, recursive=False)).strip()
+        """只取该元素自己的文字，不含子块级元素的文字——避免父子重复计数。
+
+        `Comment` 必须排除：被注释掉的 `<script>` 在 BeautifulSoup 里是注释节点，
+        照样会被 `find_all(string=True)` 捞出来，于是 JS 源码当成正文进了语料
+        （93 份文档各带一段 `const specialChars = …`）。
+        """
+        return " ".join(str(x) for x in el.find_all(string=True, recursive=False)
+                        if not isinstance(x, Comment)).strip()
 
     for el in _walk(root):
         if el.name == "table":
