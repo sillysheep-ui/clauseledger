@@ -1,15 +1,15 @@
 {
  "schema": "coverage/v1",
- "generated_at": "2026-11-13T17:57:47+0800",
+ "generated_at": "2026-11-13T18:29:34+0800",
  "corpus_version": null,
  "totals": {
   "cities_total": 337,
-  "cities_reachable": 313,
-  "cities_blocked": 24,
+  "cities_reachable": 327,
+  "cities_blocked": 10,
   "blocked_by_reason": {
-   "identity_mismatch": 5,
-   "discovery_gap": 18,
-   "waf_blocked": 1
+   "waf_blocked": 1,
+   "discovery_gap": 8,
+   "identity_mismatch": 1
   }
  },
  "cities": {
@@ -1119,14 +1119,13 @@
   },
   "台州": {
    "province": "",
-   "checked_at": "2026-11-13T17:57:47+0800",
-   "method": "httpx",
+   "checked_at": "2026-11-13T18:29:34+0800",
+   "method": "chrome",
    "last_status": 200,
    "attempts": 6,
-   "status": "blocked",
-   "reason": "identity_mismatch",
-   "detail": "域名能打开，但页面与城市对不上（多音字域名碰撞或防护页顶替）",
-   "caveat": "未接入不代表当地没有相关政策，只代表我们没能自动取到"
+   "status": "reachable",
+   "url": "https://www.zjtz.gov.cn/",
+   "chars": 6799
   },
   "丽": {
    "province": "",
@@ -2234,14 +2233,13 @@
   },
   "郴州": {
    "province": "",
-   "checked_at": "2026-11-13T17:57:47+0800",
-   "method": "httpx",
-   "last_status": null,
+   "checked_at": "2026-11-13T18:29:34+0800",
+   "method": "chrome",
+   "last_status": 200,
    "attempts": 6,
-   "status": "blocked",
-   "reason": "discovery_gap",
-   "detail": "我们没找到该城市的官方入口（省级导航未取到），不是当地没有公开信息",
-   "caveat": "未接入不代表当地没有相关政策，只代表我们没能自动取到"
+   "status": "reachable",
+   "url": "https://www.czs.gov.cn/",
+   "chars": 9860
   },
   "永州": {
    "province": "",
@@ -2269,25 +2267,23 @@
   },
   "娄底": {
    "province": "",
-   "checked_at": "2026-11-13T17:57:47+0800",
-   "method": "httpx",
-   "last_status": null,
+   "checked_at": "2026-11-13T18:29:34+0800",
+   "method": "chrome",
+   "last_status": 200,
    "attempts": 6,
-   "status": "blocked",
-   "reason": "discovery_gap",
-   "detail": "我们没找到该城市的官方入口（省级导航未取到），不是当地没有公开信息",
-   "caveat": "未接入不代表当地没有相关政策，只代表我们没能自动取到"
+   "status": "reachable",
+   "url": "https://www.hnloudi.gov.cn/",
+   "chars": 3835
   },
   "湘西": {
    "province": "",
-   "checked_at": "2026-11-13T17:57:47+0800",
-   "method": "httpx",
-   "last_status": null,
+   "checked_at": "2026-11-13T18:29:34+0800",
+   "method": "chrome",
+   "last_status": 200,
    "attempts": 9,
-   "status": "blocked",
-   "reason": "discovery_gap",
-   "detail": "我们没找到该城市的官方入口（省级导航未取到），不是当地没有公开信息",
-   "caveat": "未接入不代表当地没有相关政策，只代表我们没能自动取到"
+   "status": "reachable",
+   "url": "https://www.xxz.gov.cn/",
+   "chars": 8076
   },
   "广州": {
    "province": "",
@@ -2470,14 +2466,13 @@
   },
   "清远": {
    "province": "",
-   "checked_at": "2026-11-13T17:57:47+0800",
-   "method": "httpx",
+   "checked_at": "2026-11-13T18:29:34+0800",
+   "method": "chrome",
    "last_status": 200,
    "attempts": 6,
-   "status": "blocked",
-   "reason": "identity_mismatch",
-   "detail": "域名能打开，但页面与城市对不上（多音字域名碰撞或防护页顶替）",
-   "caveat": "未接入不代表当地没有相关政策，只代表我们没能自动取到"
+   "status": "reachable",
+   "url": "https://www.gdqy.gov.cn/",
+   "chars": 8029
   },
   "东莞": {
    "province": "",
@@ -2601,14 +2596,13 @@
   },
   "防城港": {
    "province": "",
-   "checked_at": "2026-11-13T17:57:47+0800",
-   "method": "httpx",
-   "last_status": null,
+   "checked_at": "2026-11-13T18:29:34+0800",
+   "method": "chrome",
+   "last_status": 200,
    "attempts": 6,
-   "status": "blocked",
-   "reason": "discovery_gap",
-   "detail": "我们没找到该城市的官方入口（省级导航未取到），不是当地没有公开信息",
-   "caveat": "未接入不代表当地没有相关政策，只代表我们没能自动取到"
+   "status": "reachable",
+   "url": "https://www.fcgs.gov.cn/",
+   "chars": 10102
   },
   "钦州": {
    "province": "",
@@ -2825,14 +2819,13 @@
   },
   "广元": {
    "province": "",
-   "checked_at": "2026-11-13T17:57:47+0800",
-   "method": "httpx",
+   "checked_at": "2026-11-13T18:29:34+0800",
+   "method": "chrome",
    "last_status": 200,
    "attempts": 6,
-   "status": "blocked",
-   "reason": "identity_mismatch",
-   "detail": "域名能打开，但页面与城市对不上（多音字域名碰撞或防护页顶替）",
-   "caveat": "未接入不代表当地没有相关政策，只代表我们没能自动取到"
+   "status": "reachable",
+   "url": "https://www.cngy.gov.cn/",
+   "chars": 6140
   },
   "遂宁": {
    "province": "",
@@ -3184,14 +3177,13 @@
   },
   "普洱": {
    "province": "",
-   "checked_at": "2026-11-13T17:57:47+0800",
-   "method": "httpx",
-   "last_status": null,
+   "checked_at": "2026-11-13T18:29:34+0800",
+   "method": "chrome",
+   "last_status": 200,
    "attempts": 6,
-   "status": "blocked",
-   "reason": "discovery_gap",
-   "detail": "我们没找到该城市的官方入口（省级导航未取到），不是当地没有公开信息",
-   "caveat": "未接入不代表当地没有相关政策，只代表我们没能自动取到"
+   "status": "reachable",
+   "url": "https://www.puershi.gov.cn/",
+   "chars": 11214
   },
   "临沧": {
    "province": "",
@@ -3255,14 +3247,13 @@
   },
   "大理": {
    "province": "",
-   "checked_at": "2026-11-13T17:57:47+0800",
-   "method": "httpx",
-   "last_status": null,
+   "checked_at": "2026-11-13T18:29:34+0800",
+   "method": "chrome",
+   "last_status": 200,
    "attempts": 6,
-   "status": "blocked",
-   "reason": "discovery_gap",
-   "detail": "我们没找到该城市的官方入口（省级导航未取到），不是当地没有公开信息",
-   "caveat": "未接入不代表当地没有相关政策，只代表我们没能自动取到"
+   "status": "reachable",
+   "url": "https://www.dali.gov.cn/",
+   "chars": 293316
   },
   "德宏": {
    "province": "",
@@ -3612,14 +3603,13 @@
   },
   "庆阳": {
    "province": "",
-   "checked_at": "2026-11-13T17:57:47+0800",
-   "method": "httpx",
+   "checked_at": "2026-11-13T18:29:34+0800",
+   "method": "chrome",
    "last_status": 200,
    "attempts": 6,
-   "status": "blocked",
-   "reason": "identity_mismatch",
-   "detail": "域名能打开，但页面与城市对不上（多音字域名碰撞或防护页顶替）",
-   "caveat": "未接入不代表当地没有相关政策，只代表我们没能自动取到"
+   "status": "reachable",
+   "url": "https://www.zgqingyang.gov.cn/",
+   "chars": 6095
   },
   "定西": {
    "province": "",
@@ -3647,14 +3637,13 @@
   },
   "临夏": {
    "province": "",
-   "checked_at": "2026-11-13T17:57:47+0800",
-   "method": "httpx",
-   "last_status": null,
+   "checked_at": "2026-11-13T18:29:34+0800",
+   "method": "chrome",
+   "last_status": 200,
    "attempts": 6,
-   "status": "blocked",
-   "reason": "discovery_gap",
-   "detail": "我们没找到该城市的官方入口（省级导航未取到），不是当地没有公开信息",
-   "caveat": "未接入不代表当地没有相关政策，只代表我们没能自动取到"
+   "status": "reachable",
+   "url": "https://www.linxia.gov.cn/",
+   "chars": 12689
   },
   "甘南": {
    "province": "",
@@ -3693,14 +3682,13 @@
   },
   "海北": {
    "province": "",
-   "checked_at": "2026-11-13T17:57:47+0800",
-   "method": "httpx",
-   "last_status": null,
+   "checked_at": "2026-11-13T18:29:34+0800",
+   "method": "chrome",
+   "last_status": 200,
    "attempts": 6,
-   "status": "blocked",
-   "reason": "discovery_gap",
-   "detail": "我们没找到该城市的官方入口（省级导航未取到），不是当地没有公开信息",
-   "caveat": "未接入不代表当地没有相关政策，只代表我们没能自动取到"
+   "status": "reachable",
+   "url": "https://www.haibei.gov.cn/",
+   "chars": 7190
   },
   "黄南": {
    "province": "",
@@ -3726,14 +3714,13 @@
   },
   "果洛": {
    "province": "",
-   "checked_at": "2026-11-13T17:57:47+0800",
-   "method": "httpx",
-   "last_status": null,
+   "checked_at": "2026-11-13T18:29:34+0800",
+   "method": "chrome",
+   "last_status": 200,
    "attempts": 6,
-   "status": "blocked",
-   "reason": "discovery_gap",
-   "detail": "我们没找到该城市的官方入口（省级导航未取到），不是当地没有公开信息",
-   "caveat": "未接入不代表当地没有相关政策，只代表我们没能自动取到"
+   "status": "reachable",
+   "url": "https://www.guoluo.gov.cn/",
+   "chars": 4267
   },
   "玉树": {
    "province": "",
@@ -3748,14 +3735,13 @@
   },
   "海西": {
    "province": "",
-   "checked_at": "2026-11-13T17:57:47+0800",
-   "method": "httpx",
-   "last_status": null,
+   "checked_at": "2026-11-13T18:29:34+0800",
+   "method": "chrome",
+   "last_status": 200,
    "attempts": 6,
-   "status": "blocked",
-   "reason": "discovery_gap",
-   "detail": "我们没找到该城市的官方入口（省级导航未取到），不是当地没有公开信息",
-   "caveat": "未接入不代表当地没有相关政策，只代表我们没能自动取到"
+   "status": "reachable",
+   "url": "https://www.haixi.gov.cn/",
+   "chars": 4357
   },
   "银川": {
    "province": "",
