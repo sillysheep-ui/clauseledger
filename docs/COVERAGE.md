@@ -121,3 +121,42 @@ blocked 原因分三类，用户看到的解释必须不同：
 | `state` | `ok` / `ok_after_retry` / `never_ok` |
 
 实测：**560 份文件里 59 份失败过后来成功，0 份从未成功**——这就是"失败不等于不可达"的直接证据。
+
+## 第三档：真 Chrome（凭指纹，不凭 IP）
+
+同一个 URL、同一台机器、同一个时刻，三种客户端：
+
+| 客户端 | 成都 `www.chengdu.gov.cn` | 为什么 |
+|---|---|---|
+| `httpx` | **412**，2,382 字节，0 个汉字 | 不执行 JS，停在挑战第一段 |
+| Playwright 自带 Chromium | 挑战脚本循环，**0 字** | 真跑 JS，但指纹仍是自动化 |
+| **真 Chrome（CDP）** | **200**，360 KB，正常渲染 | 指纹是真的 |
+
+所以对方拦的**不是 IP，是客户端身份**。`tools/ingest/fetch.py::fetch_smart` 现在是三档：
+
+```
+httpx  →  无头 Chromium（两段式）  →  真 Chrome（CDP）
+```
+
+只有遇到"在考验客户端"的状态码（403/412/418/429/503/521/522/524）才升级，其余照旧走 httpx。
+
+### 判据不是状态码，是"有没有正文"
+
+踩过的坑：一个 7 KB 的挑战页也能过 `200 字节`，但中文字只有 5 个。所以判据改成：
+
+```python
+substantive(html) = len(re.findall(r"[\u4e00-\u9fa5]", html)) >= 200
+```
+
+拿到正文之后，即使首包是 412，也记 `status=200`、`via=chrome`——因为我们确实拿到了页面。
+
+### 代价（必须写清楚）
+
+- 必须 `--no-sandbox`：本机进程在外层沙箱里，Chrome 自己的 sandbox 起不来（日志 `sandbox initialization failed`）。
+  这只适合**本机受信环境**，不能带到生产。
+- 一个城市 3–8 秒，不能全量跑；只对挑战状态码触发。
+- 用临时 profile（`/tmp/clauseledger-chrome`），不碰用户正在用的 Chrome。
+- 见过一种崩法：上次 CDP 断开后 Chrome 停在 `Browser.setDownloadBehavior ... not supported`，
+  所以要 `pkill` 重启再试一次（`fetch_with_real_chrome(retry=1)`）。
+
+证据：`docs/scan/shots/证据-成都-真Chrome.png`（真 Chrome 渲染出的成都市政府首页）。
