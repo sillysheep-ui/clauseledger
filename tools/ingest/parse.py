@@ -11,6 +11,10 @@ CN = re.compile(r"[\u4e00-\u9fff]")
 SCAN_PAGE_CHARS = 50
 BLOCK_TAGS = ("h1", "h2", "h3", "h4", "p", "table", "li", "div")
 CRUMB = ("您现在的位置", "当前位置", "相关链接", "首页 >", "首页>")
+# 页尾控件：从第一个命中的块起，后面全是站点模板，不是公文正文。
+# 不切掉的话，「相关稿件」「《上一篇…》」会拼进最后一条条款的正文里
+# （评测里表现为 8% 的回答带着这段尾巴，见 clean 指标）。
+FOOTER = re.compile(r"(打印本页|分享到|相关稿件|相关链接|返回顶部|关闭窗口|字体[:：]|上一篇|下一篇|扫一扫)")
 
 # 解析器版本：偏移量只在同一版本内有效，换版本必须重算引用
 PARSER_VERSION = "0.3.2"
@@ -138,6 +142,8 @@ def parse_html(data: bytes, base_url: str) -> Parsed:
             continue
         if txt.startswith(CRUMB) or re.search(r"(?:class|href|src)=|<[a-zA-Z/]", txt):
             continue   # 面包屑与模板源码残片：不是正文
+        if FOOTER.search(txt):
+            break      # 正文到此为止，后面是页尾模板
         blocks.append(Block(len(blocks), kind, txt))
 
     atts = []

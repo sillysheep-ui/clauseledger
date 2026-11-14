@@ -54,6 +54,17 @@ def leakage(q: str, title: str) -> float:
     return len(qt & set(tokenize(title))) / len(qt)
 
 
+# top-1 条款文本里的"不该出现的字"：页尾、导航、被注释掉的 JS、没剥干净的标签。
+# 它不影响 hit@1（金标只判文号），但决定"引用出去的那段话干不干净"。
+ARTIFACT = ("const ", "function(", "encodeURIComponent", "document.writeln",
+            "<!--", "<div", "<span", "您现在的位置", "当前位置",
+            "相关稿件", "分享到", "打印本页")
+
+
+def dirty(text: str) -> int:
+    return int(any(a in (text or "") for a in ARTIFACT))
+
+
 def run(split: str) -> dict:
     qs = [q for q in json.loads(QS.read_text("utf-8")) if split == "all" or q["split"] == split]
     rows = []
@@ -73,6 +84,7 @@ def run(split: str) -> dict:
             "answered": int(bool(top)),
             "top": top.clause.doc_no if top else "",
             "top_status": top.clause.status if top else "",
+            "dirty": dirty(top.clause.text) if top else 0,
             "leak": round(leakage(item["q"], item["gold_title"]), 2) if item["gold_title"] else 0.0,
         })
     return {"split": split, "rows": rows}
@@ -98,6 +110,7 @@ def summarize(rows: list[dict]) -> dict:
              "mrr": sum(r["mrr"] for r in rs) / n,
              "answered": len(ans) / n,
              "hit1_answered": (sum(r["ok1"] for r in ans) / len(ans)) if ans else 0.0,
+             "clean": (1 - sum(r["dirty"] for r in ans) / len(ans)) if ans else 0.0,
              "leak_mean": sum(r["leak"] for r in rs) / n}
         if cat == "version":
             d["effective1"] = sum(1 for r in rs if r["ok1"] and r["top_status"] == "effective") / n
@@ -108,15 +121,16 @@ def summarize(rows: list[dict]) -> dict:
 def report(res: dict) -> str:
     s = summarize(res["rows"])
     L = [f"# 评测 v2（{res['split']}，{len(res['rows'])} 条，题目来自官方政策问答）", "",
-         "| 类别 | n | hit@1 (95%CI) | hit@3 | MRR | 应答率 | 已答中的 hit@1 | 泄漏度 |",
-         "|---|---|---|---|---|---|---|---|"]
+         "| 类别 | n | hit@1 (95%CI) | hit@3 | MRR | 应答率 | 已答中的 hit@1 | 泄漏度 | 干净率 |",
+         "|---|---|---|---|---|---|---|---|---|"]
     for cat in ("official", "version"):
         b = s.get(cat)
         if not b:
             continue
         lo, hi = b["ci"]
         L.append(f"| {cat} | {b['n']} | {b['hit1']:.0%} ({lo:.0%}–{hi:.0%}) | {b['hit3']:.0%} | "
-                 f"{b['mrr']:.2f} | {b['answered']:.0%} | {b['hit1_answered']:.0%} | {b['leak_mean']:.0%} |")
+                 f"{b['mrr']:.2f} | {b['answered']:.0%} | {b['hit1_answered']:.0%} | {b['leak_mean']:.0%} | "
+                 f"{b.get('clean', 0):.0%} |")
     b = s.get("out_of_scope")
     if b:
         lo, hi = b["ci"]
