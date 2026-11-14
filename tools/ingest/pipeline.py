@@ -66,10 +66,9 @@ def ingest(url: str, *, slug: str | None = None, hint: dict | None = None) -> di
     m_doc = RE_DOCNO.search(text) or RE_DOCNO.search(parsed.title)
     m_from = RE_EFF_FROM.search(text)
     m_to = RE_EFF_TO.search(text)
-    clauses = split_clauses(blocks)
-
     hint = hint or {}
     doc_no = hint.get("doc_no") or (m_doc.group(0).replace(" ", "") if m_doc else None)
+    clauses = split_clauses(blocks, doc_no or "")
     rec = {
         "schema": "doc/v1",
         "doc_no": doc_no,
@@ -154,7 +153,7 @@ def reparse(rec: dict) -> dict:
 
     blocks = drop_nav(blocks)
     text = "\n".join(b.text for b in blocks)
-    clauses = split_clauses(blocks)
+    clauses = split_clauses(blocks, rec.get("doc_no") or "")
     m_from = RE_EFF_FROM.search(text)
     m_to = RE_EFF_TO.search(text)
 
