@@ -14,7 +14,7 @@
  "fetched_at": "2026-11-11T19:44:50+0800",
  "page_kind": "html",
  "page_sha256": "7064a0a2e9d4aa699704816b3d2aeb9a0137d0ec5f506c7b295712ff1d46fd23",
- "parser_version": "0.3.2",
+ "parser_version": "0.3.3",
  "attachments": [
   {
    "url": "https://rsj.sh.gov.cn/cmsres/c5/c5242c262f43474492da6de5ca604e64/78c95736e94dc18bec537254cbdf1770.pdf",
@@ -34,10 +34,11 @@
  "stats": {
   "blocks": 202,
   "chars": 6730,
-  "clauses": 70,
+  "clauses": 106,
   "by_level": {
    "4": 12,
-   "5": 58
+   "5": 58,
+   "6": 36
   }
  },
  "clauses": [
@@ -72,6 +73,28 @@
    "block_index": 5,
    "char_offset": 0,
    "start": 570,
+   "end": 651
+  },
+  {
+   "path": "二、/（一）/1．",
+   "label": "1．",
+   "level": 6,
+   "text": "1．注册资本人民币1000万元以上的；",
+   "page": null,
+   "block_index": 6,
+   "char_offset": 0,
+   "start": 604,
+   "end": 623
+  },
+  {
+   "path": "二、/（一）/2．",
+   "label": "2．",
+   "level": 6,
+   "text": "2．市人力资源社会保障行政部门认为需要由其实施许可的。",
+   "page": null,
+   "block_index": 7,
+   "char_offset": 0,
+   "start": 624,
    "end": 651
   },
   {
@@ -185,6 +208,61 @@
    "end": 1121
   },
   {
+   "path": "四、/（一）/2．",
+   "label": "2．",
+   "level": 6,
+   "text": "2．公司章程（筹建中公司需要提交）；",
+   "page": null,
+   "block_index": 18,
+   "char_offset": 0,
+   "start": 1034,
+   "end": 1052
+  },
+  {
+   "path": "四、/（一）/3．",
+   "label": "3．",
+   "level": 6,
+   "text": "3．验资机构出具的验资报告或者财务审计报告；",
+   "page": null,
+   "block_index": 19,
+   "char_offset": 0,
+   "start": 1053,
+   "end": 1075
+  },
+  {
+   "path": "四、/（一）/4．",
+   "label": "4．",
+   "level": 6,
+   "text": "4．经营场所的使用证明；",
+   "page": null,
+   "block_index": 20,
+   "char_offset": 0,
+   "start": 1076,
+   "end": 1088
+  },
+  {
+   "path": "四、/（一）/5．",
+   "label": "5．",
+   "level": 6,
+   "text": "5．与开展业务相适应的办公设施设备清单；",
+   "page": null,
+   "block_index": 21,
+   "char_offset": 0,
+   "start": 1089,
+   "end": 1109
+  },
+  {
+   "path": "四、/（一）/6．",
+   "label": "6．",
+   "level": 6,
+   "text": "6．劳务派遣管理制度。",
+   "page": null,
+   "block_index": 22,
+   "char_offset": 0,
+   "start": 1110,
+   "end": 1121
+  },
+  {
    "path": "四、/（二）",
    "label": "（二）",
    "level": 5,
@@ -193,6 +271,50 @@
    "block_index": 23,
    "char_offset": 0,
    "start": 1122,
+   "end": 1296
+  },
+  {
+   "path": "四、/（二）/2．",
+   "label": "2．",
+   "level": 6,
+   "text": "2．企业名称变更登记通知书（单位名称变更需要提交）；",
+   "page": null,
+   "block_index": 24,
+   "char_offset": 0,
+   "start": 1178,
+   "end": 1204
+  },
+  {
+   "path": "四、/（二）/3．",
+   "label": "3．",
+   "level": 6,
+   "text": "3．经营场所的使用证明（住所变更需要提交）；",
+   "page": null,
+   "block_index": 25,
+   "char_offset": 0,
+   "start": 1205,
+   "end": 1227
+  },
+  {
+   "path": "四、/（二）/4．",
+   "label": "4．",
+   "level": 6,
+   "text": "4．股东会、股东大会或者董事会关于变更法定代表人的决议（法定代表人变更需要提交）；",
+   "page": null,
+   "block_index": 26,
+   "char_offset": 0,
+   "start": 1228,
+   "end": 1269
+  },
+  {
+   "path": "四、/（二）/5．",
+   "label": "5．",
+   "level": 6,
+   "text": "5．验资机构出具的验资报告（增加注册资本需要提交）。",
+   "page": null,
+   "block_index": 27,
+   "char_offset": 0,
+   "start": 1270,
    "end": 1296
   },
   {
@@ -207,6 +329,17 @@
    "end": 1364
   },
   {
+   "path": "四、/（三）/2．",
+   "label": "2．",
+   "level": 6,
+   "text": "2．近3年劳务派遣基本经营情况表。",
+   "page": null,
+   "block_index": 29,
+   "char_offset": 0,
+   "start": 1347,
+   "end": 1364
+  },
+  {
    "path": "四、/（四）",
    "label": "（四）",
    "level": 5,
@@ -215,6 +348,39 @@
    "block_index": 30,
    "char_offset": 0,
    "start": 1365,
+   "end": 1555
+  },
+  {
+   "path": "四、/（四）/1．",
+   "label": "1．",
+   "level": 6,
+   "text": "1．申请变更住所、注册资本导致许可管辖发生变化的；",
+   "page": null,
+   "block_index": 31,
+   "char_offset": 0,
+   "start": 1402,
+   "end": 1427
+  },
+  {
+   "path": "四、/（四）/2．",
+   "label": "2．",
+   "level": 6,
+   "text": "2．在许可证有效期届满30日内申请延续许可的；",
+   "page": null,
+   "block_index": 32,
+   "char_offset": 0,
+   "start": 1428,
+   "end": 1451
+  },
+  {
+   "path": "四、/（四）/3．",
+   "label": "3．",
+   "level": 6,
+   "text": "3．在许可证有效期届满后重新申请许可的。\n符合条件的，按照《上海市人力资源和社会保障局关于印发〈中国（上海）自由贸易试验区及临港新片区实行劳务派遣经营许可告知承诺的试点办法〉的通知》的规定办理许可审批手续。",
+   "page": null,
+   "block_index": 33,
+   "char_offset": 0,
+   "start": 1452,
    "end": 1555
   },
   {
@@ -339,6 +505,39 @@
    "end": 2595
   },
   {
+   "path": "五、/（五）/1．",
+   "label": "1．",
+   "level": 6,
+   "text": "1．申请经营劳务派遣业务的，人力资源社会保障行政部门应当自受理之日起10个工作日内依法作出是否准予行政许可的决定；10个工作日内不能作出决定的，经本行政部门负责人批准，可以延长5个工作日，并将延长期限的理由告知申请人；",
+   "page": null,
+   "block_index": 46,
+   "char_offset": 0,
+   "start": 2386,
+   "end": 2495
+  },
+  {
+   "path": "五、/（五）/2．",
+   "label": "2．",
+   "level": 6,
+   "text": "2．申请变更的，人力资源社会保障行政部门应当自受理之日起5个工作日内依法作出是否准予变更的决定；",
+   "page": null,
+   "block_index": 47,
+   "char_offset": 0,
+   "start": 2496,
+   "end": 2544
+  },
+  {
+   "path": "五、/（五）/3．",
+   "label": "3．",
+   "level": 6,
+   "text": "3．申请延续许可的，人力资源社会保障行政部门应当自受理之日起30日内依法作出是否准予延续许可的决定。",
+   "page": null,
+   "block_index": 48,
+   "char_offset": 0,
+   "start": 2545,
+   "end": 2595
+  },
+  {
    "path": "五、/（六）",
    "label": "（六）",
    "level": 5,
@@ -460,6 +659,28 @@
    "end": 3999
   },
   {
+   "path": "二、/（一）/1．",
+   "label": "1．",
+   "level": 6,
+   "text": "1．注册资本人民币 1000万元以上的；",
+   "page": 2,
+   "block_index": 86,
+   "char_offset": 0,
+   "start": 3951,
+   "end": 3971
+  },
+  {
+   "path": "二、/（一）/2．",
+   "label": "2．",
+   "level": 6,
+   "text": "2．市人力资源社会保障行政部门认为需要由其实施许可的。",
+   "page": 2,
+   "block_index": 87,
+   "char_offset": 0,
+   "start": 3972,
+   "end": 3999
+  },
+  {
    "path": "二、/（二）",
    "label": "（二）",
    "level": 5,
@@ -570,6 +791,61 @@
    "end": 4478
   },
   {
+   "path": "四、/（一）/2．",
+   "label": "2．",
+   "level": 6,
+   "text": "2．公司章程（筹建中公司需要提交） ；",
+   "page": 3,
+   "block_index": 106,
+   "char_offset": 0,
+   "start": 4390,
+   "end": 4409
+  },
+  {
+   "path": "四、/（一）/3．",
+   "label": "3．",
+   "level": 6,
+   "text": "3．验资机构出具的验资报告或者财务审计报告；",
+   "page": 3,
+   "block_index": 107,
+   "char_offset": 0,
+   "start": 4410,
+   "end": 4432
+  },
+  {
+   "path": "四、/（一）/4．",
+   "label": "4．",
+   "level": 6,
+   "text": "4．经营场所的使用证明；",
+   "page": 3,
+   "block_index": 108,
+   "char_offset": 0,
+   "start": 4433,
+   "end": 4445
+  },
+  {
+   "path": "四、/（一）/5．",
+   "label": "5．",
+   "level": 6,
+   "text": "5．与开展业务相适应的办公设施设备清单；",
+   "page": 3,
+   "block_index": 109,
+   "char_offset": 0,
+   "start": 4446,
+   "end": 4466
+  },
+  {
+   "path": "四、/（一）/6．",
+   "label": "6．",
+   "level": 6,
+   "text": "6．劳务派遣管理制度。",
+   "page": 3,
+   "block_index": 110,
+   "char_offset": 0,
+   "start": 4467,
+   "end": 4478
+  },
+  {
    "path": "四、/（二）",
    "label": "（二）",
    "level": 5,
@@ -578,6 +854,50 @@
    "block_index": 111,
    "char_offset": 0,
    "start": 4479,
+   "end": 4659
+  },
+  {
+   "path": "四、/（二）/2．",
+   "label": "2．",
+   "level": 6,
+   "text": "2．企业名称变更登记通知书（单位名称变更需要提交） ；",
+   "page": 3,
+   "block_index": 113,
+   "char_offset": 0,
+   "start": 4536,
+   "end": 4563
+  },
+  {
+   "path": "四、/（二）/3．",
+   "label": "3．",
+   "level": 6,
+   "text": "3．经营场所的使用证明（住所变更需要提交） ；",
+   "page": 3,
+   "block_index": 114,
+   "char_offset": 0,
+   "start": 4564,
+   "end": 4587
+  },
+  {
+   "path": "四、/（二）/4．",
+   "label": "4．",
+   "level": 6,
+   "text": "4．股东会、股东大会或者董事会关于变更法定代表人的决\n议（法定代表人变更需要提交） ；",
+   "page": 3,
+   "block_index": 115,
+   "char_offset": 0,
+   "start": 4588,
+   "end": 4631
+  },
+  {
+   "path": "四、/（二）/5．",
+   "label": "5．",
+   "level": 6,
+   "text": "5．验资机构出具的验资报告（增加注册资本需要提交） 。",
+   "page": 4,
+   "block_index": 117,
+   "char_offset": 0,
+   "start": 4632,
    "end": 4659
   },
   {
@@ -592,6 +912,17 @@
    "end": 4730
   },
   {
+   "path": "四、/（三）/2．",
+   "label": "2．",
+   "level": 6,
+   "text": "2．近3年劳务派遣基本经营情况表。",
+   "page": 4,
+   "block_index": 120,
+   "char_offset": 0,
+   "start": 4713,
+   "end": 4730
+  },
+  {
    "path": "四、/（四）",
    "label": "（四）",
    "level": 5,
@@ -600,6 +931,39 @@
    "block_index": 121,
    "char_offset": 0,
    "start": 4731,
+   "end": 4925
+  },
+  {
+   "path": "四、/（四）/1．",
+   "label": "1．",
+   "level": 6,
+   "text": "1．申请变更住所、注册资本导致许可管辖发生变化的；",
+   "page": 4,
+   "block_index": 123,
+   "char_offset": 0,
+   "start": 4769,
+   "end": 4794
+  },
+  {
+   "path": "四、/（四）/2．",
+   "label": "2．",
+   "level": 6,
+   "text": "2．在许可证有效期届满 30日内申请延续许可的；",
+   "page": 4,
+   "block_index": 124,
+   "char_offset": 0,
+   "start": 4795,
+   "end": 4819
+  },
+  {
+   "path": "四、/（四）/3．",
+   "label": "3．",
+   "level": 6,
+   "text": "3．在许可证有效期届满后重新申请许可的。\n符合条件的，按照《上海市人力资源和社会保障局关于印发\n〈中国（上海）自由贸易试验区及临港新片区实行劳务派遣经营\n许可告知承诺的试点办法〉的通知》的规定办理许可审批手续。",
+   "page": 4,
+   "block_index": 125,
+   "char_offset": 0,
+   "start": 4820,
    "end": 4925
   },
   {
@@ -721,6 +1085,39 @@
    "block_index": 161,
    "char_offset": 0,
    "start": 5746,
+   "end": 5998
+  },
+  {
+   "path": "五、/（五）/1．",
+   "label": "1．",
+   "level": 6,
+   "text": "1．申请经营劳务派遣业务的，人力资源社会保障行政部门\n应当自受理之日起 10 个工作日内依法作出是否准予行政许可的\n决定；10个工作日内不能作出决定的，经本行政部门负责人批准，\n可以延长 5个工作日，并将延长期限的理由告知申请人；",
+   "page": 6,
+   "block_index": 163,
+   "char_offset": 0,
+   "start": 5780,
+   "end": 5895
+  },
+  {
+   "path": "五、/（五）/2．",
+   "label": "2．",
+   "level": 6,
+   "text": "2．申请变更的，人力资源社会保障行政部门应当自受理之\n日起5个工作日内依法作出是否准予变更的决定；",
+   "page": 6,
+   "block_index": 167,
+   "char_offset": 0,
+   "start": 5896,
+   "end": 5945
+  },
+  {
+   "path": "五、/（五）/3．",
+   "label": "3．",
+   "level": 6,
+   "text": "3．申请延续许可的，人力资源社会保障行政部门应当自受\n理之日起 30日内依法作出是否准予延续许可的决定。",
+   "page": 6,
+   "block_index": 169,
+   "char_offset": 0,
+   "start": 5946,
    "end": 5998
   },
   {

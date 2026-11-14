@@ -17,8 +17,12 @@ LEVELS: list[tuple[int, re.Pattern[str]]] = [
     (3, re.compile(rf"^第[{NUM}]+条")),
     (4, re.compile(rf"^[{NUM}]+、")),
     (5, re.compile(rf"^[（(][{NUM}]+[）)]")),
-    (6, re.compile(r"^\d{1,2}[.、](?!\d)")),
+    (6, re.compile(r"^\d{1,2}[.．、](?!\d)")),
     (7, re.compile(r"^[（(]\d{1,2}[）)]")),
+    # 2026-11-14 补：⑴⑵⑶ 这类圈码、全角句点「1．」、阿拉伯「第1条」
+    # 实测漏切 376 行「1．」+18 行「⑴」+少量「第1条」——它们被并进上一条，条款粒度直接变粗
+    (7, re.compile(r"^[⑴-⒇]")),
+    (3, re.compile(r"^第\s*\d{1,3}\s*[条章节]")),
 ]
 
 
