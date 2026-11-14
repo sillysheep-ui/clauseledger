@@ -102,10 +102,16 @@ class Clause:
     page: int | None
     start: int
     end: int
+    sec: int = 0        # 同一 path 的第几次出现（附录尤其多），path 本身不唯一
 
 
 # 「本通知第一条第二款…」在 PDF 里换行后行首长得像标题，其实是被引用的条款
 CROSSREF = re.compile(r"^第[{NUM}\d]{{1,4}}\s*[条章节]\s*第".format(NUM=NUM))
+
+
+# 附录/附表/附件：正文之外的一整片名单，没有编号，不切开就会把最后一条撑到上万字
+APPENDIX = re.compile(r"^(附\s*录|附\s*表|附\s*件)\s*([0-9一二三四五六七八九十]{1,3})?$")
+APP_MAX = 600  # 附录内每块的字数上限
 
 
 def _match(line: str) -> tuple[int, str] | None:
@@ -136,13 +142,42 @@ def split_clauses(blocks: list[Block], doc_no: str = "") -> list[Clause]:
 
     heads: list[tuple[int, int, str, int]] = []  # line_idx, level, label, offset
     for i, (_, _, txt, _) in enumerate(lines):
+        am = APPENDIX.match(txt.strip())
+        if am and len(txt.strip()) <= 12:  # 附录也是一级段，否则整片名单会并进上一条
+            heads.append((i, 1, f"{am.group(1).replace(' ', '')}{am.group(2) or ''}", pos[i]))
+            continue
         m = _match(txt)
         if m:
             heads.append((i, m[0], m[1], pos[i]))
 
     out: list[Clause] = []
     stack: list[tuple[int, str]] = []
+    app_seen: dict[str, int] = {}
     for k, (i, level, label, off) in enumerate(heads):
+        am = APPENDIX.match(lines[i][2].strip())
+        if am and len(lines[i][2].strip()) <= 12:
+            end = len(lines)
+            for j, lvl, _, _ in heads[k + 1:]:
+                if lvl <= 1:
+                    end = j
+                    break
+            name = f"{am.group(1).replace(' ', '')}{am.group(2) or ''}"
+            buf, s0 = [], pos[i]
+            for t in range(i, end):
+                txt = lines[t][2]
+                if buf and sum(len(x) + 1 for x in buf) + len(txt) > APP_MAX:
+                    n = app_seen.get(name, 0); app_seen[name] = n + 1
+                    out.append(Clause(path=name, level=1, label=name, text="\n".join(buf),
+                                      block_index=lines[i][0], char_offset=0, page=lines[t - 1][3],
+                                      start=s0, end=pos[t - 1] + len(lines[t - 1][2]), sec=n))
+                    buf, s0 = [], pos[t]
+                buf.append(txt)
+            if buf:
+                n = app_seen.get(name, 0); app_seen[name] = n + 1
+                out.append(Clause(path=name, level=1, label=name, text="\n".join(buf),
+                                  block_index=lines[i][0], char_offset=0, page=lines[end - 1][3],
+                                  start=s0, end=pos[end - 1] + len(lines[end - 1][2]), sec=n))
+            continue
         end_line = len(lines)
         for j, lvl, _, _ in heads[k + 1:]:
             if lvl <= level:
@@ -161,4 +196,9 @@ def split_clauses(blocks: list[Block], doc_no: str = "") -> list[Clause]:
         out.append(Clause(path=path, level=level, label=label, text=body,
                           block_index=bidx, char_offset=lines[i][1], page=page,
                           start=off, end=pos[end_line - 1] + len(lines[end_line - 1][2])))
+    seen: dict[str, int] = {}
+    for c in out:  # 全局口径：path 不唯一，sec 记录这是第几次出现（正文/附件/附录各算一次）
+        n = seen.get(c.path, 0)
+        c.sec = n
+        seen[c.path] = n + 1
     return out

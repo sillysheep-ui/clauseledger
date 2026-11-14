@@ -14,7 +14,7 @@
  "fetched_at": "2026-11-11T19:44:49+0800",
  "page_kind": "html",
  "page_sha256": "48d1e7285e55f399832a9efb447a2b323370fd4f26b0c09daaaa58e3dfb6cfe6",
- "parser_version": "0.3.12",
+ "parser_version": "0.3.14",
  "attachments": [
   {
    "url": "https://rsj.sh.gov.cn/cmsres/d5/d561fa2ddd0444a7b2eaf9f9b00f7869/220523b1cdde6efa3f1db23ad55edd60.pdf",
@@ -50,7 +50,8 @@
    "block_index": 4,
    "char_offset": 0,
    "start": 488,
-   "end": 554
+   "end": 554,
+   "sec": 0
   },
   {
    "path": "第二条",
@@ -61,7 +62,8 @@
    "block_index": 5,
    "char_offset": 0,
    "start": 555,
-   "end": 624
+   "end": 624,
+   "sec": 0
   },
   {
    "path": "第三条",
@@ -72,7 +74,8 @@
    "block_index": 6,
    "char_offset": 0,
    "start": 625,
-   "end": 727
+   "end": 727,
+   "sec": 0
   },
   {
    "path": "第三条/（一）",
@@ -83,7 +86,8 @@
    "block_index": 7,
    "char_offset": 0,
    "start": 647,
-   "end": 676
+   "end": 676,
+   "sec": 0
   },
   {
    "path": "第三条/（二）",
@@ -94,7 +98,8 @@
    "block_index": 8,
    "char_offset": 0,
    "start": 677,
-   "end": 701
+   "end": 701,
+   "sec": 0
   },
   {
    "path": "第三条/（三）",
@@ -105,7 +110,8 @@
    "block_index": 9,
    "char_offset": 0,
    "start": 702,
-   "end": 727
+   "end": 727,
+   "sec": 0
   },
   {
    "path": "第四条",
@@ -116,7 +122,8 @@
    "block_index": 10,
    "char_offset": 0,
    "start": 728,
-   "end": 789
+   "end": 789,
+   "sec": 0
   },
   {
    "path": "第五条",
@@ -127,7 +134,8 @@
    "block_index": 11,
    "char_offset": 0,
    "start": 790,
-   "end": 985
+   "end": 985,
+   "sec": 0
   },
   {
    "path": "第五条/（一）",
@@ -138,7 +146,8 @@
    "block_index": 12,
    "char_offset": 0,
    "start": 830,
-   "end": 864
+   "end": 864,
+   "sec": 0
   },
   {
    "path": "第五条/（二）",
@@ -149,7 +158,8 @@
    "block_index": 13,
    "char_offset": 0,
    "start": 865,
-   "end": 887
+   "end": 887,
+   "sec": 0
   },
   {
    "path": "第五条/（三）",
@@ -160,7 +170,8 @@
    "block_index": 14,
    "char_offset": 0,
    "start": 888,
-   "end": 910
+   "end": 910,
+   "sec": 0
   },
   {
    "path": "第五条/（四）",
@@ -171,7 +182,8 @@
    "block_index": 15,
    "char_offset": 0,
    "start": 911,
-   "end": 957
+   "end": 957,
+   "sec": 0
   },
   {
    "path": "第五条/（五）",
@@ -182,7 +194,8 @@
    "block_index": 16,
    "char_offset": 0,
    "start": 958,
-   "end": 985
+   "end": 985,
+   "sec": 0
   },
   {
    "path": "第六条",
@@ -193,7 +206,8 @@
    "block_index": 17,
    "char_offset": 0,
    "start": 986,
-   "end": 1196
+   "end": 1196,
+   "sec": 0
   },
   {
    "path": "第六条/（一）",
@@ -204,7 +218,8 @@
    "block_index": 18,
    "char_offset": 0,
    "start": 1028,
-   "end": 1045
+   "end": 1045,
+   "sec": 0
   },
   {
    "path": "第六条/（二）",
@@ -215,7 +230,8 @@
    "block_index": 19,
    "char_offset": 0,
    "start": 1046,
-   "end": 1073
+   "end": 1073,
+   "sec": 0
   },
   {
    "path": "第六条/（三）",
@@ -226,7 +242,8 @@
    "block_index": 20,
    "char_offset": 0,
    "start": 1074,
-   "end": 1106
+   "end": 1106,
+   "sec": 0
   },
   {
    "path": "第六条/（四）",
@@ -237,7 +254,8 @@
    "block_index": 21,
    "char_offset": 0,
    "start": 1107,
-   "end": 1134
+   "end": 1134,
+   "sec": 0
   },
   {
    "path": "第六条/（五）",
@@ -248,7 +266,8 @@
    "block_index": 22,
    "char_offset": 0,
    "start": 1135,
-   "end": 1153
+   "end": 1153,
+   "sec": 0
   },
   {
    "path": "第六条/（六）",
@@ -259,7 +278,8 @@
    "block_index": 23,
    "char_offset": 0,
    "start": 1154,
-   "end": 1176
+   "end": 1176,
+   "sec": 0
   },
   {
    "path": "第六条/（七）",
@@ -270,7 +290,8 @@
    "block_index": 24,
    "char_offset": 0,
    "start": 1177,
-   "end": 1196
+   "end": 1196,
+   "sec": 0
   },
   {
    "path": "第七条",
@@ -281,7 +302,8 @@
    "block_index": 25,
    "char_offset": 0,
    "start": 1197,
-   "end": 1234
+   "end": 1234,
+   "sec": 0
   },
   {
    "path": "第八条",
@@ -292,7 +314,8 @@
    "block_index": 26,
    "char_offset": 0,
    "start": 1235,
-   "end": 1449
+   "end": 1449,
+   "sec": 0
   },
   {
    "path": "第八条/（一）",
@@ -303,7 +326,8 @@
    "block_index": 27,
    "char_offset": 0,
    "start": 1279,
-   "end": 1288
+   "end": 1288,
+   "sec": 0
   },
   {
    "path": "第八条/（二）",
@@ -314,7 +338,8 @@
    "block_index": 28,
    "char_offset": 0,
    "start": 1289,
-   "end": 1304
+   "end": 1304,
+   "sec": 0
   },
   {
    "path": "第八条/（三）",
@@ -325,7 +350,8 @@
    "block_index": 29,
    "char_offset": 0,
    "start": 1305,
-   "end": 1313
+   "end": 1313,
+   "sec": 0
   },
   {
    "path": "第八条/（四）",
@@ -336,7 +362,8 @@
    "block_index": 30,
    "char_offset": 0,
    "start": 1314,
-   "end": 1449
+   "end": 1449,
+   "sec": 0
   },
   {
    "path": "第九条",
@@ -347,7 +374,8 @@
    "block_index": 32,
    "char_offset": 0,
    "start": 1450,
-   "end": 1635
+   "end": 1635,
+   "sec": 0
   },
   {
    "path": "第十条",
@@ -358,7 +386,8 @@
    "block_index": 33,
    "char_offset": 0,
    "start": 1636,
-   "end": 1766
+   "end": 1766,
+   "sec": 0
   },
   {
    "path": "第十一条",
@@ -369,7 +398,8 @@
    "block_index": 34,
    "char_offset": 0,
    "start": 1767,
-   "end": 1848
+   "end": 1848,
+   "sec": 0
   },
   {
    "path": "第十二条",
@@ -380,7 +410,8 @@
    "block_index": 35,
    "char_offset": 0,
    "start": 1849,
-   "end": 2133
+   "end": 2133,
+   "sec": 0
   },
   {
    "path": "第十三条",
@@ -391,7 +422,8 @@
    "block_index": 36,
    "char_offset": 0,
    "start": 2134,
-   "end": 2343
+   "end": 2343,
+   "sec": 0
   },
   {
    "path": "第十四条",
@@ -402,7 +434,8 @@
    "block_index": 39,
    "char_offset": 0,
    "start": 2344,
-   "end": 2428
+   "end": 2428,
+   "sec": 0
   },
   {
    "path": "第十五条",
@@ -413,7 +446,8 @@
    "block_index": 40,
    "char_offset": 0,
    "start": 2429,
-   "end": 2529
+   "end": 2529,
+   "sec": 0
   },
   {
    "path": "第十六条",
@@ -424,7 +458,8 @@
    "block_index": 41,
    "char_offset": 0,
    "start": 2530,
-   "end": 2621
+   "end": 2621,
+   "sec": 0
   },
   {
    "path": "第十七条",
@@ -435,7 +470,8 @@
    "block_index": 42,
    "char_offset": 0,
    "start": 2622,
-   "end": 2684
+   "end": 2684,
+   "sec": 0
   },
   {
    "path": "第十八条",
@@ -446,7 +482,8 @@
    "block_index": 43,
    "char_offset": 0,
    "start": 2685,
-   "end": 3319
+   "end": 3319,
+   "sec": 0
   },
   {
    "path": "第一条",
@@ -457,7 +494,8 @@
    "block_index": 68,
    "char_offset": 0,
    "start": 3320,
-   "end": 3388
+   "end": 3388,
+   "sec": 1
   },
   {
    "path": "第二条",
@@ -468,7 +506,8 @@
    "block_index": 71,
    "char_offset": 0,
    "start": 3389,
-   "end": 3460
+   "end": 3460,
+   "sec": 1
   },
   {
    "path": "第三条",
@@ -479,7 +518,8 @@
    "block_index": 74,
    "char_offset": 0,
    "start": 3461,
-   "end": 3563
+   "end": 3563,
+   "sec": 1
   },
   {
    "path": "第三条/（一）",
@@ -490,7 +530,8 @@
    "block_index": 75,
    "char_offset": 0,
    "start": 3483,
-   "end": 3512
+   "end": 3512,
+   "sec": 1
   },
   {
    "path": "第三条/（二）",
@@ -501,7 +542,8 @@
    "block_index": 76,
    "char_offset": 0,
    "start": 3513,
-   "end": 3537
+   "end": 3537,
+   "sec": 1
   },
   {
    "path": "第三条/（三）",
@@ -512,7 +554,8 @@
    "block_index": 77,
    "char_offset": 0,
    "start": 3538,
-   "end": 3563
+   "end": 3563,
+   "sec": 1
   },
   {
    "path": "第四条",
@@ -523,7 +566,8 @@
    "block_index": 78,
    "char_offset": 0,
    "start": 3564,
-   "end": 3627
+   "end": 3627,
+   "sec": 1
   },
   {
    "path": "第五条",
@@ -534,7 +578,8 @@
    "block_index": 81,
    "char_offset": 0,
    "start": 3628,
-   "end": 3826
+   "end": 3826,
+   "sec": 1
   },
   {
    "path": "第五条/（一）",
@@ -545,7 +590,8 @@
    "block_index": 83,
    "char_offset": 0,
    "start": 3669,
-   "end": 3704
+   "end": 3704,
+   "sec": 1
   },
   {
    "path": "第五条/（二）",
@@ -556,7 +602,8 @@
    "block_index": 85,
    "char_offset": 0,
    "start": 3705,
-   "end": 3727
+   "end": 3727,
+   "sec": 1
   },
   {
    "path": "第五条/（三）",
@@ -567,7 +614,8 @@
    "block_index": 86,
    "char_offset": 0,
    "start": 3728,
-   "end": 3750
+   "end": 3750,
+   "sec": 1
   },
   {
    "path": "第五条/（四）",
@@ -578,7 +626,8 @@
    "block_index": 87,
    "char_offset": 0,
    "start": 3751,
-   "end": 3798
+   "end": 3798,
+   "sec": 1
   },
   {
    "path": "第五条/（五）",
@@ -589,7 +638,8 @@
    "block_index": 89,
    "char_offset": 0,
    "start": 3799,
-   "end": 3826
+   "end": 3826,
+   "sec": 1
   },
   {
    "path": "第六条",
@@ -600,7 +650,8 @@
    "block_index": 90,
    "char_offset": 0,
    "start": 3827,
-   "end": 4039
+   "end": 4039,
+   "sec": 1
   },
   {
    "path": "第六条/（一）",
@@ -611,7 +662,8 @@
    "block_index": 92,
    "char_offset": 0,
    "start": 3870,
-   "end": 3887
+   "end": 3887,
+   "sec": 1
   },
   {
    "path": "第六条/（二）",
@@ -622,7 +674,8 @@
    "block_index": 93,
    "char_offset": 0,
    "start": 3888,
-   "end": 3915
+   "end": 3915,
+   "sec": 1
   },
   {
    "path": "第六条/（三）",
@@ -633,7 +686,8 @@
    "block_index": 94,
    "char_offset": 0,
    "start": 3916,
-   "end": 3949
+   "end": 3949,
+   "sec": 1
   },
   {
    "path": "第六条/（四）",
@@ -644,7 +698,8 @@
    "block_index": 96,
    "char_offset": 0,
    "start": 3950,
-   "end": 3977
+   "end": 3977,
+   "sec": 1
   },
   {
    "path": "第六条/（五）",
@@ -655,7 +710,8 @@
    "block_index": 97,
    "char_offset": 0,
    "start": 3978,
-   "end": 3996
+   "end": 3996,
+   "sec": 1
   },
   {
    "path": "第六条/（六）",
@@ -666,7 +722,8 @@
    "block_index": 98,
    "char_offset": 0,
    "start": 3997,
-   "end": 4019
+   "end": 4019,
+   "sec": 1
   },
   {
    "path": "第六条/（七）",
@@ -677,7 +734,8 @@
    "block_index": 99,
    "char_offset": 0,
    "start": 4020,
-   "end": 4039
+   "end": 4039,
+   "sec": 1
   },
   {
    "path": "第七条",
@@ -688,7 +746,8 @@
    "block_index": 100,
    "char_offset": 0,
    "start": 4040,
-   "end": 4078
+   "end": 4078,
+   "sec": 1
   },
   {
    "path": "第八条",
@@ -699,7 +758,8 @@
    "block_index": 102,
    "char_offset": 0,
    "start": 4079,
-   "end": 4297
+   "end": 4297,
+   "sec": 1
   },
   {
    "path": "第八条/（一）",
@@ -710,7 +770,8 @@
    "block_index": 104,
    "char_offset": 0,
    "start": 4124,
-   "end": 4133
+   "end": 4133,
+   "sec": 1
   },
   {
    "path": "第八条/（二）",
@@ -721,7 +782,8 @@
    "block_index": 105,
    "char_offset": 0,
    "start": 4134,
-   "end": 4149
+   "end": 4149,
+   "sec": 1
   },
   {
    "path": "第八条/（三）",
@@ -732,7 +794,8 @@
    "block_index": 106,
    "char_offset": 0,
    "start": 4150,
-   "end": 4158
+   "end": 4158,
+   "sec": 1
   },
   {
    "path": "第八条/（四）",
@@ -743,7 +806,8 @@
    "block_index": 107,
    "char_offset": 0,
    "start": 4159,
-   "end": 4297
+   "end": 4297,
+   "sec": 1
   },
   {
    "path": "第九条",
@@ -754,7 +818,8 @@
    "block_index": 112,
    "char_offset": 0,
    "start": 4298,
-   "end": 4489
+   "end": 4489,
+   "sec": 1
   },
   {
    "path": "第十条",
@@ -765,7 +830,8 @@
    "block_index": 119,
    "char_offset": 0,
    "start": 4490,
-   "end": 4626
+   "end": 4626,
+   "sec": 1
   },
   {
    "path": "第十一条",
@@ -776,7 +842,8 @@
    "block_index": 124,
    "char_offset": 0,
    "start": 4627,
-   "end": 4710
+   "end": 4710,
+   "sec": 1
   },
   {
    "path": "第十二条",
@@ -787,7 +854,8 @@
    "block_index": 127,
    "char_offset": 0,
    "start": 4711,
-   "end": 5012
+   "end": 5012,
+   "sec": 1
   },
   {
    "path": "第十三条",
@@ -798,7 +866,8 @@
    "block_index": 138,
    "char_offset": 0,
    "start": 5013,
-   "end": 5228
+   "end": 5228,
+   "sec": 1
   },
   {
    "path": "第十四条",
@@ -809,7 +878,8 @@
    "block_index": 147,
    "char_offset": 0,
    "start": 5229,
-   "end": 5315
+   "end": 5315,
+   "sec": 1
   },
   {
    "path": "第十五条",
@@ -820,7 +890,8 @@
    "block_index": 150,
    "char_offset": 0,
    "start": 5316,
-   "end": 5420
+   "end": 5420,
+   "sec": 1
   },
   {
    "path": "第十六条",
@@ -831,7 +902,8 @@
    "block_index": 154,
    "char_offset": 0,
    "start": 5421,
-   "end": 5515
+   "end": 5515,
+   "sec": 1
   },
   {
    "path": "第十七条",
@@ -842,7 +914,8 @@
    "block_index": 158,
    "char_offset": 0,
    "start": 5516,
-   "end": 5580
+   "end": 5580,
+   "sec": 1
   },
   {
    "path": "第十八条",
@@ -853,7 +926,8 @@
    "block_index": 161,
    "char_offset": 0,
    "start": 5581,
-   "end": 5620
+   "end": 5620,
+   "sec": 1
   }
  ],
  "blocks": [

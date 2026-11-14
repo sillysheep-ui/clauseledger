@@ -77,7 +77,8 @@ def check(rec: dict) -> Report:
         c["_n"] = norm(c["text"])
 
     # 主键重复：path 是"编号路径"，同一份文件里 通知正文 与 附件办法 可能各有「一、」
-    paths = Counter(c["path"] for c in clauses)
+    # 2026-11-14：附录切分后同一 path 会有多个 sec，path 单独不再能判重
+    paths = Counter((c["path"], c.get("sec", 0)) for c in clauses)
     r.dup_path = sum(n for n in paths.values() if n > 1)
     r.dup_kinds = sum(1 for n in paths.values() if n > 1)
 

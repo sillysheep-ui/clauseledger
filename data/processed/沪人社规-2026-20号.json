@@ -14,7 +14,7 @@
  "fetched_at": "2026-11-11T19:44:45+0800",
  "page_kind": "html",
  "page_sha256": "d0e1bae14ed37c2a9e59db1889b8e2132647bd43e28a878e7e9709e7819c428f",
- "parser_version": "0.3.12",
+ "parser_version": "0.3.14",
  "attachments": [
   {
    "url": "https://rsj.sh.gov.cn/cmsres/bc/bc966997c5ae4cc2a3e3439f3e03246e/fb9154f379d775f15ead6d356385e010.pdf",
@@ -49,7 +49,8 @@
    "block_index": 4,
    "char_offset": 0,
    "start": 171,
-   "end": 282
+   "end": 282,
+   "sec": 0
   },
   {
    "path": "二、",
@@ -60,7 +61,8 @@
    "block_index": 6,
    "char_offset": 0,
    "start": 283,
-   "end": 364
+   "end": 364,
+   "sec": 0
   },
   {
    "path": "三、",
@@ -71,7 +73,8 @@
    "block_index": 7,
    "char_offset": 0,
    "start": 365,
-   "end": 472
+   "end": 472,
+   "sec": 0
   },
   {
    "path": "四、",
@@ -82,7 +85,8 @@
    "block_index": 8,
    "char_offset": 0,
    "start": 473,
-   "end": 747
+   "end": 747,
+   "sec": 0
   },
   {
    "path": "一、",
@@ -93,7 +97,8 @@
    "block_index": 19,
    "char_offset": 0,
    "start": 748,
-   "end": 872
+   "end": 872,
+   "sec": 1
   },
   {
    "path": "二、",
@@ -104,7 +109,8 @@
    "block_index": 23,
    "char_offset": 0,
    "start": 873,
-   "end": 967
+   "end": 967,
+   "sec": 1
   },
   {
    "path": "三、",
@@ -115,7 +121,8 @@
    "block_index": 26,
    "char_offset": 0,
    "start": 968,
-   "end": 1078
+   "end": 1078,
+   "sec": 1
   },
   {
    "path": "四、",
@@ -126,7 +133,8 @@
    "block_index": 30,
    "char_offset": 0,
    "start": 1079,
-   "end": 1172
+   "end": 1172,
+   "sec": 1
   }
  ],
  "blocks": [
