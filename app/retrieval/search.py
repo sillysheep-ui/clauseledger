@@ -157,7 +157,7 @@ def search(query: str, k: int = 8, *, status: tuple[str, ...] | None = None,
            min_score: float = MIN_SCORE, min_coverage: float = MIN_COVERAGE,
            min_cand_cov: float = 0.25) -> list[Hit]:
     return search_result(query, k=k, status=status, min_score=min_score,
-                         min_coverage=min_coverage).hits
+                         min_coverage=min_coverage, min_cand_cov=min_cand_cov).hits
 
 
 def search_result(query: str, k: int = 8, *, status: tuple[str, ...] | None = None,
