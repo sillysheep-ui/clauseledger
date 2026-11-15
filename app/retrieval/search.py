@@ -154,13 +154,15 @@ def _load() -> tuple[bm25s.BM25, list[Clause]]:
 
 
 def search(query: str, k: int = 8, *, status: tuple[str, ...] | None = None,
-           min_score: float = MIN_SCORE, min_coverage: float = 0.0) -> list[Hit]:
+           min_score: float = MIN_SCORE, min_coverage: float = MIN_COVERAGE,
+           min_cand_cov: float = 0.25) -> list[Hit]:
     return search_result(query, k=k, status=status, min_score=min_score,
                          min_coverage=min_coverage).hits
 
 
 def search_result(query: str, k: int = 8, *, status: tuple[str, ...] | None = None,
-                  min_score: float = MIN_SCORE, min_coverage: float = 0.0) -> Answer:
+                  min_score: float = MIN_SCORE, min_coverage: float = MIN_COVERAGE,
+                  min_cand_cov: float = 0.25) -> Answer:
     reason = refuse_reason(query)
     if reason:
         kind = "not_covered" if reason.startswith(("未覆盖", "未接入")) else "out_of_domain"
@@ -181,7 +183,8 @@ def search_result(query: str, k: int = 8, *, status: tuple[str, ...] | None = No
             continue
         ctext = set(tokenize(c.text))
         cov = len(set(qt) & ctext) / max(1, len(set(qt)))
-        if cov < min_coverage:
+        # 两级阈值：候选过滤可以松（保住召回），拒答判定必须严（挡住瞎答）
+        if cov < min_cand_cov:
             continue
         # 现行有效优先：同年份文件文本高度相似、分数接近，靠状态打破平手
         boost = 1.08 if c.status == "effective" else 1.0
@@ -194,7 +197,7 @@ def search_result(query: str, k: int = 8, *, status: tuple[str, ...] | None = No
     if not out:
         return Answer([], "没有条款达到相关性下限", "insufficient", n_docs, 0,
                       searched=_searched(n_docs, len(qt)), gap=_gap(qt))
-    if out[0].coverage < MIN_COVERAGE:
+    if out[0].coverage < min_coverage:  # 2026-11-15：此前这里写死常量，传参等于没传
         return Answer([], f"首条条款只覆盖 {out[0].coverage:.0%} 的提问词", "insufficient",
                       n_docs, len(out), searched=_searched(n_docs, len(qt)), gap=_gap(qt))
     return Answer(_prefer_effective(_collapse(out))[:k], "", "ok", n_docs, len(out),

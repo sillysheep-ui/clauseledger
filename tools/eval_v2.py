@@ -66,7 +66,9 @@ def dirty(text: str) -> int:
 
 
 def run(split: str) -> dict:
-    qs = [q for q in json.loads(QS.read_text("utf-8")) if split == "all" or q["split"] == split]
+    allq = [q for q in json.loads(QS.read_text("utf-8")) if split == "all" or q["split"] == split]
+    qs = [q for q in allq if not q.get("ambiguous")]   # 缺主语的题不删，只不计入分母
+    n_amb = len(allq) - len(qs)
     rows = []
     for item in qs:
         hits = search(item["q"], k=10)
@@ -87,7 +89,7 @@ def run(split: str) -> dict:
             "dirty": dirty(top.clause.text) if top else 0,
             "leak": round(leakage(item["q"], item["gold_title"]), 2) if item["gold_title"] else 0.0,
         })
-    return {"split": split, "rows": rows}
+    return {"split": split, "rows": rows, "ambiguous": n_amb}
 
 
 def summarize(rows: list[dict]) -> dict:
@@ -123,6 +125,11 @@ def report(res: dict) -> str:
     L = [f"# 评测 v2（{res['split']}，{len(res['rows'])} 条，题目来自官方政策问答）", "",
          "| 类别 | n | hit@1 (95%CI) | hit@3 | MRR | 应答率 | 已答中的 hit@1 | 泄漏度 | 干净率 |",
          "|---|---|---|---|---|---|---|---|---|"]
+    if res.get("ambiguous"):
+        L.append("")
+        L.append(f"> 另有 **{res['ambiguous']} 条标记 `ambiguous`**（官方问答脱离文章上下文，题干缺主语），"
+                 "不计入分母；用例保留可复核。")
+        L.append("")
     for cat in ("official", "version"):
         b = s.get(cat)
         if not b:

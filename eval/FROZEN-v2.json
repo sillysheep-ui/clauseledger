@@ -1,0 +1,23 @@
+{
+ "version": "eval-v2.1",
+ "frozen_at": "2026-11-15",
+ "file": "eval/questions_v2.json",
+ "sha256": "baca8e3c0a9d24f6eecd245fa5408dda83aea0db983b36eda50215520f173aac",
+ "total": 203,
+ "ambiguous": 6,
+ "by_split": {
+  "dev": 121,
+  "test": 50,
+  "holdout": 32
+ },
+ "by_category": {
+  "official": 168,
+  "version": 5,
+  "out_of_scope": 30
+ },
+ "rules": [
+  "test 集只在发布前跑一次，不得用于调阈值、改词典、选题",
+  "改一个用例必须在 eval/CHANGELOG.md 里写：为什么改、旧值是什么、谁定的",
+  "ambiguous 用例不删，只标；统计时分母不含它们，但名额保留可复核"
+ ]
+}
