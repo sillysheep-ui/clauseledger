@@ -112,6 +112,7 @@ class Hit:
     score: float
     coverage: float = 0.0   # 查询词有多少比例真的出现在这条条款里
     versions: int = 1       # 同名文件的历史版本数（含本条）
+    child: str = ""         # 父子索引里命中的那个子块（生成时优先用它，省上下文）
     _rank: float = 0.0      # 排序用：分数 × 效力加成
 
 
@@ -141,7 +142,7 @@ def index_meta() -> dict:
         h = hashlib.sha256((INDEX / "clauses.jsonl").read_bytes()).hexdigest()[:12]
         _META = {
             "index_version": h,
-            "corpus_snapshot": f"docs={stats['docs']},clauses={stats['clauses']}",
+            "corpus_snapshot": f"docs={stats['docs']},clauses={stats['clauses']},children={stats.get('children', 0)}",
         }
     return _META
 
@@ -150,11 +151,13 @@ def _searched(n_docs: int, n_queries: int) -> dict:
     return {**index_meta(), "n_docs": n_docs, "n_queries": n_queries}
 
 
-def _load() -> tuple[bm25s.BM25, list[Clause]]:
+def _load() -> tuple[bm25s.BM25, list[Clause], list[dict]]:
     retriever = bm25s.BM25.load(str(INDEX / "bm25"))
     clauses = [Clause(**json.loads(l)) for l in
                (INDEX / "clauses.jsonl").read_text("utf-8").splitlines() if l.strip()]
-    return retriever, clauses
+    children = [json.loads(l) for l in
+                (INDEX / "children.jsonl").read_text("utf-8").splitlines() if l.strip()]
+    return retriever, clauses, children
 
 
 def search(query: str, k: int = 8, *, status: tuple[str, ...] | None = None,
@@ -172,30 +175,43 @@ def search_result(query: str, k: int = 8, *, status: tuple[str, ...] | None = No
         kind = "not_covered" if reason.startswith(("未覆盖", "未接入")) else "out_of_domain"
         # 连索引都没进：n_queries=0。这种结局绝不能是 no_policy（那是"查过没有"）。
         return Answer([], reason, kind, n_docs=0, searched=_searched(0, 0))
-    retriever, clauses = _load()
+    retriever, clauses, children = _load()
     qt = [t for t in tokenize(query) if t not in QUESTION_WORDS]
     if not qt:
         return Answer([], "问题里没有可用于检索的词", "insufficient",
                       searched=_searched(0, 0))
-    idx, scores = retriever.retrieve([qt], k=min(len(clauses), max(k * 4, 40)))
-    out: list[Hit] = []
+    # 索引建在子块上（父子索引），取回的是子块，用 pid 回填父条款。
+    # 子块数远多于条款数，候选要相对多取一些，否则去重后剩不下几条。
+    idx, scores = retriever.retrieve([qt], k=min(len(children), max(k * 8, 60)))
+    best: dict[int, tuple[float, str]] = {}   # pid -> (最高子块分, 命中子块正文)
     for i, s in zip(idx[0], scores[0]):
-        c = clauses[int(i)]
+        ch = children[int(i)]
+        pid = int(ch["pid"])
+        if pid not in best or float(s) > best[pid][0]:
+            best[pid] = (float(s), ch["text"])
+    out: list[Hit] = []
+    qset = set(qt)
+    for pid, (score, child_text) in best.items():
+        c = clauses[pid]
         if status is not None and c.status not in status:
             continue
-        if float(s) < min_score:
+        if score < min_score:
             continue
-        ctext = set(tokenize(c.text))
-        cov = len(set(qt) & ctext) / max(1, len(set(qt)))
+        # 覆盖率算在**父条款**上：回填之后我们看到的是父条款，用子块的覆盖率
+        # 会低估（子块只是父条款的一段）。代价是长条款的覆盖率仍然偏乐观——
+        # 这是已知偏差，记在 docs/EVAL.md 的局限里。
+        cov = len(qset & set(tokenize(c.text))) / max(1, len(qset))
         # 两级阈值：候选过滤可以松（保住召回），拒答判定必须严（挡住瞎答）
         if cov < min_cand_cov:
             continue
         # 现行有效优先：同年份文件文本高度相似、分数接近，靠状态打破平手
         boost = 1.08 if c.status == "effective" else 1.0
         # 标题命中加权：用户问的是"这件事"，文件标题写着这件事，比正文里顺带提一句更有分量
-        title_hits = len(set(qt) & set(tokenize(c.title)))
-        out.append(Hit(c, float(s), round(cov, 2),
-                       _rank=float(s) * boost + 0.6 * title_hits))
+        title_hits = len(qset & set(tokenize(c.title)))
+        h = Hit(c, score, round(cov, 2),
+                _rank=score * boost + 0.6 * title_hits)
+        h.child = child_text   # 命中的具体那一段，生成时优先用它
+        out.append(h)
     out.sort(key=lambda h: h._rank, reverse=True)
     n_docs = len({h.clause.doc_no for h in out})
     if not out:

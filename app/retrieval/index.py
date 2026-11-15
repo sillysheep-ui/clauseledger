@@ -13,6 +13,7 @@ from pathlib import Path
 import jieba
 import bm25s
 
+from app.retrieval.children import split_children
 from app.retrieval.records import Clause, status_of
 
 PROCESSED = Path("data/processed")
@@ -111,6 +112,20 @@ def _dedupe(clauses: list[Clause]) -> list[Clause]:
     return list(best.values())
 
 
+def build_children(clauses: list[Clause]) -> list[dict]:
+    """父子索引：索引建在子块上，返回时回填父条款。
+
+    pid 是父条款在 clauses 列表里的下标——条款 id 里有 "#"，用它当键在
+    jsonl 里不好定位；下标在同一个索引版本内是稳定的。
+    """
+    out: list[dict] = []
+    for pid, c in enumerate(clauses):
+        for k, (s, e) in enumerate(split_children(c.text)):
+            out.append({"cid": f"{pid}:{k}", "pid": pid, "start": s, "end": e,
+                        "text": c.text[s:e]})
+    return out
+
+
 def build() -> dict:
     _setup()
     clauses = collect()
@@ -118,15 +133,25 @@ def build() -> dict:
     (INDEX / "clauses.jsonl").write_text(
         "\n".join(json.dumps(c.to_dict(), ensure_ascii=False) for c in clauses), "utf-8")
 
-    corpus = [tokenize(c.text) for c in clauses]
+    children = build_children(clauses)
+    (INDEX / "children.jsonl").write_text(
+        "\n".join(json.dumps(x, ensure_ascii=False) for x in children), "utf-8")
+
+    # 索引建在子块上：长条款里的那一句话不再被几万字稀释
+    corpus = [tokenize(x["text"]) for x in children]
     retriever = bm25s.BM25()
     retriever.index(corpus)
     retriever.save(str(INDEX / "bm25"))
 
+    split_docs = sum(1 for pid in {x["pid"] for x in children}
+                     if sum(1 for y in children if y["pid"] == pid) > 1)
     stats = {
         "clauses": len(clauses),
+        "children": len(children),
+        "split_clauses": split_docs,
         "docs": len({c.doc_no for c in clauses}),
         "chars": sum(len(c.text) for c in clauses),
+        "child_chars": sum(len(x["text"]) for x in children),
         "by_status": {},
         "avg_tokens": round(sum(len(t) for t in corpus) / max(1, len(corpus)), 1),
     }
