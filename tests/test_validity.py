@@ -75,3 +75,33 @@ def test_repealed_map_keys_are_targets():
                                           "effective_date": "2020-01-01"}]},
                               as_of="2026-01-01")
     assert "A" in m and "B" not in m
+
+
+def test_year_of_ignores_numbers_inside_doc_no():
+    from app.domain.validity import year_of
+    assert year_of("2020年建筑业工伤保险怎么参加") == 2020
+    assert year_of("沪人社规〔2020〕26号讲了什么") == 2020  # 文号里的年份也算时间线索
+    assert year_of("比例是 2.5 的时候") is None
+    assert year_of("赔偿 5000 元") is None
+
+
+def test_in_force_respects_repeal_date():
+    """2015〕34号 自身没写日期，但 2020-12-01 被废止：2019 有效、2021 无效。"""
+    rels = {"X〔2015〕34号": [{"type": "repeal", "source": "Y〔2020〕26号",
+                              "effective_date": "2020-12-01"}]}
+    d = {"doc_no": "X〔2015〕34号", "effective_from": None, "effective_to": None}
+    from app.domain.validity import in_force
+    assert in_force(d, 2019, rels) is True
+    assert in_force(d, 2020, rels) is True     # 那一年里前 11 个月有效
+    assert in_force(d, 2021, rels) is False
+
+
+def test_year_scope_changes_which_document_is_current():
+    """同一个问题，加不加年份应当改变"哪份文件算数"的判断依据（不依赖检索结果）。"""
+    rels = {"X〔2015〕34号": [{"type": "repeal", "source": "Y〔2020〕26号",
+                              "effective_date": "2020-12-01"}]}
+    old = {"doc_no": "X〔2015〕34号"}
+    new = {"doc_no": "Y〔2020〕26号", "effective_from": "2020-12-01", "effective_to": "2025-11-30"}
+    from app.domain.validity import in_force
+    assert in_force(old, 2019, rels) and not in_force(new, 2019, rels)
+    assert in_force(old, 2021, rels) is False and in_force(new, 2021, rels)

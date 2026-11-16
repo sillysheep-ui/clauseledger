@@ -149,6 +149,15 @@ def build() -> dict:
 
     split_docs = sum(1 for pid in {x["pid"] for x in children}
                      if sum(1 for y in children if y["pid"] == pid) > 1)
+    # 判"那一年是否有"只需要起止日期，不必回读 574 份全文
+    _meta = {}
+    for f in sorted(PROCESSED.glob("*.json")):
+        d = json.loads(f.read_text("utf-8"))
+        if d.get("doc_no"):
+            _meta[d["doc_no"]] = {"doc_no": d["doc_no"],
+                                  "effective_from": d.get("effective_from"),
+                                  "effective_to": d.get("effective_to")}
+    (INDEX / "docs_meta.json").write_text(json.dumps(_meta, ensure_ascii=False), "utf-8")
     stats = {
         "clauses": len(clauses),
         "children": len(children),

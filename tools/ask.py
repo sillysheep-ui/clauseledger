@@ -21,7 +21,10 @@ def main() -> None:
     ans = search_result(a.question, k=a.k,
                         status=("effective",) if a.only_effective else None)
     hits = ans.hits
-    print(f"问：{a.question}\n")
+    print(f"问：{a.question}")
+    if ans.as_of:
+        print(f"判定基准日：{ans.as_of}（来自提问里的年份；不带年份则用今天）")
+    print()
     if ans.refused:
         print(f"答：{ans.reason}")
         print(f"    检索范围：{ans.n_docs} 份文件 / {ans.n_candidates} 条候选条款")
@@ -33,6 +36,11 @@ def main() -> None:
         c = h.clause
         flag = {"effective": "✓现行", "expired": "✗已失效",
                 "pending": "·未生效", "unknown": "?效力未知"}[c.status]
+        if h.scope:
+            # 带年份提问时，索引里冻结的"今天有效"不代表"那一年有效"
+            flag = "✓该年内有效" if "不在" not in h.scope else "✗该年无效"
+        elif h.stale:
+            flag = "✗已废止"
         print(f"[{i}] score={h.score:4.1f} rank={h._rank:4.1f} cov={h.coverage:.0%} {flag}  {c.citation}")
         if h.stale:
             print(f"     ⚠ {h.stale}——引用这条时要说明它现在不作数")

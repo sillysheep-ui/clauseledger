@@ -90,3 +90,47 @@ def repealed_map(*, as_of: str | None = None,
                 out[no] = f"被《{e['source']}》废止（{since} 起）"
                 break
     return out
+
+
+YEAR = __import__("re").compile(r"(?<!\d)(19\d{2}|20\d{2})\s*年?")
+
+
+def year_of(text: str) -> int | None:
+    """从提问里找年份。"2020年工伤怎么赔" → 2020。
+
+    只认 19xx/20xx 且前后不接数字，避免把文号里的年份、金额、比例当年份。
+    """
+    if not text:
+        return None
+    m = YEAR.search(text)
+    if not m:
+        return None
+    y = int(m.group(1))
+    return y if 1990 <= y <= 2035 else None
+
+
+def window(doc: dict, rels: dict[str, list[dict]] | None = None) -> tuple[str | None, str | None]:
+    """文件真正有效的区间 [start, end)。
+
+    起点取 effective_from；终点取 min(effective_to, 废止日)。
+    废止日是语料里明确写着的，比"有效期至"更硬——两者取早的那个。
+    """
+    start = doc.get("effective_from")
+    end = doc.get("effective_to")
+    if rels:
+        for e in rels.get(doc.get("doc_no") or "", []):
+            since = e.get("effective_date")
+            if since and (end is None or since < end):
+                end = since
+    return start, end
+
+
+def in_force(doc: dict, year: int, rels: dict[str, list[dict]] | None = None) -> bool:
+    """这一年里有没有效（区间与年份有交集即算）。"""
+    start, end = window(doc, rels)
+    lo, hi = f"{year}-01-01", f"{year}-12-31"
+    if start and start > hi:
+        return False
+    if end and end < lo:
+        return False
+    return True

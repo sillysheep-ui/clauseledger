@@ -13,6 +13,7 @@ import re
 
 import json
 from dataclasses import dataclass, field
+from datetime import date
 from pathlib import Path
 
 import bm25s
@@ -95,6 +96,7 @@ class Answer:
     searched: dict = field(default_factory=dict)
     # 已知存在、但我们没拿到的文件——用它把"查不到"和"没有"分开说。
     gap: dict | None = None
+    as_of: str = ""           # 效力判定的基准日（可能来自提问里的年份）
 
     @property
     def refused(self) -> bool:
@@ -114,11 +116,37 @@ class Hit:
     versions: int = 1       # 同名文件的历史版本数（含本条）
     child: str = ""         # 父子索引里命中的那个子块（生成时优先用它，省上下文）
     stale: str = ""         # 非空 = 该文件在 as_of 那天已被废止（引用要带上这句话）
+    scope: str = ""         # 带年份提问时的效力口径（"2020 年内有效" / "2020 年不在有效期内"）
     _rank: float = 0.0      # 排序用：分数 × 效力加成
 
 
 _REPEALED: dict[str, str] = {}
 _REPEAL_SRC: set[str] = set()
+_BY_DAY: dict[str, dict[str, str]] = {}
+_DOCS_BY_NO: dict[str, dict] = {}
+
+
+def _repealed_as_of(as_of: str, rels: dict[str, list[dict]]) -> dict[str, str]:
+    """在 as_of 那天已生效的废止关系：doc_no -> 理由。"""
+    out: dict[str, str] = {}
+    for no, edges in rels.items():
+        for e in edges:
+            since = e.get("effective_date")
+            if since and since <= as_of:
+                out[no] = f"被《{e['source']}》废止（{since} 起）"
+                break
+    return out
+
+
+def docs_meta() -> dict[str, dict]:
+    """doc_no -> {effective_from, effective_to}：判"那一年是否有"用，不读全文。"""
+    global _DOCS_BY_NO
+    if _DOCS_BY_NO:
+        return _DOCS_BY_NO
+    p = INDEX / "docs_meta.json"
+    if p.exists():
+        _DOCS_BY_NO = json.loads(p.read_text("utf-8"))
+    return _DOCS_BY_NO
 _META: dict | None = None
 _REG: DocRegistry | None = None
 REGISTRY = Path("data/registry/docs.jsonl")
@@ -173,21 +201,29 @@ def search(query: str, k: int = 8, *, status: tuple[str, ...] | None = None,
 def search_result(query: str, k: int = 8, *, status: tuple[str, ...] | None = None,
                   min_score: float = MIN_SCORE, min_coverage: float = MIN_COVERAGE,
                   min_cand_cov: float = 0.25) -> Answer:
+    from app.domain.validity import year_of as _year_of
+    _y = _year_of(query)
+    _as_of = f"{_y}-12-31" if _y else date.today().isoformat()
     reason = refuse_reason(query)
     if reason:
         kind = "not_covered" if reason.startswith(("未覆盖", "未接入")) else "out_of_domain"
         # 连索引都没进：n_queries=0。这种结局绝不能是 no_policy（那是"查过没有"）。
-        return Answer([], reason, kind, n_docs=0, searched=_searched(0, 0))
+        return Answer([], reason, kind, n_docs=0, searched=_searched(0, 0), as_of=_as_of)
     retriever, clauses, children = _load()
+    from app.domain.validity import in_force, load as _load_rels
+    _rels = _load_rels()
+    year, as_of = _y, _as_of
     global _REPEALED, _REPEAL_SRC
-    if not _REPEALED:
-        from app.domain import validity
-        _REPEALED = validity.repealed_map()
-        _REPEAL_SRC = {e["source"] for v in validity.load().values() for e in v}
+    if as_of not in _BY_DAY:
+        _BY_DAY[as_of] = _repealed_as_of(as_of, _rels)
+    _REPEALED = _BY_DAY[as_of]
+    _DOCS_BY_NO.update(docs_meta())
+    if not _REPEAL_SRC:
+        _REPEAL_SRC = {e["source"] for v in _rels.values() for e in v}
     qt = [t for t in tokenize(query) if t not in QUESTION_WORDS]
     if not qt:
         return Answer([], "问题里没有可用于检索的词", "insufficient",
-                      searched=_searched(0, 0))
+                      searched=_searched(0, 0), as_of=_as_of)
     # 索引建在子块上（父子索引），取回的是子块，用 pid 回填父条款。
     # 子块数远多于条款数，候选要相对多取一些，否则去重后剩不下几条。
     idx, scores = retriever.retrieve([qt], k=min(len(children), max(k * 8, 60)))
@@ -199,6 +235,7 @@ def search_result(query: str, k: int = 8, *, status: tuple[str, ...] | None = No
             best[pid] = (float(s), ch["text"])
     out: list[Hit] = []
     qset = set(qt)
+    scope = ""
     for pid, (score, child_text) in best.items():
         c = clauses[pid]
         if status is not None and c.status not in status:
@@ -220,23 +257,36 @@ def search_result(query: str, k: int = 8, *, status: tuple[str, ...] | None = No
         # 提权废止源 1.3 让 hit@3 70%→65%，两种都更差——说明我们还没有可靠的
         # "替代关系"，不该拿分数去猜。标注进引用，让人看见。
         stale = _REPEALED.get(c.doc_no, "")
+        # 提问里带年份时，改判"那一年有没有效"：
+        # 问 2020 年的规定，不能拿 2026 年的文件答，也不该把当年有效的旧文件标成"已作废"。
+        if year:
+            meta = _DOCS_BY_NO.get(c.doc_no)
+            if meta is not None:
+                if in_force(meta, year, _rels):
+                    boost *= 1.2
+                    stale, scope = "", f"{year} 年内有效"
+                else:
+                    boost *= 0.8
+                    stale, scope = f"{year} 年不在有效期内", f"{year} 年不在有效期内"
         # 标题命中加权：用户问的是"这件事"，文件标题写着这件事，比正文里顺带提一句更有分量
         title_hits = len(qset & set(tokenize(c.title)))
         h = Hit(c, score, round(cov, 2),
                 _rank=score * boost + 0.6 * title_hits)
         h.child = child_text   # 命中的具体那一段，生成时优先用它
         h.stale = stale
+        h.scope = scope
         out.append(h)
     out.sort(key=lambda h: h._rank, reverse=True)
     n_docs = len({h.clause.doc_no for h in out})
     if not out:
         return Answer([], "没有条款达到相关性下限", "insufficient", n_docs, 0,
-                      searched=_searched(n_docs, len(qt)), gap=_gap(qt))
+                      searched=_searched(n_docs, len(qt)), gap=_gap(qt), as_of=_as_of)
     if out[0].coverage < min_coverage:  # 2026-11-15：此前这里写死常量，传参等于没传
         return Answer([], f"首条条款只覆盖 {out[0].coverage:.0%} 的提问词", "insufficient",
-                      n_docs, len(out), searched=_searched(n_docs, len(qt)), gap=_gap(qt))
+                      n_docs, len(out), searched=_searched(n_docs, len(qt)), gap=_gap(qt),
+                      as_of=_as_of)
     return Answer(_prefer_effective(_collapse(out))[:k], "", "ok", n_docs, len(out),
-                  searched=_searched(n_docs, len(qt)))
+                  searched=_searched(n_docs, len(qt)), as_of=_as_of)
 
 
 def _status_rank(status: str) -> int:
