@@ -33,7 +33,9 @@ def main() -> None:
         c = h.clause
         flag = {"effective": "✓现行", "expired": "✗已失效",
                 "pending": "·未生效", "unknown": "?效力未知"}[c.status]
-        print(f"[{i}] {h.score:5.1f} cov={h.coverage:.0%} {flag}  {c.citation}")
+        print(f"[{i}] score={h.score:4.1f} rank={h._rank:4.1f} cov={h.coverage:.0%} {flag}  {c.citation}")
+        if h.stale:
+            print(f"     ⚠ {h.stale}——引用这条时要说明它现在不作数")
         if c.effective_to:
             print(f"     有效期至 {c.effective_to}")
         body = c.text.replace("\n", " ").strip()
