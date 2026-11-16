@@ -116,6 +116,7 @@ class Hit:
     versions: int = 1       # 同名文件的历史版本数（含本条）
     child: str = ""         # 父子索引里命中的那个子块（生成时优先用它，省上下文）
     stale: str = ""         # 非空 = 该文件在 as_of 那天已被废止（引用要带上这句话）
+    _in_year: bool = False  # 仅排序用：能否确认在该年份有效
     scope: str = ""         # 带年份提问时的效力口径（"2020 年内有效" / "2020 年不在有效期内"）
     _rank: float = 0.0      # 排序用：分数 × 效力加成
 
@@ -236,6 +237,7 @@ def search_result(query: str, k: int = 8, *, status: tuple[str, ...] | None = No
     out: list[Hit] = []
     qset = set(qt)
     scope = ""
+    _out_of_year = 0
     for pid, (score, child_text) in best.items():
         c = clauses[pid]
         if status is not None and c.status not in status:
@@ -257,6 +259,21 @@ def search_result(query: str, k: int = 8, *, status: tuple[str, ...] | None = No
         # 提权废止源 1.3 让 hit@3 70%→65%，两种都更差——说明我们还没有可靠的
         # "替代关系"，不该拿分数去猜。标注进引用，让人看见。
         stale = _REPEALED.get(c.doc_no, "")
+        # 带年份提问时**先筛后排**：那一年明确不在有效期内的，直接不进候选。
+        # 只做加权（1.2/0.8）实测无效——同主题跨年文件的文本几乎逐字相同，
+        # BM25 分差远大于 20%，加权改不动顺序；而"问 2019 年却拿 2026 年的文件答"
+        # 不是排序问题，是**选错了年份**，只能靠过滤。
+        # 日期未知（unknown）的文件不筛：不知道 ≠ 无效。
+        _in_year = False
+        if year:
+            _m = _DOCS_BY_NO.get(c.doc_no) or {}
+            # "日期未知"既不能证明有效、也不能证明无效：
+            # 过滤时放过（不知道 ≠ 无效），分层时算低等级（不知道 ≠ 有效）。
+            _known = bool(_m.get("effective_from") or _m.get("effective_to"))
+            if _known and not in_force(_m, year, _rels):
+                _out_of_year += 1
+                continue
+            _in_year = _known and in_force(_m, year, _rels)
         # 提问里带年份时，改判"那一年有没有效"：
         # 问 2020 年的规定，不能拿 2026 年的文件答，也不该把当年有效的旧文件标成"已作废"。
         if year:
@@ -271,12 +288,19 @@ def search_result(query: str, k: int = 8, *, status: tuple[str, ...] | None = No
         # 标题命中加权：用户问的是"这件事"，文件标题写着这件事，比正文里顺带提一句更有分量
         title_hits = len(qset & set(tokenize(c.title)))
         h = Hit(c, score, round(cov, 2),
-                _rank=score * boost + 0.6 * title_hits)
+                _rank=score * boost + 0.6 * title_hits + (0.5 if _in_year else 0.0))
         h.child = child_text   # 命中的具体那一段，生成时优先用它
         h.stale = stale
         h.scope = scope
+        h._in_year = _in_year
         out.append(h)
-    out.sort(key=lambda h: h._rank, reverse=True)
+    # 带年份时先按"能否确认那一年有效"分层，再按分数排。
+    # 理由：日期未知 ≠ 有效。用户既然说了年份，就该先相信能证明自己那年有效的文件；
+    # 只在同一层里比相关性。不带年份时这一层不存在，排序与以前完全一致。
+    if year:
+        out.sort(key=lambda h: (h._in_year, h._rank), reverse=True)
+    else:
+        out.sort(key=lambda h: h._rank, reverse=True)
     n_docs = len({h.clause.doc_no for h in out})
     if not out:
         return Answer([], "没有条款达到相关性下限", "insufficient", n_docs, 0,
