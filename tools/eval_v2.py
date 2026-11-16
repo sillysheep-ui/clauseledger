@@ -67,8 +67,9 @@ def dirty(text: str) -> int:
 
 def run(split: str) -> dict:
     allq = [q for q in json.loads(QS.read_text("utf-8")) if split == "all" or q["split"] == split]
-    qs = [q for q in allq if not q.get("ambiguous")]   # 缺主语的题不删，只不计入分母
-    n_amb = len(allq) - len(qs)
+    qs = [q for q in allq if not q.get("ambiguous") and not q.get("stale")]
+    n_amb = sum(1 for q in allq if q.get("ambiguous"))
+    n_stale = sum(1 for q in allq if q.get("stale"))
     rows = []
     for item in qs:
         hits = search(item["q"], k=10)
@@ -89,7 +90,7 @@ def run(split: str) -> dict:
             "dirty": dirty(top.clause.text) if top else 0,
             "leak": round(leakage(item["q"], item["gold_title"]), 2) if item["gold_title"] else 0.0,
         })
-    return {"split": split, "rows": rows, "ambiguous": n_amb}
+    return {"split": split, "rows": rows, "ambiguous": n_amb, "stale": n_stale}
 
 
 def summarize(rows: list[dict]) -> dict:

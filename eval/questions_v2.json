@@ -408,7 +408,9 @@
   "gold_title": "关于2021年调整本市征地养老人员生活费标准的通知",
   "source": "https://rsj.sh.gov.cn/tzcjd_17352_17352/20250801/t0035_1434570.html",
   "id": "OFFI-045",
-  "split": "dev"
+  "split": "dev",
+  "stale": true,
+  "stale_reason": "金标文件在提问年份（2025）已失效，题目本身过期"
  },
  {
   "q": "灵活就业人员与企业职工的养老金计发办法一样吗？",
@@ -711,7 +713,9 @@
   "gold_title": "关于2021年调整本市征地养老人员生活费标准的通知",
   "source": "https://rsj.sh.gov.cn/tzcjd_17352_17352/20250801/t0035_1434570.html",
   "id": "OFFI-078",
-  "split": "dev"
+  "split": "dev",
+  "stale": true,
+  "stale_reason": "金标文件在提问年份（2025）已失效，题目本身过期"
  },
  {
   "q": "正高级工程师的申报、评审程序有哪些？",

@@ -174,6 +174,8 @@ def index_meta() -> dict:
         h = hashlib.sha256((INDEX / "clauses.jsonl").read_bytes()).hexdigest()[:12]
         _META = {
             "index_version": h,
+            "docs": stats["docs"], "clauses": stats["clauses"],
+            "children": stats.get("children", 0),
             "corpus_snapshot": f"docs={stats['docs']},clauses={stats['clauses']},children={stats.get('children', 0)}",
         }
     return _META

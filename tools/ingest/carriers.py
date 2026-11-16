@@ -199,6 +199,13 @@ def rebuild(rec: dict) -> dict:
             clauses.append(c)
         base += sum(len(b.text) for b in sup.blocks) + 1
 
+    # sec 必须在**合并之后**重算：每个载体各自切分时都从 0 开始，
+    # 直接拼接会出现两段 "附件/0"（2026-11 实测 122 条重复）。
+    seen_sec: dict[str, int] = {}
+    for c in clauses:
+        c.sec = seen_sec.get(c.path, 0)
+        seen_sec[c.path] = c.sec + 1
+
     text = "\n".join(b.text for b in blocks)
     out = dict(rec)
     out.update({

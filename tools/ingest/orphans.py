@@ -5,12 +5,14 @@
 from __future__ import annotations
 
 import json
+import re
 from datetime import datetime
 from pathlib import Path
 
 RAW = Path("data/raw")
 PROCESSED = Path("data/processed")
 OUT = Path("data/registry/orphans.jsonl")
+PROBE = re.compile(r"^[a-z0-9.-]+\.[a-z]{2,}$")  # 存盘时用域名命名的探测样本
 
 
 def referenced_hashes(processed_dir: Path = PROCESSED) -> set[str]:
@@ -27,6 +29,14 @@ def referenced_hashes(processed_dir: Path = PROCESSED) -> set[str]:
         for a in rec.get("attachments", []):
             if a.get("sha256"):
                 used.add(a["sha256"][:12])
+        # 载体模型之后，没有被选为主副本的字节记在 carriers 里——它们不是孤儿。
+        for c in rec.get("carriers") or []:
+            if c.get("sha256"):
+                used.add(c["sha256"][:12])
+        cc = rec.get("carrier_choice") or {}
+        for c in (cc.get("supplements") or []) + (cc.get("dropped") or []):
+            if c.get("sha256"):
+                used.add(c["sha256"][:12])
     return used
 
 
@@ -43,7 +53,9 @@ def scan(raw_dir: Path = RAW, processed_dir: Path = PROCESSED) -> list[dict]:
                 continue
             out.append({
                 "sha12": d.name, "name": f.name, "bytes": f.stat().st_size,
-                "reason": "no_record_points_here",
+                "kind": ("probe" if PROBE.match(f.name) else "orphan"),
+            "reason": "probe_sample_not_in_corpus" if PROBE.match(f.name)
+                      else "no_record_points_here",
                 "detected_at": datetime.now().astimezone().isoformat(timespec="seconds"),
             })
     return out
