@@ -55,3 +55,5 @@ data/processed.carriers/
 data/index.carriers/
 data/processed.old/
 data/index.old/
+data/runs/
+data/world/

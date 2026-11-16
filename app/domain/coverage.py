@@ -63,6 +63,11 @@ class CoverageIndex:
                             f"{city}未接入：{rec.get('detail', '站点无法自动获取')}",
                             rec.get("caveat"))
         matters = rec.get("matters") or {}
+        if not rec.get("docs"):
+            # 站点可达 ≠ 有正文。没有正文的城市一律 partial，绝不返回"已接入"。
+            return Coverage("partial", city, matter,
+                            f"{city}站点已接入，但尚未建库（当前只有上海有正文）",
+                            "站点可达不代表已有可引用的条款")
         if matter and matter not in matters:
             return Coverage("partial", city, matter,
                             f"{city}站点已接入，但「{matter}」尚未建库",

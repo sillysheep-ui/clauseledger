@@ -154,11 +154,24 @@
 
 ---
 
-## S8 编排 / 门控 / 界面：**完全没做**
+## S8 编排 / 门控 / 界面：**骨架已起，业务未接**
 
-- 没有状态机（可恢复、幂等、审批）→ 项目主线里最重要的三件事都还只是设计
-- 没有界面 → 所有能力只在命令行
-- 没有多 agent → 只有 Advisor/Auditor 的设计
+**做什么**：把 S1–S7 串成一次可恢复、可审批、可审计的 run。
+
+**已做（S8-A 雏形）**
+- 状态机 9 个节点：`normalize → coverage → retrieve → judge → [gate_judgement] → compose → verify → [gate_action] → act → finalize`
+- 事件流只追加（`data/runs/<id>/events.jsonl`），状态落盘（`state.json`），恢复只重入被中断的节点
+- 两道门控：判定为 `unknown` 停一次，有副作用停一次；拒绝 = 0 副作用
+- 副作用按**条**幂等：批准两次仍只写 3 条
+- HTTP 四个端点 + 命令行 `tools/run.py`
+- 9 条单测守着三条不变量（含"新进程恢复"）
+
+**核验不足**
+1. `judge()` 只有落户一个判定器，其余一律 `unknown`（STUB）
+2. `clarify` 门槛不存在；审批没有 TTL / 单次消费 / 参数绑定
+3. 没有界面（`/` 是占位页），没有审计时间线
+4. 副作用写的是本地 JSON，不是真 MCP
+5. 没有多 agent（Advisor/Auditor 仍只是设计）
 
 ---
 
