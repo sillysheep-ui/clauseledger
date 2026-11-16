@@ -156,7 +156,9 @@ def build() -> dict:
         if d.get("doc_no"):
             _meta[d["doc_no"]] = {"doc_no": d["doc_no"],
                                   "effective_from": d.get("effective_from"),
-                                  "effective_to": d.get("effective_to")}
+                                  "effective_to": d.get("effective_to"),
+                                  # 成文日期：条文不可能在成文之前生效，所以它可以当**下界**用
+                                  "issued_at": d.get("issued_at")}
     (INDEX / "docs_meta.json").write_text(json.dumps(_meta, ensure_ascii=False), "utf-8")
     stats = {
         "clauses": len(clauses),

@@ -112,10 +112,12 @@ def year_of(text: str) -> int | None:
 def window(doc: dict, rels: dict[str, list[dict]] | None = None) -> tuple[str | None, str | None]:
     """文件真正有效的区间 [start, end)。
 
-    起点取 effective_from；终点取 min(effective_to, 废止日)。
-    废止日是语料里明确写着的，比"有效期至"更硬——两者取早的那个。
+    起点取 effective_from，没有就用**成文日期**当兜底——
+    文件不可能在自己成文之前生效，所以成文日期是一个安全的下界
+    （唯一例外是"自某年起施行"的溯及既往，那种文件正文里通常写明了 effective_from，不会走到兜底）。
+    终点取 min(effective_to, 废止日)：废止日是语料里明确写着的，比"有效期至"更硬。
     """
-    start = doc.get("effective_from")
+    start = doc.get("effective_from") or doc.get("issued_at")
     end = doc.get("effective_to")
     if rels:
         for e in rels.get(doc.get("doc_no") or "", []):
