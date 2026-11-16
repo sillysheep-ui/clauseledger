@@ -142,6 +142,25 @@ def report(res: dict) -> str:
     if b:
         lo, hi = b["ci"]
         L.append(f"| out_of_scope | {b['n']} | — | — | — | 拒答 {b['rate']:.0%} ({lo:.0%}–{hi:.0%}) | — | — |")
+    # 金标自己已经废止的题：整体 hit@1 会被它们拖低。单列一行，不许混着报。
+    try:
+        from app.domain.validity import load as _load_rels
+        _rels = _load_rels()
+    except Exception:
+        _rels = {}
+    if _rels:
+        rows = [r for r in res["rows"] if r["cat"] == "official"]
+        live = [r for r in rows if r["gold"] not in _rels]
+        dead = [r for r in rows if r["gold"] in _rels]
+        _top_stale = sum(1 for r in rows if r.get("answered") and r.get("top") in _rels)
+        L += ["", f"> 现行性：top-1 引用了**已被废止**的文件 **{_top_stale}/{len(rows)}**"
+              "（文号可能对、内容已过期；这是关系层目前只标注不改分的结果）。"]
+        if live:
+            lo, hi = wilson(sum(1 for r in live if r["ok1"]), len(live))
+            L += ["", f"> 金标仍有效子集：hit@1 **{sum(1 for r in live if r['ok1'])}/{len(live)} = "
+                  f"{sum(1 for r in live if r['ok1'])/len(live):.0%}**（{lo:.0%}–{hi:.0%}）；"
+                  f"另有 **{len(dead)} 条金标已被语料内文件废止**，仍计入上表。"
+                  "两个数都要报：前者是能力，后者是可比的旧口径。"]
     miss = [r for r in res["rows"] if r["cat"] != "out_of_scope" and r["rank"] == 0]
     wrong = [r for r in res["rows"] if r["cat"] == "out_of_scope" and r["answered"]]
     L += ["", f"## 完全没命中（{len(miss)}/{len(res['rows']) - len([r for r in res['rows'] if r['cat']=='out_of_scope'])}）", ""]

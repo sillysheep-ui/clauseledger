@@ -113,9 +113,12 @@ class Hit:
     coverage: float = 0.0   # 查询词有多少比例真的出现在这条条款里
     versions: int = 1       # 同名文件的历史版本数（含本条）
     child: str = ""         # 父子索引里命中的那个子块（生成时优先用它，省上下文）
+    stale: str = ""         # 非空 = 该文件在 as_of 那天已被废止（引用要带上这句话）
     _rank: float = 0.0      # 排序用：分数 × 效力加成
 
 
+_REPEALED: dict[str, str] = {}
+_REPEAL_SRC: set[str] = set()
 _META: dict | None = None
 _REG: DocRegistry | None = None
 REGISTRY = Path("data/registry/docs.jsonl")
@@ -176,6 +179,11 @@ def search_result(query: str, k: int = 8, *, status: tuple[str, ...] | None = No
         # 连索引都没进：n_queries=0。这种结局绝不能是 no_policy（那是"查过没有"）。
         return Answer([], reason, kind, n_docs=0, searched=_searched(0, 0))
     retriever, clauses, children = _load()
+    global _REPEALED, _REPEAL_SRC
+    if not _REPEALED:
+        from app.domain import validity
+        _REPEALED = validity.repealed_map()
+        _REPEAL_SRC = {e["source"] for v in validity.load().values() for e in v}
     qt = [t for t in tokenize(query) if t not in QUESTION_WORDS]
     if not qt:
         return Answer([], "问题里没有可用于检索的词", "insufficient",
@@ -206,11 +214,18 @@ def search_result(query: str, k: int = 8, *, status: tuple[str, ...] | None = No
             continue
         # 现行有效优先：同年份文件文本高度相似、分数接近，靠状态打破平手
         boost = 1.08 if c.status == "effective" else 1.0
+        # 已废止的文件：不是删掉，是降权并留痕——用户仍可能问"当年的规定"，
+        # 但系统必须知道它现在不作数。实测 9 道题就是被这份"看起来仍有效"的文件带偏的。
+        # 已废止：**只标注、不改分**。实测降权 0.5 让 hit@1 55.3%→54.3%、
+        # 提权废止源 1.3 让 hit@3 70%→65%，两种都更差——说明我们还没有可靠的
+        # "替代关系"，不该拿分数去猜。标注进引用，让人看见。
+        stale = _REPEALED.get(c.doc_no, "")
         # 标题命中加权：用户问的是"这件事"，文件标题写着这件事，比正文里顺带提一句更有分量
         title_hits = len(qset & set(tokenize(c.title)))
         h = Hit(c, score, round(cov, 2),
                 _rank=score * boost + 0.6 * title_hits)
         h.child = child_text   # 命中的具体那一段，生成时优先用它
+        h.stale = stale
         out.append(h)
     out.sort(key=lambda h: h._rank, reverse=True)
     n_docs = len({h.clause.doc_no for h in out})
