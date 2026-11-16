@@ -31,6 +31,8 @@ class Clause:
     effective_to: str | None = None
     url: str = ""
     parser_version: str = ""
+    carrier: str = "page"
+    extract: str = "native"
 
     def to_dict(self) -> dict:
         return asdict(self)
@@ -39,7 +41,17 @@ class Clause:
     def citation(self) -> str:
         """人读的引用串：文号 + 条款路径 + 页码。"""
         p = " / ".join(self.path) if self.path else "正文"
-        return f"《{self.doc_no}》{p}" + (f"（第 {self.page} 页）" if self.page else "")
+        return f"《{self.doc_no}》{p}" + self.locate
+
+    @property
+    def locate(self) -> str:
+        """坐标必须跟载体一致：PDF 说页码，网页说第几段，扫描件还要交代识别风险。"""
+        if self.page:
+            note = "扫描件 OCR" if self.extract == "ocr" else "PDF 原件"
+            return f"（第 {self.page} 页 · {note}）"
+        if self.block_index:
+            return f"（第 {self.block_index} 段 · 网页原文）"
+        return ""
 
 
 def status_of(effective_to: str | None, effective_from: str | None, *, today: str = TODAY) -> str:

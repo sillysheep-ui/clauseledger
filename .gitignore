@@ -51,3 +51,5 @@ data/index/
 data/logs/
 data/reports/
 data/processed.seed/
+data/processed.carriers/
+data/index.carriers/

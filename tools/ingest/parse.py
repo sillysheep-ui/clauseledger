@@ -17,7 +17,7 @@ CRUMB = ("您现在的位置", "当前位置", "相关链接", "首页 >", "首�
 FOOTER = re.compile(r"(打印本页|分享到|相关稿件|相关链接|返回顶部|关闭窗口|字体[:：]|上一篇|下一篇|扫一扫)")
 
 # 解析器版本：偏移量只在同一版本内有效，换版本必须重算引用
-PARSER_VERSION = "0.3.14"
+PARSER_VERSION = "0.3.15"
 
 
 @dataclass
@@ -159,6 +159,30 @@ def httpx_urljoin(base: str, href: str) -> str:
     return urljoin(base, href)
 
 
+
+# PDF 的换行是排版换行，不是段落边界。一行一块会把"固定\n收入"切成两个词，
+# 检索时既切断了词，也让条款正文变成碎行。所以在页内先把折行接回去。
+HARD_BREAK = re.compile(
+    r"^(第\s*[一二三四五六七八九十百\d]{1,4}\s*[条章节]|[一二三四五六七八九十]{1,3}\s*、"
+    r"|[（(][一二三四五六七八九十\d]{1,3}[）)]|\d{1,2}\s*[.．、]|附\s*[录表件]|抄送)"
+)
+SENT_END = ("。", "！", "？", "；", "：", "!", "?", ";", ":")
+
+
+def _merge_wrapped(lines: list[str]) -> list[str]:
+    out: list[str] = []
+    for ln in lines:
+        if not out:
+            out.append(ln)
+            continue
+        prev = out[-1]
+        if HARD_BREAK.match(ln) or prev.endswith(SENT_END) or len(prev) < 6:
+            out.append(ln)
+        else:
+            out[-1] = prev + ln      # 中文折行直接拼，不加空格
+    return out
+
+
 def parse_pdf(data: bytes, path: str | None = None) -> Parsed:
     from pypdf import PdfReader
 
@@ -187,18 +211,16 @@ def parse_pdf(data: bytes, path: str | None = None) -> Parsed:
         if sum(len(CN.findall(t)) for t in texts) > total:
             blocks: list[Block] = []
             for pg, t in enumerate(texts, 1):
-                for raw in t.splitlines():
-                    ln = _clean(raw)
-                    if len(CN.findall(ln)) >= 2:
-                        blocks.append(Block(len(blocks), "para", ln, page=pg))
+                lines = [_clean(x) for x in t.splitlines()]
+                for ln in _merge_wrapped([x for x in lines if len(CN.findall(x)) >= 2]):
+                    blocks.append(Block(len(blocks), "para", ln, page=pg))
             return Parsed(blocks, title, extract="ocr", ocr_conf=round(conf, 3))
 
     blocks: list[Block] = []
     for pg, t in pages:
-        for raw in t.splitlines():
-            ln = _clean(raw)
-            if len(CN.findall(ln)) >= 2:
-                blocks.append(Block(len(blocks), "para", ln, page=pg))
+        lines = [_clean(x) for x in t.splitlines()]
+        for ln in _merge_wrapped([x for x in lines if len(CN.findall(x)) >= 2]):
+            blocks.append(Block(len(blocks), "para", ln, page=pg))
     return Parsed(blocks, title)
 
 

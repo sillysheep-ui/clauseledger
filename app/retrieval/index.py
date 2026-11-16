@@ -16,8 +16,10 @@ import bm25s
 from app.retrieval.children import split_children
 from app.retrieval.records import Clause, status_of
 
-PROCESSED = Path("data/processed")
-INDEX = Path("data/index")
+import os
+
+PROCESSED = Path(os.environ.get("CLAUSELEDGER_PROCESSED", "data/processed"))
+INDEX = Path(os.environ.get("CLAUSELEDGER_INDEX", "data/index"))
 
 # 领域词：jieba 默认词典会把"丧假""居转户"切碎，这里补上
 USER_WORDS = ["丧假", "居转户", "工伤认定", "缴费基数", "养老保险", "医疗保险",
@@ -76,6 +78,7 @@ def collect(min_chars: int = 10) -> list[Clause]:
                 status=st, effective_from=d.get("effective_from"),
                 effective_to=d.get("effective_to"),
                 url=d.get("url", ""), parser_version=d.get("parser_version", ""),
+                carrier=c.get("carrier") or "page", extract=d.get("extract") or "native",
             ))
         if not doc:   # 1980–2000 年代的短通知常常整篇不分条，按段落兜底
             for j, b in enumerate(d.get("blocks", [])):
@@ -88,7 +91,8 @@ def collect(min_chars: int = 10) -> list[Clause]:
                     page=b.get("page") or 0, block_index=j, char_offset=0,
                     start=0, end=0, status=st, effective_from=d.get("effective_from"),
                     effective_to=d.get("effective_to"), url=d.get("url", ""),
-                    parser_version=d.get("parser_version", "")))
+                    parser_version=d.get("parser_version", ""),
+                    carrier=d.get("carrier") or "page", extract=d.get("extract") or "native"))
 
         # 条款路径只在**同一份文件内**唯一；跨文件比较会把"一、"当成别人的父节点
         paths = [tuple(c.path) for c in doc]

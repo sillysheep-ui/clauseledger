@@ -103,6 +103,7 @@ class Clause:
     start: int
     end: int
     sec: int = 0        # 同一 path 的第几次出现（附录尤其多），path 本身不唯一
+    carrier: str = "page"  # 来自哪个载体：page / att1 / att2…（引用坐标靠它）
 
 
 # 「本通知第一条第二款…」在 PDF 里换行后行首长得像标题，其实是被引用的条款

@@ -97,7 +97,7 @@ def ingest(url: str, *, slug: str | None = None, hint: dict | None = None) -> di
         "clauses": [
             {"path": c.path, "label": c.label, "level": c.level, "text": c.text,
              "page": c.page, "block_index": c.block_index, "char_offset": c.char_offset,
-             "start": c.start, "end": c.end, "sec": c.sec}
+             "start": c.start, "end": c.end, "sec": c.sec, "carrier": c.carrier}
             for c in clauses
         ],
         "blocks": [{"i": b.index, "kind": b.kind, "page": b.page, "text": b.text} for b in blocks],
@@ -169,7 +169,7 @@ def reparse(rec: dict) -> dict:
         "clauses": [
             {"path": c.path, "label": c.label, "level": c.level, "text": c.text,
              "page": c.page, "block_index": c.block_index, "char_offset": c.char_offset,
-             "start": c.start, "end": c.end, "sec": c.sec}
+             "start": c.start, "end": c.end, "sec": c.sec, "carrier": c.carrier}
             for c in clauses
         ],
         "blocks": [{"i": b.index, "kind": b.kind, "page": b.page, "text": b.text} for b in blocks],
