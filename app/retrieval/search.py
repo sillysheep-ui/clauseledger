@@ -179,6 +179,23 @@ def index_meta() -> dict:
     return _META
 
 
+# 提问里的"水分词"：几乎每份文件都出现，出现了也不代表它回答了这个问题。
+# 覆盖率的分母如果把它们算进去，问题问得越长、覆盖率越低——**闸门实际上在惩罚"问得具体"**。
+# 所以分母只算"有区分度"的词。阈值不动（仍是 0.5），改的是分母。
+WATER = set("""
+的 了 是 有 在 和 与 或 及 等 为 对 从 到 把 被 让 给 向 于 就 都 也 还 又 很 更 最 不 没 没有
+多少 哪些 哪个 怎么 怎样 什么 如何 为什么 是否 可以 能否 需要 应当 应该 请问 一下 一般 通常
+本市 上海 上海市 文件 规定 办法 通知 意见 有关 关于 进行 相关 以上 以下 其他 以及 根据 按照
+对于 其中 目前 现在 今年 去年 明年 期间 时候 时间 情况 问题 内容 方面 部分 有关
+""".split())
+
+
+def content_terms(qs: set[str]) -> set[str]:
+    """去掉水分词与单字词后剩下的"实词"。全被滤掉时退回原集合，避免除零。"""
+    keep = {t for t in qs if t not in WATER and len(t) > 1}
+    return keep or qs
+
+
 def _searched(n_docs: int, n_queries: int) -> dict:
     return {**index_meta(), "n_docs": n_docs, "n_queries": n_queries}
 
@@ -247,7 +264,8 @@ def search_result(query: str, k: int = 8, *, status: tuple[str, ...] | None = No
         # 覆盖率算在**父条款**上：回填之后我们看到的是父条款，用子块的覆盖率
         # 会低估（子块只是父条款的一段）。代价是长条款的覆盖率仍然偏乐观——
         # 这是已知偏差，记在 docs/EVAL.md 的局限里。
-        cov = len(qset & set(tokenize(c.text))) / max(1, len(qset))
+        _qt = content_terms(qset)
+        cov = len(_qt & set(tokenize(c.text))) / max(1, len(_qt))
         # 两级阈值：候选过滤可以松（保住召回），拒答判定必须严（挡住瞎答）
         if cov < min_cand_cov:
             continue
