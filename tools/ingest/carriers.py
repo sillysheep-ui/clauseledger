@@ -164,6 +164,34 @@ def plan(rec: dict, cands: list[Carrier]) -> Plan:
     return Plan(main, sups, drops, why)
 
 
+def relocate(blocks: list[Block], clauses: list[Clause]) -> None:
+    """按**块锚点**重算偏移，保证 start 单调、父子区间自洽。
+
+    不能用 text.find 顺序搜索：同一份文件里"三、"可能在正文与附件各出现一次，
+    搜索会把父条款落到后一份、子条款落到前一份，父子区间就互相打架
+    （2026-11 实测 17 份文档 I2/I3 违规）。
+    """
+    starts, cur = [], 0
+    for b in blocks:
+        starts.append(cur)
+        cur += len(b.text) + 1
+    text = "\n".join(b.text for b in blocks)
+    for c in clauses:
+        i = -1
+        bi = c.block_index
+        if 0 <= bi < len(blocks):
+            off = c.char_offset
+            # 只信块锚点，不做逐字比对：父条款常常横跨多个块，
+            # 拿"一个块内的切片"去比必然失败，然后回落到文本搜索又把位置找错
+            if 0 <= off <= len(blocks[bi].text):
+                i = starts[bi] + off
+        if i < 0:
+            i = text.find(c.text)
+        if i < 0:
+            continue
+        c.start, c.end = i, i + len(c.text)
+
+
 def rebuild(rec: dict) -> dict:
     """主副本提供正文与坐标；补充内容去重后追加；副本只登记。"""
     cands = load_carriers(rec)
@@ -207,6 +235,10 @@ def rebuild(rec: dict) -> dict:
         seen_sec[c.path] = c.sec + 1
 
     text = "\n".join(b.text for b in blocks)
+    # 偏移必须以**合并后的全文**为准：主载体按块数累加、补充分支再加 base 都会差几行，
+    # 结果 start 不再单调（2026-11 实测 18 份文档），父子区间检查随之失真。
+    relocate(blocks, clauses)
+    clauses.sort(key=lambda c: (c.start, c.end))
     out = dict(rec)
     out.update({
         "parser_version": PARSER_VERSION,

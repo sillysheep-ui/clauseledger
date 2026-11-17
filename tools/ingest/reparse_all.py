@@ -17,6 +17,7 @@ from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
 from tools.ingest.parse import PARSER_VERSION
+from tools.ingest.carriers import rebuild
 from tools.ingest.pipeline import reparse
 
 OUT = Path("data/processed")
@@ -27,7 +28,12 @@ def one(path: Path) -> dict:
     rec = json.loads(path.read_text("utf-8"))
     before = rec.get("stats", {})
     try:
-        new = reparse(rec)
+        # 载体模型下必须从**载体计划**重建：直接把 attachments 再拼一次会
+        # 把主副本的正文复制一遍（2026-11 实测条款翻倍、区间重叠 17 处）
+        if rec.get("carrier_choice"):
+            new = rebuild(rec)
+        else:
+            new = reparse(rec)
     except Exception as e:  # 单份失败不能拖垮全库
         return {"file": path.name, "ok": False, "error": f"{type(e).__name__}: {e}"}
     tmp = path.with_suffix(".tmp")
@@ -55,10 +61,9 @@ def main() -> None:
     print(f"目标 {len(files)} 份 → parser {PARSER_VERSION}")
 
     if a.dry_run:
-        from tools.ingest.pipeline import reparse as _rp
         for f in files[:6]:
             rec = json.loads(f.read_text("utf-8"))
-            new = _rp(rec)
+            new = rebuild(rec) if rec.get("carrier_choice") else reparse(rec)
             b, nb = rec["stats"], new["stats"]
             print(f"  {f.name[:40]:42s} 块 {b['blocks']:4d}→{nb['blocks']:4d} "
                   f"字 {b['chars']:6d}→{nb['chars']:6d} 条款 {b['clauses']:3d}→{nb['clauses']:3d}")

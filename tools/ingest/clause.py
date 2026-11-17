@@ -115,6 +115,16 @@ APPENDIX = re.compile(r"^(附\s*录|附\s*表|附\s*件)\s*([0-9一二三四五�
 APP_MAX = 600  # 附录内每块的字数上限
 
 
+def _is_appendix(txt: str, i: int, total: int) -> bool:
+    """独立的"附件N"行且**位于文档后半段**才算附录。
+
+    正文里也会出现独立的"附件3"（附件清单、表格标题），一命中就把后面的正文
+    全当成附录块——2026-11 实测把 41 条正文条款错标成「附件3」。
+    """
+    t = txt.strip()
+    return bool(APPENDIX.match(t)) and len(t) <= 12 and i >= int(total * 0.6)
+
+
 def _match(line: str) -> tuple[int, str] | None:
     s = line.strip()
     if CROSSREF.match(s):
@@ -144,7 +154,7 @@ def split_clauses(blocks: list[Block], doc_no: str = "") -> list[Clause]:
     heads: list[tuple[int, int, str, int]] = []  # line_idx, level, label, offset
     for i, (_, _, txt, _) in enumerate(lines):
         am = APPENDIX.match(txt.strip())
-        if am and len(txt.strip()) <= 12:  # 附录也是一级段，否则整片名单会并进上一条
+        if _is_appendix(txt, i, len(lines)):  # 附录也是一级段，否则整片名单会并进上一条
             heads.append((i, 1, f"{am.group(1).replace(' ', '')}{am.group(2) or ''}", pos[i]))
             continue
         m = _match(txt)
@@ -156,7 +166,7 @@ def split_clauses(blocks: list[Block], doc_no: str = "") -> list[Clause]:
     app_seen: dict[str, int] = {}
     for k, (i, level, label, off) in enumerate(heads):
         am = APPENDIX.match(lines[i][2].strip())
-        if am and len(lines[i][2].strip()) <= 12:
+        if _is_appendix(lines[i][2], i, len(lines)):
             end = len(lines)
             for j, lvl, _, _ in heads[k + 1:]:
                 if lvl <= 1:

@@ -96,7 +96,9 @@ def check(rec: dict) -> Report:
 
     for c in clauses:
         # I1 标签自洽
-        if not c["_n"].startswith(norm(c["label"])):
+        # 例外：附录被按 600 字切块，后续块的文字不以「附件N」开头，这是设计而非缺陷
+        is_app = c["label"].startswith(("附件", "附录", "附表")) and c.get("sec", 0) > 0
+        if not is_app and not c["_n"].startswith(norm(c["label"])):
             r.i1_bad.append(c["path"])
         # I6 / I7
         n = len(c["_n"])
