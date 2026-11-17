@@ -19,6 +19,7 @@ from pathlib import Path
 import bm25s
 
 from app.domain.registry import DocRegistry
+from app.retrieval import rerank as _rerank
 from app.retrieval.index import INDEX, tokenize
 from app.retrieval.records import Clause
 
@@ -314,6 +315,10 @@ def search_result(query: str, k: int = 8, *, status: tuple[str, ...] | None = No
         h.scope = scope
         h._in_year = _in_year
         out.append(h)
+    # 可选重排：必须在 _collapse 之前——条款级才有足够信号，
+    # 压成"每份文件一条"再重排会把 hit@1 从 58.7% 打到 41.3%（见 docs/RETRIEVAL-LIT.md）。
+    if _rerank.enabled() and len(out) > 1:
+        out = _rerank.rerank(query, out, top=_rerank.top_n())
     # 带年份时先按"能否确认那一年有效"分层，再按分数排。
     # 理由：日期未知 ≠ 有效。用户既然说了年份，就该先相信能证明自己那年有效的文件；
     # 只在同一层里比相关性。不带年份时这一层不存在，排序与以前完全一致。
