@@ -35,6 +35,7 @@ class Parsed:
     attachments: list[str] = field(default_factory=list)
     extract: str = "native"   # native / ocr / textutil / unsupported
     ocr_conf: float | None = None
+    meta: dict = field(default_factory=dict)   # 页面 <meta>（PubDate/ContentSource 等）
 
     @property
     def text(self) -> str:
@@ -70,8 +71,16 @@ def _table_rows(tbl) -> list[str]:
     return rows
 
 
+META_KEYS = ("PubDate", "ContentSource", "ArticleTitle", "Keywords", "Description")
+
+
 def parse_html(data: bytes, base_url: str) -> Parsed:
     soup = BeautifulSoup(data, "lxml")
+    meta: dict = {}
+    for m in soup.find_all("meta"):
+        name = (m.get("name") or m.get("property") or "").strip()
+        if name in META_KEYS and (m.get("content") or "").strip():
+            meta[name.lower()] = m["content"].strip()
     for t in soup(["script", "style", "nav", "header", "footer", "noscript"]):
         t.decompose()
     title = ""
@@ -151,7 +160,7 @@ def parse_html(data: bytes, base_url: str) -> Parsed:
         h = a["href"].lower()
         if re.search(r"\.(pdf|docx?|wps)(\?|$)", h):
             atts.append(httpx_urljoin(base_url, a["href"]))
-    return Parsed(blocks, title, list(dict.fromkeys(atts)))
+    return Parsed(blocks, title, list(dict.fromkeys(atts)), meta=meta)
 
 
 def httpx_urljoin(base: str, href: str) -> str:

@@ -82,6 +82,7 @@ def ingest(url: str, *, slug: str | None = None, hint: dict | None = None) -> di
         "url": url,
         "fetched_at": datetime.now(CST).strftime("%Y-%m-%dT%H:%M:%S%z"),
         "page_kind": kind,
+        "page_meta": parsed.meta,
         "page_sha256": page.sha256,
         "parser_version": PARSER_VERSION,
         "attachments": atts,
@@ -159,6 +160,7 @@ def reparse(rec: dict) -> dict:
 
     out = dict(rec)
     out.update({
+        "page_meta": parsed.meta or rec.get("page_meta") or {},
         "parser_version": PARSER_VERSION,
         "attachments": atts,
         "extract": parsed.extract,
