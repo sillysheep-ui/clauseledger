@@ -14,7 +14,7 @@
  "fetched_at": "2026-11-11T19:44:49+0800",
  "page_kind": "pdf",
  "page_sha256": "165da4089b5a991e89013ccc08d7dd36a79e9a9e53feaabb60e91dbd87e45330",
- "parser_version": "0.3.16",
+ "parser_version": "0.3.17",
  "attachments": [
   {
    "url": "https://rsj.sh.gov.cn/cmsres/d5/d561fa2ddd0444a7b2eaf9f9b00f7869/220523b1cdde6efa3f1db23ad55edd60.pdf",
@@ -52,6 +52,7 @@
    "start": 623,
    "end": 689,
    "sec": 0,
+   "part": 0,
    "carrier": "page"
   },
   {
@@ -65,6 +66,7 @@
    "start": 690,
    "end": 759,
    "sec": 0,
+   "part": 0,
    "carrier": "page"
   },
   {
@@ -78,6 +80,7 @@
    "start": 760,
    "end": 862,
    "sec": 0,
+   "part": 0,
    "carrier": "page"
   },
   {
@@ -91,6 +94,7 @@
    "start": 782,
    "end": 811,
    "sec": 0,
+   "part": 0,
    "carrier": "page"
   },
   {
@@ -104,6 +108,7 @@
    "start": 812,
    "end": 836,
    "sec": 0,
+   "part": 0,
    "carrier": "page"
   },
   {
@@ -117,6 +122,7 @@
    "start": 837,
    "end": 862,
    "sec": 0,
+   "part": 0,
    "carrier": "page"
   },
   {
@@ -130,6 +136,7 @@
    "start": 863,
    "end": 924,
    "sec": 0,
+   "part": 0,
    "carrier": "page"
   },
   {
@@ -143,6 +150,7 @@
    "start": 925,
    "end": 1121,
    "sec": 0,
+   "part": 0,
    "carrier": "page"
   },
   {
@@ -156,6 +164,7 @@
    "start": 965,
    "end": 999,
    "sec": 0,
+   "part": 0,
    "carrier": "page"
   },
   {
@@ -169,6 +178,7 @@
    "start": 1000,
    "end": 1022,
    "sec": 0,
+   "part": 0,
    "carrier": "page"
   },
   {
@@ -182,6 +192,7 @@
    "start": 1023,
    "end": 1045,
    "sec": 0,
+   "part": 0,
    "carrier": "page"
   },
   {
@@ -195,6 +206,7 @@
    "start": 1046,
    "end": 1093,
    "sec": 0,
+   "part": 0,
    "carrier": "page"
   },
   {
@@ -208,6 +220,7 @@
    "start": 1094,
    "end": 1121,
    "sec": 0,
+   "part": 0,
    "carrier": "page"
   },
   {
@@ -221,6 +234,7 @@
    "start": 1122,
    "end": 1332,
    "sec": 0,
+   "part": 0,
    "carrier": "page"
   },
   {
@@ -234,6 +248,7 @@
    "start": 1164,
    "end": 1181,
    "sec": 0,
+   "part": 0,
    "carrier": "page"
   },
   {
@@ -247,6 +262,7 @@
    "start": 1182,
    "end": 1209,
    "sec": 0,
+   "part": 0,
    "carrier": "page"
   },
   {
@@ -260,6 +276,7 @@
    "start": 1210,
    "end": 1242,
    "sec": 0,
+   "part": 0,
    "carrier": "page"
   },
   {
@@ -273,6 +290,7 @@
    "start": 1243,
    "end": 1270,
    "sec": 0,
+   "part": 0,
    "carrier": "page"
   },
   {
@@ -286,6 +304,7 @@
    "start": 1271,
    "end": 1289,
    "sec": 0,
+   "part": 0,
    "carrier": "page"
   },
   {
@@ -299,6 +318,7 @@
    "start": 1290,
    "end": 1312,
    "sec": 0,
+   "part": 0,
    "carrier": "page"
   },
   {
@@ -312,6 +332,7 @@
    "start": 1313,
    "end": 1332,
    "sec": 0,
+   "part": 0,
    "carrier": "page"
   },
   {
@@ -325,6 +346,7 @@
    "start": 1333,
    "end": 1370,
    "sec": 0,
+   "part": 0,
    "carrier": "page"
   },
   {
@@ -338,6 +360,7 @@
    "start": 1371,
    "end": 1586,
    "sec": 0,
+   "part": 0,
    "carrier": "page"
   },
   {
@@ -351,6 +374,7 @@
    "start": 1415,
    "end": 1424,
    "sec": 0,
+   "part": 0,
    "carrier": "page"
   },
   {
@@ -364,6 +388,7 @@
    "start": 1425,
    "end": 1440,
    "sec": 0,
+   "part": 0,
    "carrier": "page"
   },
   {
@@ -377,6 +402,7 @@
    "start": 1441,
    "end": 1449,
    "sec": 0,
+   "part": 0,
    "carrier": "page"
   },
   {
@@ -390,6 +416,7 @@
    "start": 1450,
    "end": 1586,
    "sec": 0,
+   "part": 0,
    "carrier": "page"
   },
   {
@@ -403,6 +430,7 @@
    "start": 1587,
    "end": 1773,
    "sec": 0,
+   "part": 0,
    "carrier": "page"
   },
   {
@@ -416,6 +444,7 @@
    "start": 1774,
    "end": 1906,
    "sec": 0,
+   "part": 0,
    "carrier": "page"
   },
   {
@@ -429,6 +458,7 @@
    "start": 1907,
    "end": 1988,
    "sec": 0,
+   "part": 0,
    "carrier": "page"
   },
   {
@@ -442,6 +472,7 @@
    "start": 1989,
    "end": 2282,
    "sec": 0,
+   "part": 0,
    "carrier": "page"
   },
   {
@@ -455,6 +486,7 @@
    "start": 2283,
    "end": 2492,
    "sec": 0,
+   "part": 0,
    "carrier": "page"
   },
   {
@@ -468,6 +500,7 @@
    "start": 2493,
    "end": 2577,
    "sec": 0,
+   "part": 0,
    "carrier": "page"
   },
   {
@@ -481,6 +514,7 @@
    "start": 2578,
    "end": 2679,
    "sec": 0,
+   "part": 0,
    "carrier": "page"
   },
   {
@@ -494,6 +528,7 @@
    "start": 2680,
    "end": 2772,
    "sec": 0,
+   "part": 0,
    "carrier": "page"
   },
   {
@@ -507,6 +542,7 @@
    "start": 2773,
    "end": 2835,
    "sec": 0,
+   "part": 0,
    "carrier": "page"
   },
   {
@@ -520,6 +556,7 @@
    "start": 2836,
    "end": 2874,
    "sec": 0,
+   "part": 0,
    "carrier": "page"
   }
  ],

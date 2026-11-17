@@ -32,6 +32,7 @@ class Clause:
     url: str = ""
     parser_version: str = ""
     carrier: str = "page"
+    part: int = 0
     extract: str = "native"
 
     def to_dict(self) -> dict:

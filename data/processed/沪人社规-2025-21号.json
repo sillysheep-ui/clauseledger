@@ -14,7 +14,7 @@
  "fetched_at": "2026-11-11T19:51:32+0800",
  "page_kind": "html",
  "page_sha256": "d4de9fbe5845eef5479415ac904496eb57a56786d41f0eb0ae511fb4220fba9f",
- "parser_version": "0.3.16",
+ "parser_version": "0.3.17",
  "attachments": [
   {
    "url": "https://rsj.sh.gov.cn/cmsres/13/1385f0bf27a548f69f7274e58417959d/5eb9b513dbde3ea253b7d32f7b6e7261.pdf",
@@ -51,6 +51,7 @@
    "start": 173,
    "end": 284,
    "sec": 0,
+   "part": 0,
    "carrier": "page"
   },
   {
@@ -64,6 +65,7 @@
    "start": 285,
    "end": 366,
    "sec": 0,
+   "part": 0,
    "carrier": "page"
   },
   {
@@ -77,6 +79,7 @@
    "start": 367,
    "end": 474,
    "sec": 0,
+   "part": 0,
    "carrier": "page"
   },
   {
@@ -90,6 +93,7 @@
    "start": 475,
    "end": 556,
    "sec": 0,
+   "part": 0,
    "carrier": "page"
   }
  ],

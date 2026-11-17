@@ -102,8 +102,11 @@ class Clause:
     page: int | None
     start: int
     end: int
-    sec: int = 0        # 同一 path 的第几次出现（附录尤其多），path 本身不唯一
+    sec: int = 0        # 同一 (part, path) 的第几次出现（附录尤其多）
     carrier: str = "page"  # 来自哪个载体：page / att1 / att2…（引用坐标靠它）
+    part: int = 0       # 第几份文档：0=正文，1..=第 N 个附件/附录
+    # 一份文件常装着多份文档（通知 + 附件里的《办法》《标准》），各自从「一、」重新编号。
+    # 不给它们分家，父条款会认领到另一份文档的子条款（实测 15 份文档 I2/I3 违规）。
 
 
 # 「本通知第一条第二款…」在 PDF 里换行后行首长得像标题，其实是被引用的条款
@@ -146,6 +149,14 @@ def split_clauses(blocks: list[Block], doc_no: str = "") -> list[Clause]:
     while lines and TAIL_NOISE.search(lines[-1][2].strip()):
         lines.pop()
 
+    # 每行属于第几份文档：独立的「附件N / 附录N」行开新的一份
+    part_of, cur = [], 0
+    for (_, _, txt, _) in lines:
+        t = txt.strip()
+        if APPENDIX.match(t) and len(t) <= 12:
+            cur += 1
+        part_of.append(cur)
+
     pos, cursor = [], 0
     for i, (_, _, txt, _) in enumerate(lines):
         pos.append(cursor)
@@ -180,14 +191,16 @@ def split_clauses(blocks: list[Block], doc_no: str = "") -> list[Clause]:
                     n = app_seen.get(name, 0); app_seen[name] = n + 1
                     out.append(Clause(path=name, level=1, label=name, text="\n".join(buf),
                                       block_index=lines[i][0], char_offset=0, page=lines[t - 1][3],
-                                      start=s0, end=pos[t - 1] + len(lines[t - 1][2]), sec=n))
+                                      start=s0, end=pos[t - 1] + len(lines[t - 1][2]), sec=n,
+                                      part=part_of[i]))
                     buf, s0 = [], pos[t]
                 buf.append(txt)
             if buf:
                 n = app_seen.get(name, 0); app_seen[name] = n + 1
                 out.append(Clause(path=name, level=1, label=name, text="\n".join(buf),
                                   block_index=lines[i][0], char_offset=0, page=lines[end - 1][3],
-                                  start=s0, end=pos[end - 1] + len(lines[end - 1][2]), sec=n))
+                                  start=s0, end=pos[end - 1] + len(lines[end - 1][2]), sec=n,
+                                  part=part_of[i]))
             continue
         end_line = len(lines)
         for j, lvl, _, _ in heads[k + 1:]:
@@ -206,10 +219,12 @@ def split_clauses(blocks: list[Block], doc_no: str = "") -> list[Clause]:
         bidx, _, _, page = lines[i]
         out.append(Clause(path=path, level=level, label=label, text=body,
                           block_index=bidx, char_offset=lines[i][1], page=page,
-                          start=off, end=pos[end_line - 1] + len(lines[end_line - 1][2])))
-    seen: dict[str, int] = {}
-    for c in out:  # 全局口径：path 不唯一，sec 记录这是第几次出现（正文/附件/附录各算一次）
-        n = seen.get(c.path, 0)
+                          start=off, end=pos[end_line - 1] + len(lines[end_line - 1][2]),
+                          part=part_of[i]))
+    seen: dict[tuple[int, str], int] = {}
+    for c in out:  # 只在同一份文档内计数：正文的「一、」与附件《办法》的「一、」是两回事
+        key = (c.part, c.path)
+        n = seen.get(key, 0)
         c.sec = n
-        seen[c.path] = n + 1
+        seen[key] = n + 1
     return out

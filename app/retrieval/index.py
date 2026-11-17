@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import json
 import re
+import re
 from pathlib import Path
 
 import jieba
@@ -48,12 +49,29 @@ def _path(p) -> list[str]:
 
 
 def _is_leaf(c: Clause, paths: list[tuple]) -> bool:
-    """父条款文本包含子条款全文，同时索引会造成同一段文字出现两三次。只留叶子。"""
-    p = tuple(c.path)
-    for other in paths:
-        if len(other) > len(p) and other[: len(p)] == p:
+    """父条款文本包含子条款全文，同时索引会造成同一段文字出现两三次。只留叶子。
+
+    比较键必须带 part：一份文件里常装着通知 + 附件《办法》，两边都有「一、」，
+    只比 path 会把附件里的「一、」当成正文「一、」的父条款，整份附件就被删光。
+    """
+    mine = tuple(c.path)
+    for part, other in paths:
+        if part == c.part and len(other) > len(mine) and other[: len(mine)] == mine:
             return False
     return True
+
+
+def _with_part(c: dict, labels: list[str]) -> list[str]:
+    """附件里的条款在路径前加「附件N ›」，否则和正文同号条款分不开。
+
+    附录自己切块时 path 已经是「附件一」，再加一次会变成「附件一 › 附件一」。
+    """
+    path = _path(c.get("path"))
+    part = c.get("part") or 0
+    if part <= 0 or part - 1 >= len(labels):
+        return path
+    label = labels[part - 1]
+    return path if path and path[0] == label else [label] + path
 
 
 def collect(min_chars: int = 10) -> list[Clause]:
@@ -62,6 +80,12 @@ def collect(min_chars: int = 10) -> list[Clause]:
     for f in sorted(PROCESSED.glob("*.json")):
         d = json.loads(f.read_text("utf-8"))
         st = status_of(d.get("effective_to"), d.get("effective_from"))
+        # 附件里的《办法》有自己的一套编号，引用时必须写明"附件N ›"，否则和正文的第十八条分不开
+        labels = [re.sub(r"\s+", "", (b.get("text") or "").strip())
+                  for b in d.get("blocks", [])
+                  if re.fullmatch(r"(附\s*录|附\s*表|附\s*件)\s*([0-9一二三四五六七八九十]{1,3})?",
+                                  (b.get("text") or "").strip())
+                  and len((b.get("text") or "").strip()) <= 12]
         doc: list[Clause] = []
         for i, c in enumerate(d.get("clauses", [])):
             text = (c.get("text") or "").strip()
@@ -70,7 +94,8 @@ def collect(min_chars: int = 10) -> list[Clause]:
             doc.append(Clause(
                 id=f"{d['doc_no']}#{i}",
                 doc_no=d["doc_no"], title=d.get("title", ""),
-                path=_path(c.get("path")), level=c.get("level", 0),
+                path=_with_part(c, labels),
+                level=c.get("level", 0),
                 label=c.get("label", ""), text=text,
                 page=c.get("page") or 0, block_index=c.get("block_index") or 0,
                 char_offset=c.get("char_offset") or 0,
@@ -79,6 +104,7 @@ def collect(min_chars: int = 10) -> list[Clause]:
                 effective_to=d.get("effective_to"),
                 url=d.get("url", ""), parser_version=d.get("parser_version", ""),
                 carrier=c.get("carrier") or "page", extract=d.get("extract") or "native",
+                part=c.get("part") or 0,
             ))
         if not doc:   # 1980–2000 年代的短通知常常整篇不分条，按段落兜底
             for j, b in enumerate(d.get("blocks", [])):
@@ -95,7 +121,7 @@ def collect(min_chars: int = 10) -> list[Clause]:
                     carrier=d.get("carrier") or "page", extract=d.get("extract") or "native"))
 
         # 条款路径只在**同一份文件内**唯一；跨文件比较会把"一、"当成别人的父节点
-        paths = [tuple(c.path) for c in doc]
+        paths = [(c.part, tuple(c.path)) for c in doc]
         out.extend(c for c in doc if _is_leaf(c, paths))
     return _dedupe(out)
 

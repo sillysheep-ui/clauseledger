@@ -140,17 +140,17 @@ def plan(rec: dict, cands: list[Carrier]) -> Plan:
     main, why = choose_main(cands)
     if main is None:
         return Plan(None, [], [(c, "无正文") for c in cands], why)
-    pset = {c.path for c in main.clauses}
+    pset = {(c.part, c.path) for c in main.clauses}
     sups: list[tuple[Carrier, bool]] = []
     drops: list[tuple[Carrier, str]] = []
     for c in cands:
         if c is main:
             continue
-        j = _jaccard(pset, {x.path for x in c.clauses})
+        j = _jaccard({p for _, p in pset}, {x.path for x in c.clauses})
         if j >= DUP_JACCARD:
             # 重合度高不等于完全一样：网页版常多出通知抬头、附则、附件说明。
             # 只把"主副本没有的路径"补进来，既不重复也不丢内容。
-            extra = {x.path for x in c.clauses} - pset
+            extra = {x.path for x in c.clauses} - {p for _, p in pset}
             if extra and c.chars >= SUP_CHARS:
                 sups.append((c, True))
                 continue
@@ -208,7 +208,7 @@ def rebuild(rec: dict) -> dict:
         c.carrier = p.main.label
         clauses.append(c)
     for sup, partial in p.supplements:
-        keep_paths = {c.path for c in p.main.clauses} if partial else None
+        keep_paths = {p for _, p in pset} if partial else None
         off = len(blocks)
         for b in sup.blocks:
             blocks.append(Block(len(blocks), b.kind, b.text, b.page))
@@ -229,10 +229,11 @@ def rebuild(rec: dict) -> dict:
 
     # sec 必须在**合并之后**重算：每个载体各自切分时都从 0 开始，
     # 直接拼接会出现两段 "附件/0"（2026-11 实测 122 条重复）。
-    seen_sec: dict[str, int] = {}
+    seen_sec: dict[tuple[int, str], int] = {}
     for c in clauses:
-        c.sec = seen_sec.get(c.path, 0)
-        seen_sec[c.path] = c.sec + 1
+        key = (c.part, c.path)
+        c.sec = seen_sec.get(key, 0)
+        seen_sec[key] = c.sec + 1
 
     text = "\n".join(b.text for b in blocks)
     # 偏移必须以**合并后的全文**为准：主载体按块数累加、补充分支再加 base 都会差几行，
@@ -254,7 +255,8 @@ def rebuild(rec: dict) -> dict:
         "clauses": [
             {"path": c.path, "label": c.label, "level": c.level, "text": c.text,
              "page": c.page, "block_index": c.block_index, "char_offset": c.char_offset,
-             "start": c.start, "end": c.end, "sec": c.sec, "carrier": c.carrier}
+             "start": c.start, "end": c.end, "sec": c.sec, "part": c.part,
+             "carrier": c.carrier}
             for c in clauses
         ],
         "blocks": [{"i": b.index, "kind": b.kind, "page": b.page, "text": b.text}

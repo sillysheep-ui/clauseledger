@@ -78,7 +78,7 @@ def check(rec: dict) -> Report:
 
     # 主键重复：path 是"编号路径"，同一份文件里 通知正文 与 附件办法 可能各有「一、」
     # 2026-11-14：附录切分后同一 path 会有多个 sec，path 单独不再能判重
-    paths = Counter((c["path"], c.get("sec", 0)) for c in clauses)
+    paths = Counter((c.get("part", 0), c["path"], c.get("sec", 0)) for c in clauses)
     r.dup_path = sum(n for n in paths.values() if n > 1)
     r.dup_kinds = sum(1 for n in paths.values() if n > 1)
 
@@ -86,7 +86,12 @@ def check(rec: dict) -> Report:
     # （path 会重复，用 path 当主键会把不同章节的父条款认错——第一版体检就是这么误报 1791 条的）
     stack: list[dict] = []
     kids: dict[int, list[dict]] = defaultdict(list)
-    for c in sorted(clauses, key=lambda x: x["start"]):
+    cur_part = None
+    for c in sorted(clauses, key=lambda x: (x.get("part", 0), x["start"])):
+        # 换了一份文档（正文 → 附件里的《办法》）编号会重新开始，父子栈必须清空
+        if c.get("part", 0) != cur_part:
+            stack.clear()
+            cur_part = c.get("part", 0)
         while stack and stack[-1]["level"] >= c["level"]:
             stack.pop()
         c["_parent"] = stack[-1] if stack else None
