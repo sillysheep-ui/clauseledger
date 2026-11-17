@@ -25,7 +25,7 @@ from app.retrieval.records import Clause
 
 MIN_SCORE = 3.0      # BM25 绝对分；低于它基本是"只共享了两个字"
 MIN_COVERAGE = 0.5   # 首条条款至少覆盖一半提问词，才算"有把握"
-MIN_ANSWER = 0.35    # 低于它直接拒答；0.35–0.5 之间答但标"低置信""
+MIN_ANSWER = 0.30    # 地板：低于它连"沾边"都算不上。0.30–0.5 只标低置信，不拒答"
 
 # 覆盖范围：只做上海。问题里出现别的城市，直接说没覆盖，不许拿上海条款凑。
 SUPPORTED_CITIES = {"上海"}

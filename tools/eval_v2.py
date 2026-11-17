@@ -19,7 +19,7 @@ import time
 from pathlib import Path
 
 from app.retrieval.index import tokenize
-from app.retrieval.search import search, search_result
+from app.retrieval.search import search, search_result, MIN_ANSWER, MIN_COVERAGE
 
 QS = Path("eval/questions_v2.json")
 REPORTS = Path("eval/reports")
@@ -152,7 +152,7 @@ def report(res: dict) -> str:
     if low:
         lh = sum(1 for r in low if r["ok1"])
         L.append("")
-        L.append(f"> 低置信（覆盖 0.35–0.5，答但标「请核对」）**{len(low)} 条**，其中 hit@1 **{lh}** 条；"
+        L.append(f"> 低置信（覆盖 {MIN_ANSWER:.2f}–{MIN_COVERAGE:.2f}，答但标「请核对」）**{len(low)} 条**，其中 hit@1 **{lh}** 条；"
                  f"高置信 hit@1 {sum(1 for r in res['rows'] if r.get('conf') == 'high' and r['ok1'])} 条。")
     # 金标自己已经废止的题：整体 hit@1 会被它们拖低。单列一行，不许混着报。
     try:
