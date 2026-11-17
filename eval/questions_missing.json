@@ -1,0 +1,122 @@
+[
+ {
+  "id": "MISS-001",
+  "q": "上海博士后公寓怎么申请",
+  "category": "in_scope_missing",
+  "split": "dev",
+  "gold_doc": "",
+  "gold_title": "",
+  "expect": "refuse",
+  "note": "博士后公寓在语料里 0 命中"
+ },
+ {
+  "id": "MISS-002",
+  "q": "外国人工作许可怎么办理",
+  "category": "in_scope_missing",
+  "split": "dev",
+  "gold_doc": "",
+  "gold_title": "",
+  "expect": "refuse",
+  "note": "外国人工作许可 0 命中"
+ },
+ {
+  "id": "MISS-003",
+  "q": "选调生怎么报名",
+  "category": "in_scope_missing",
+  "split": "dev",
+  "gold_doc": "",
+  "gold_title": "",
+  "expect": "refuse",
+  "note": "选调生 0 命中"
+ },
+ {
+  "id": "MISS-004",
+  "q": "上海育儿假是多少天",
+  "category": "in_scope_missing",
+  "split": "dev",
+  "gold_doc": "",
+  "gold_title": "",
+  "expect": "refuse",
+  "note": "育儿假 0 命中（该事项属卫健委口径）"
+ },
+ {
+  "id": "MISS-005",
+  "q": "电子劳动合同有法律效力吗",
+  "category": "in_scope_missing",
+  "split": "dev",
+  "gold_doc": "",
+  "gold_title": "",
+  "expect": "refuse",
+  "note": "电子劳动合同 0 命中；最近的是 2019〕33号 电子证书"
+ },
+ {
+  "id": "MISS-006",
+  "q": "集体合同必须备案吗，去哪里备案",
+  "category": "in_scope_missing",
+  "split": "dev",
+  "gold_doc": "",
+  "gold_title": "",
+  "expect": "refuse",
+  "note": "集体合同+备案 0 命中"
+ },
+ {
+  "id": "MISS-007",
+  "q": "独生子女父母护理假有几天",
+  "category": "in_scope_missing",
+  "split": "dev",
+  "gold_doc": "",
+  "gold_title": "",
+  "expect": "refuse",
+  "note": "护理假 0 命中"
+ },
+ {
+  "id": "MISS-008",
+  "q": "随军家属就业有什么安置政策",
+  "category": "in_scope_missing",
+  "split": "dev",
+  "gold_doc": "",
+  "gold_title": "",
+  "expect": "refuse",
+  "note": "随军家属 0 命中"
+ },
+ {
+  "id": "MISS-009",
+  "q": "上海托育补贴怎么申请",
+  "category": "in_scope_missing",
+  "split": "dev",
+  "gold_doc": "",
+  "gold_title": "",
+  "expect": "refuse",
+  "note": "托育 0 命中"
+ },
+ {
+  "id": "MISS-010",
+  "q": "个人养老金每年最多交多少",
+  "category": "in_scope_missing",
+  "split": "dev",
+  "gold_doc": "",
+  "gold_title": "",
+  "expect": "refuse",
+  "note": "个人养老金 0 命中"
+ },
+ {
+  "id": "MISS-011",
+  "q": "劳动仲裁的时效是多久",
+  "category": "in_scope_missing",
+  "split": "dev",
+  "gold_doc": "",
+  "gold_title": "",
+  "expect": "refuse",
+  "note": "时效 0 命中；最近的是 2014〕38号 仲裁管辖"
+ },
+ {
+  "id": "MISS-012",
+  "q": "2027年上海最低工资标准是多少",
+  "category": "in_scope_missing",
+  "split": "dev",
+  "gold_doc": "",
+  "gold_title": "",
+  "expect": "refuse",
+  "note": "2027 未发布；语料只有 2025 年标准"
+ }
+]
