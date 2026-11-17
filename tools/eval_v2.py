@@ -19,7 +19,7 @@ import time
 from pathlib import Path
 
 from app.retrieval.index import tokenize
-from app.retrieval.search import search
+from app.retrieval.search import search, search_result
 
 QS = Path("eval/questions_v2.json")
 REPORTS = Path("eval/reports")
@@ -72,7 +72,9 @@ def run(split: str) -> dict:
     n_stale = sum(1 for q in allq if q.get("stale"))
     rows = []
     for item in qs:
-        hits = search(item["q"], k=10)
+        ans = search_result(item["q"], k=10)
+        hits = ans.hits if ans.kind == "ok" else []
+        conf = ans.confidence if ans.kind == "ok" else "none"
         rank = 0
         for i, h in enumerate(hits, 1):
             if is_hit(h, item["gold_doc"], item["gold_title"]):
@@ -87,6 +89,7 @@ def run(split: str) -> dict:
             "answered": int(bool(top)),
             "top": top.clause.doc_no if top else "",
             "top_status": top.clause.status if top else "",
+            "conf": conf,
             "dirty": dirty(top.clause.text) if top else 0,
             "leak": round(leakage(item["q"], item["gold_title"]), 2) if item["gold_title"] else 0.0,
         })
@@ -143,6 +146,14 @@ def report(res: dict) -> str:
     if b:
         lo, hi = b["ci"]
         L.append(f"| out_of_scope | {b['n']} | — | — | — | 拒答 {b['rate']:.0%} ({lo:.0%}–{hi:.0%}) | — | — |")
+    # 低置信：答了但首条只覆盖三四成提问词。它既不是拒答也不是"有把握"，
+    # 单独报一行，避免用整体 hit@1 掩盖"多答出来的是错的多"。
+    low = [r for r in res["rows"] if r.get("conf") == "low"]
+    if low:
+        lh = sum(1 for r in low if r["ok1"])
+        L.append("")
+        L.append(f"> 低置信（覆盖 0.35–0.5，答但标「请核对」）**{len(low)} 条**，其中 hit@1 **{lh}** 条；"
+                 f"高置信 hit@1 {sum(1 for r in res['rows'] if r.get('conf') == 'high' and r['ok1'])} 条。")
     # 金标自己已经废止的题：整体 hit@1 会被它们拖低。单列一行，不许混着报。
     try:
         from app.domain.validity import load as _load_rels

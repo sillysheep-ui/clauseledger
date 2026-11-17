@@ -28,6 +28,9 @@ def main() -> None:
     if ans.refused:
         print(f"答：{ans.reason}")
         print(f"    检索范围：{ans.n_docs} 份文件 / {ans.n_candidates} 条候选条款")
+    if ans.kind == "ok" and ans.confidence == "low":
+        print("    低置信：首条只覆盖了部分提问词，以下条款请对照原文核对后再用。")
+        print()
         if ans.gap:
             print(f"    已知但没取到：{ans.gap['text']}")
         return

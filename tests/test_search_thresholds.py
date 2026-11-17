@@ -16,11 +16,12 @@ def test_search_forwards_all_thresholds(monkeypatch):
         return S.Answer([], "", "ok", 0, 0, searched={"n_docs": 0, "n_queries": 0})
 
     monkeypatch.setattr(S, "search_result", fake)
-    S.search("任意", k=3, min_score=1.5, min_coverage=0.7, min_cand_cov=0.9)
+    S.search("任意", k=3, min_score=1.5, min_coverage=0.7, min_cand_cov=0.9, min_answer=0.2)
     assert seen["k"] == 3
     assert seen["min_score"] == 1.5
     assert seen["min_coverage"] == 0.7
     assert seen["min_cand_cov"] == 0.9, "search() 又吞掉一个阈值参数"
+    assert seen["min_answer"] == 0.2, "search() 吞掉了 min_answer"
 
 
 def test_unreachable_threshold_actually_refuses():
@@ -30,5 +31,7 @@ def test_unreachable_threshold_actually_refuses():
     if not loose.hits:
         import pytest
         pytest.skip("索引未构建")
-    assert S.search_result(q, k=5, min_coverage=1.01).outcome != "answer"
+    # 2026-11-17 起阈值分两档：min_answer 决定"拒不拒"，min_coverage 决定"标不标低置信"
+    assert S.search_result(q, k=5, min_answer=1.01).outcome != "answer"
     assert S.search_result(q, k=5, min_cand_cov=1.01).hits == []
+    assert S.search_result(q, k=5, min_coverage=1.01).confidence == "low"

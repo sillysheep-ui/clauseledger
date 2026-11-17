@@ -24,7 +24,8 @@ from app.retrieval.index import INDEX, tokenize
 from app.retrieval.records import Clause
 
 MIN_SCORE = 3.0      # BM25 绝对分；低于它基本是"只共享了两个字"
-MIN_COVERAGE = 0.5   # 首条条款至少覆盖一半提问词，否则算"没找到"
+MIN_COVERAGE = 0.5   # 首条条款至少覆盖一半提问词，才算"有把握"
+MIN_ANSWER = 0.35    # 低于它直接拒答；0.35–0.5 之间答但标"低置信""
 
 # 覆盖范围：只做上海。问题里出现别的城市，直接说没覆盖，不许拿上海条款凑。
 SUPPORTED_CITIES = {"上海"}
@@ -98,6 +99,9 @@ class Answer:
     # 已知存在、但我们没拿到的文件——用它把"查不到"和"没有"分开说。
     gap: dict | None = None
     as_of: str = ""           # 效力判定的基准日（可能来自提问里的年份）
+    # high / low：low 表示"答得出来，但首条只覆盖了三四成提问词"。
+    # 不把它并进拒答——四态里 unknown 要能带着证据出现，而不是吞掉证据。
+    confidence: str = "high"
 
     @property
     def refused(self) -> bool:
@@ -214,14 +218,15 @@ def _load() -> tuple[bm25s.BM25, list[Clause], list[dict]]:
 
 def search(query: str, k: int = 8, *, status: tuple[str, ...] | None = None,
            min_score: float = MIN_SCORE, min_coverage: float = MIN_COVERAGE,
-           min_cand_cov: float = 0.25) -> list[Hit]:
+           min_cand_cov: float = 0.25, min_answer: float = MIN_ANSWER) -> list[Hit]:
     return search_result(query, k=k, status=status, min_score=min_score,
+                         min_answer=min_answer,
                          min_coverage=min_coverage, min_cand_cov=min_cand_cov).hits
 
 
 def search_result(query: str, k: int = 8, *, status: tuple[str, ...] | None = None,
                   min_score: float = MIN_SCORE, min_coverage: float = MIN_COVERAGE,
-                  min_cand_cov: float = 0.25) -> Answer:
+                  min_cand_cov: float = 0.25, min_answer: float = MIN_ANSWER) -> Answer:
     from app.domain.validity import year_of as _year_of
     _y = _year_of(query)
     _as_of = f"{_y}-12-31" if _y else date.today().isoformat()
@@ -330,12 +335,15 @@ def search_result(query: str, k: int = 8, *, status: tuple[str, ...] | None = No
     if not out:
         return Answer([], "没有条款达到相关性下限", "insufficient", n_docs, 0,
                       searched=_searched(n_docs, len(qt)), gap=_gap(qt), as_of=_as_of)
-    if out[0].coverage < min_coverage:  # 2026-11-15：此前这里写死常量，传参等于没传
+    if out[0].coverage < min_answer:
         return Answer([], f"首条条款只覆盖 {out[0].coverage:.0%} 的提问词", "insufficient",
                       n_docs, len(out), searched=_searched(n_docs, len(qt)), gap=_gap(qt),
                       as_of=_as_of)
+    # 0.35–0.5：给答案，但标低置信。理由见 docs/RETRIEVAL-LIT.md：
+    # 15 条误拒里 8 条的正确答案就在 top-3，一刀切拒答是拿"不知道"当安全。
+    conf = "high" if out[0].coverage >= min_coverage else "low"
     return Answer(_prefer_effective(_collapse(out))[:k], "", "ok", n_docs, len(out),
-                  searched=_searched(n_docs, len(qt)), as_of=_as_of)
+                  searched=_searched(n_docs, len(qt)), as_of=_as_of, confidence=conf)
 
 
 def _status_rank(status: str) -> int:
