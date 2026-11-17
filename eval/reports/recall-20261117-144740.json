@@ -1,0 +1,1164 @@
+{
+ "ts": "20261117-144740",
+ "model": "BAAI/bge-small-zh-v1.5",
+ "topk": 200,
+ "rrf_k": 60,
+ "corpus": {
+  "clauses": 5983,
+  "children": 6064
+ },
+ "peak_mb": 149.253868,
+ "summary": {
+  "A": {
+   "method": "A",
+   "n": 92,
+   "hit1": 51,
+   "hit3": 72,
+   "mrr": 0.6784777077003398,
+   "found": 91,
+   "mean_rank": 5.824175824175824,
+   "lat_med_ms": 1.6033332794904709,
+   "lat_p90_ms": 2.1942919120192528,
+   "build_s": 17.117549624759704
+  },
+  "B": {
+   "method": "B",
+   "n": 92,
+   "hit1": 56,
+   "hit3": 72,
+   "mrr": 0.7059630590289122,
+   "found": 89,
+   "mean_rank": 5.134831460674158,
+   "lat_med_ms": 1.7949999310076237,
+   "lat_p90_ms": 2.409708220511675,
+   "build_s": 7.971136083360761
+  },
+  "A+后处理(线上)": {
+   "method": "A+后处理(线上)",
+   "n": 92,
+   "hit1": 53,
+   "hit3": 69,
+   "mrr": 0.6698498964803312,
+   "found": 75
+  }
+ },
+ "mcnemar": {
+  "B": {
+   "better": 9,
+   "worse": 4,
+   "p": 0.266845703125
+  }
+ },
+ "rows": {
+  "A": [
+   {
+    "id": "OFFI-001",
+    "rank": 1
+   },
+   {
+    "id": "OFFI-003",
+    "rank": 1
+   },
+   {
+    "id": "OFFI-004",
+    "rank": 4
+   },
+   {
+    "id": "OFFI-005",
+    "rank": 1
+   },
+   {
+    "id": "OFFI-006",
+    "rank": 1
+   },
+   {
+    "id": "OFFI-007",
+    "rank": 7
+   },
+   {
+    "id": "OFFI-008",
+    "rank": 3
+   },
+   {
+    "id": "OFFI-009",
+    "rank": 1
+   },
+   {
+    "id": "OFFI-010",
+    "rank": 6
+   },
+   {
+    "id": "OFFI-012",
+    "rank": 1
+   },
+   {
+    "id": "OFFI-013",
+    "rank": 3
+   },
+   {
+    "id": "OFFI-014",
+    "rank": 1
+   },
+   {
+    "id": "OFFI-015",
+    "rank": 2
+   },
+   {
+    "id": "OFFI-016",
+    "rank": 1
+   },
+   {
+    "id": "OFFI-017",
+    "rank": 1
+   },
+   {
+    "id": "OFFI-018",
+    "rank": 2
+   },
+   {
+    "id": "OFFI-019",
+    "rank": 4
+   },
+   {
+    "id": "OFFI-020",
+    "rank": 1
+   },
+   {
+    "id": "OFFI-021",
+    "rank": 1
+   },
+   {
+    "id": "OFFI-022",
+    "rank": 50
+   },
+   {
+    "id": "OFFI-023",
+    "rank": 22
+   },
+   {
+    "id": "OFFI-024",
+    "rank": 5
+   },
+   {
+    "id": "OFFI-025",
+    "rank": 1
+   },
+   {
+    "id": "OFFI-026",
+    "rank": 1
+   },
+   {
+    "id": "OFFI-027",
+    "rank": 1
+   },
+   {
+    "id": "OFFI-028",
+    "rank": 2
+   },
+   {
+    "id": "OFFI-029",
+    "rank": 1
+   },
+   {
+    "id": "OFFI-030",
+    "rank": 2
+   },
+   {
+    "id": "OFFI-031",
+    "rank": 64
+   },
+   {
+    "id": "OFFI-032",
+    "rank": 2
+   },
+   {
+    "id": "OFFI-033",
+    "rank": 3
+   },
+   {
+    "id": "OFFI-034",
+    "rank": 1
+   },
+   {
+    "id": "OFFI-036",
+    "rank": 9
+   },
+   {
+    "id": "OFFI-037",
+    "rank": 1
+   },
+   {
+    "id": "OFFI-038",
+    "rank": 2
+   },
+   {
+    "id": "OFFI-039",
+    "rank": 9
+   },
+   {
+    "id": "OFFI-040",
+    "rank": 49
+   },
+   {
+    "id": "OFFI-041",
+    "rank": 32
+   },
+   {
+    "id": "OFFI-042",
+    "rank": 1
+   },
+   {
+    "id": "OFFI-043",
+    "rank": 1
+   },
+   {
+    "id": "OFFI-044",
+    "rank": 1
+   },
+   {
+    "id": "OFFI-046",
+    "rank": 48
+   },
+   {
+    "id": "OFFI-047",
+    "rank": 1
+   },
+   {
+    "id": "OFFI-048",
+    "rank": 1
+   },
+   {
+    "id": "OFFI-049",
+    "rank": 2
+   },
+   {
+    "id": "OFFI-051",
+    "rank": 1
+   },
+   {
+    "id": "OFFI-052",
+    "rank": 1
+   },
+   {
+    "id": "OFFI-053",
+    "rank": 3
+   },
+   {
+    "id": "OFFI-054",
+    "rank": 3
+   },
+   {
+    "id": "OFFI-055",
+    "rank": 1
+   },
+   {
+    "id": "OFFI-056",
+    "rank": 2
+   },
+   {
+    "id": "OFFI-057",
+    "rank": 1
+   },
+   {
+    "id": "OFFI-058",
+    "rank": 1
+   },
+   {
+    "id": "OFFI-059",
+    "rank": 0
+   },
+   {
+    "id": "OFFI-060",
+    "rank": 1
+   },
+   {
+    "id": "OFFI-061",
+    "rank": 4
+   },
+   {
+    "id": "OFFI-062",
+    "rank": 1
+   },
+   {
+    "id": "OFFI-063",
+    "rank": 1
+   },
+   {
+    "id": "OFFI-064",
+    "rank": 1
+   },
+   {
+    "id": "OFFI-066",
+    "rank": 1
+   },
+   {
+    "id": "OFFI-067",
+    "rank": 3
+   },
+   {
+    "id": "OFFI-068",
+    "rank": 1
+   },
+   {
+    "id": "OFFI-069",
+    "rank": 3
+   },
+   {
+    "id": "OFFI-070",
+    "rank": 1
+   },
+   {
+    "id": "OFFI-071",
+    "rank": 1
+   },
+   {
+    "id": "OFFI-072",
+    "rank": 1
+   },
+   {
+    "id": "OFFI-073",
+    "rank": 2
+   },
+   {
+    "id": "OFFI-074",
+    "rank": 2
+   },
+   {
+    "id": "OFFI-075",
+    "rank": 1
+   },
+   {
+    "id": "OFFI-076",
+    "rank": 2
+   },
+   {
+    "id": "OFFI-079",
+    "rank": 2
+   },
+   {
+    "id": "OFFI-080",
+    "rank": 6
+   },
+   {
+    "id": "OFFI-081",
+    "rank": 1
+   },
+   {
+    "id": "OFFI-082",
+    "rank": 1
+   },
+   {
+    "id": "OFFI-083",
+    "rank": 22
+   },
+   {
+    "id": "OFFI-084",
+    "rank": 1
+   },
+   {
+    "id": "OFFI-085",
+    "rank": 1
+   },
+   {
+    "id": "OFFI-086",
+    "rank": 1
+   },
+   {
+    "id": "OFFI-087",
+    "rank": 1
+   },
+   {
+    "id": "OFFI-088",
+    "rank": 77
+   },
+   {
+    "id": "OFFI-089",
+    "rank": 1
+   },
+   {
+    "id": "OFFI-090",
+    "rank": 1
+   },
+   {
+    "id": "OFFI-091",
+    "rank": 4
+   },
+   {
+    "id": "OFFI-092",
+    "rank": 3
+   },
+   {
+    "id": "OFFI-093",
+    "rank": 7
+   },
+   {
+    "id": "OFFI-094",
+    "rank": 1
+   },
+   {
+    "id": "OFFI-095",
+    "rank": 1
+   },
+   {
+    "id": "OFFI-096",
+    "rank": 1
+   },
+   {
+    "id": "OFFI-097",
+    "rank": 1
+   },
+   {
+    "id": "OFFI-098",
+    "rank": 2
+   },
+   {
+    "id": "OFFI-099",
+    "rank": 1
+   },
+   {
+    "id": "OFFI-100",
+    "rank": 1
+   }
+  ],
+  "B": [
+   {
+    "id": "OFFI-001",
+    "rank": 1
+   },
+   {
+    "id": "OFFI-003",
+    "rank": 1
+   },
+   {
+    "id": "OFFI-004",
+    "rank": 4
+   },
+   {
+    "id": "OFFI-005",
+    "rank": 1
+   },
+   {
+    "id": "OFFI-006",
+    "rank": 1
+   },
+   {
+    "id": "OFFI-007",
+    "rank": 6
+   },
+   {
+    "id": "OFFI-008",
+    "rank": 2
+   },
+   {
+    "id": "OFFI-009",
+    "rank": 1
+   },
+   {
+    "id": "OFFI-010",
+    "rank": 7
+   },
+   {
+    "id": "OFFI-012",
+    "rank": 1
+   },
+   {
+    "id": "OFFI-013",
+    "rank": 2
+   },
+   {
+    "id": "OFFI-014",
+    "rank": 1
+   },
+   {
+    "id": "OFFI-015",
+    "rank": 2
+   },
+   {
+    "id": "OFFI-016",
+    "rank": 1
+   },
+   {
+    "id": "OFFI-017",
+    "rank": 1
+   },
+   {
+    "id": "OFFI-018",
+    "rank": 2
+   },
+   {
+    "id": "OFFI-019",
+    "rank": 3
+   },
+   {
+    "id": "OFFI-020",
+    "rank": 1
+   },
+   {
+    "id": "OFFI-021",
+    "rank": 1
+   },
+   {
+    "id": "OFFI-022",
+    "rank": 0
+   },
+   {
+    "id": "OFFI-023",
+    "rank": 17
+   },
+   {
+    "id": "OFFI-024",
+    "rank": 3
+   },
+   {
+    "id": "OFFI-025",
+    "rank": 1
+   },
+   {
+    "id": "OFFI-026",
+    "rank": 1
+   },
+   {
+    "id": "OFFI-027",
+    "rank": 1
+   },
+   {
+    "id": "OFFI-028",
+    "rank": 2
+   },
+   {
+    "id": "OFFI-029",
+    "rank": 1
+   },
+   {
+    "id": "OFFI-030",
+    "rank": 2
+   },
+   {
+    "id": "OFFI-031",
+    "rank": 76
+   },
+   {
+    "id": "OFFI-032",
+    "rank": 3
+   },
+   {
+    "id": "OFFI-033",
+    "rank": 5
+   },
+   {
+    "id": "OFFI-034",
+    "rank": 1
+   },
+   {
+    "id": "OFFI-036",
+    "rank": 10
+   },
+   {
+    "id": "OFFI-037",
+    "rank": 1
+   },
+   {
+    "id": "OFFI-038",
+    "rank": 3
+   },
+   {
+    "id": "OFFI-039",
+    "rank": 21
+   },
+   {
+    "id": "OFFI-040",
+    "rank": 23
+   },
+   {
+    "id": "OFFI-041",
+    "rank": 0
+   },
+   {
+    "id": "OFFI-042",
+    "rank": 1
+   },
+   {
+    "id": "OFFI-043",
+    "rank": 1
+   },
+   {
+    "id": "OFFI-044",
+    "rank": 1
+   },
+   {
+    "id": "OFFI-046",
+    "rank": 28
+   },
+   {
+    "id": "OFFI-047",
+    "rank": 1
+   },
+   {
+    "id": "OFFI-048",
+    "rank": 1
+   },
+   {
+    "id": "OFFI-049",
+    "rank": 1
+   },
+   {
+    "id": "OFFI-051",
+    "rank": 1
+   },
+   {
+    "id": "OFFI-052",
+    "rank": 1
+   },
+   {
+    "id": "OFFI-053",
+    "rank": 1
+   },
+   {
+    "id": "OFFI-054",
+    "rank": 1
+   },
+   {
+    "id": "OFFI-055",
+    "rank": 1
+   },
+   {
+    "id": "OFFI-056",
+    "rank": 11
+   },
+   {
+    "id": "OFFI-057",
+    "rank": 1
+   },
+   {
+    "id": "OFFI-058",
+    "rank": 1
+   },
+   {
+    "id": "OFFI-059",
+    "rank": 0
+   },
+   {
+    "id": "OFFI-060",
+    "rank": 1
+   },
+   {
+    "id": "OFFI-061",
+    "rank": 3
+   },
+   {
+    "id": "OFFI-062",
+    "rank": 2
+   },
+   {
+    "id": "OFFI-063",
+    "rank": 2
+   },
+   {
+    "id": "OFFI-064",
+    "rank": 1
+   },
+   {
+    "id": "OFFI-066",
+    "rank": 1
+   },
+   {
+    "id": "OFFI-067",
+    "rank": 1
+   },
+   {
+    "id": "OFFI-068",
+    "rank": 1
+   },
+   {
+    "id": "OFFI-069",
+    "rank": 1
+   },
+   {
+    "id": "OFFI-070",
+    "rank": 1
+   },
+   {
+    "id": "OFFI-071",
+    "rank": 1
+   },
+   {
+    "id": "OFFI-072",
+    "rank": 1
+   },
+   {
+    "id": "OFFI-073",
+    "rank": 1
+   },
+   {
+    "id": "OFFI-074",
+    "rank": 2
+   },
+   {
+    "id": "OFFI-075",
+    "rank": 1
+   },
+   {
+    "id": "OFFI-076",
+    "rank": 2
+   },
+   {
+    "id": "OFFI-079",
+    "rank": 2
+   },
+   {
+    "id": "OFFI-080",
+    "rank": 1
+   },
+   {
+    "id": "OFFI-081",
+    "rank": 1
+   },
+   {
+    "id": "OFFI-082",
+    "rank": 1
+   },
+   {
+    "id": "OFFI-083",
+    "rank": 37
+   },
+   {
+    "id": "OFFI-084",
+    "rank": 1
+   },
+   {
+    "id": "OFFI-085",
+    "rank": 1
+   },
+   {
+    "id": "OFFI-086",
+    "rank": 1
+   },
+   {
+    "id": "OFFI-087",
+    "rank": 1
+   },
+   {
+    "id": "OFFI-088",
+    "rank": 55
+   },
+   {
+    "id": "OFFI-089",
+    "rank": 48
+   },
+   {
+    "id": "OFFI-090",
+    "rank": 1
+   },
+   {
+    "id": "OFFI-091",
+    "rank": 5
+   },
+   {
+    "id": "OFFI-092",
+    "rank": 1
+   },
+   {
+    "id": "OFFI-093",
+    "rank": 5
+   },
+   {
+    "id": "OFFI-094",
+    "rank": 1
+   },
+   {
+    "id": "OFFI-095",
+    "rank": 1
+   },
+   {
+    "id": "OFFI-096",
+    "rank": 1
+   },
+   {
+    "id": "OFFI-097",
+    "rank": 1
+   },
+   {
+    "id": "OFFI-098",
+    "rank": 1
+   },
+   {
+    "id": "OFFI-099",
+    "rank": 1
+   },
+   {
+    "id": "OFFI-100",
+    "rank": 6
+   }
+  ],
+  "A+后处理(线上)": [
+   {
+    "id": "OFFI-001",
+    "rank": 1
+   },
+   {
+    "id": "OFFI-003",
+    "rank": 1
+   },
+   {
+    "id": "OFFI-004",
+    "rank": 4
+   },
+   {
+    "id": "OFFI-005",
+    "rank": 1
+   },
+   {
+    "id": "OFFI-006",
+    "rank": 1
+   },
+   {
+    "id": "OFFI-007",
+    "rank": 3
+   },
+   {
+    "id": "OFFI-008",
+    "rank": 5
+   },
+   {
+    "id": "OFFI-009",
+    "rank": 1
+   },
+   {
+    "id": "OFFI-010",
+    "rank": 3
+   },
+   {
+    "id": "OFFI-012",
+    "rank": 1
+   },
+   {
+    "id": "OFFI-013",
+    "rank": 2
+   },
+   {
+    "id": "OFFI-014",
+    "rank": 1
+   },
+   {
+    "id": "OFFI-015",
+    "rank": 2
+   },
+   {
+    "id": "OFFI-016",
+    "rank": 1
+   },
+   {
+    "id": "OFFI-017",
+    "rank": 1
+   },
+   {
+    "id": "OFFI-018",
+    "rank": 2
+   },
+   {
+    "id": "OFFI-019",
+    "rank": 1
+   },
+   {
+    "id": "OFFI-020",
+    "rank": 1
+   },
+   {
+    "id": "OFFI-021",
+    "rank": 1
+   },
+   {
+    "id": "OFFI-022",
+    "rank": 0
+   },
+   {
+    "id": "OFFI-023",
+    "rank": 2
+   },
+   {
+    "id": "OFFI-024",
+    "rank": 5
+   },
+   {
+    "id": "OFFI-025",
+    "rank": 1
+   },
+   {
+    "id": "OFFI-026",
+    "rank": 1
+   },
+   {
+    "id": "OFFI-027",
+    "rank": 2
+   },
+   {
+    "id": "OFFI-028",
+    "rank": 1
+   },
+   {
+    "id": "OFFI-029",
+    "rank": 1
+   },
+   {
+    "id": "OFFI-030",
+    "rank": 1
+   },
+   {
+    "id": "OFFI-031",
+    "rank": 0
+   },
+   {
+    "id": "OFFI-032",
+    "rank": 1
+   },
+   {
+    "id": "OFFI-033",
+    "rank": 0
+   },
+   {
+    "id": "OFFI-034",
+    "rank": 1
+   },
+   {
+    "id": "OFFI-036",
+    "rank": 0
+   },
+   {
+    "id": "OFFI-037",
+    "rank": 2
+   },
+   {
+    "id": "OFFI-038",
+    "rank": 3
+   },
+   {
+    "id": "OFFI-039",
+    "rank": 0
+   },
+   {
+    "id": "OFFI-040",
+    "rank": 0
+   },
+   {
+    "id": "OFFI-041",
+    "rank": 0
+   },
+   {
+    "id": "OFFI-042",
+    "rank": 1
+   },
+   {
+    "id": "OFFI-043",
+    "rank": 1
+   },
+   {
+    "id": "OFFI-044",
+    "rank": 1
+   },
+   {
+    "id": "OFFI-046",
+    "rank": 0
+   },
+   {
+    "id": "OFFI-047",
+    "rank": 1
+   },
+   {
+    "id": "OFFI-048",
+    "rank": 1
+   },
+   {
+    "id": "OFFI-049",
+    "rank": 2
+   },
+   {
+    "id": "OFFI-051",
+    "rank": 1
+   },
+   {
+    "id": "OFFI-052",
+    "rank": 1
+   },
+   {
+    "id": "OFFI-053",
+    "rank": 1
+   },
+   {
+    "id": "OFFI-054",
+    "rank": 0
+   },
+   {
+    "id": "OFFI-055",
+    "rank": 1
+   },
+   {
+    "id": "OFFI-056",
+    "rank": 0
+   },
+   {
+    "id": "OFFI-057",
+    "rank": 0
+   },
+   {
+    "id": "OFFI-058",
+    "rank": 1
+   },
+   {
+    "id": "OFFI-059",
+    "rank": 0
+   },
+   {
+    "id": "OFFI-060",
+    "rank": 1
+   },
+   {
+    "id": "OFFI-061",
+    "rank": 4
+   },
+   {
+    "id": "OFFI-062",
+    "rank": 2
+   },
+   {
+    "id": "OFFI-063",
+    "rank": 1
+   },
+   {
+    "id": "OFFI-064",
+    "rank": 1
+   },
+   {
+    "id": "OFFI-066",
+    "rank": 1
+   },
+   {
+    "id": "OFFI-067",
+    "rank": 0
+   },
+   {
+    "id": "OFFI-068",
+    "rank": 1
+   },
+   {
+    "id": "OFFI-069",
+    "rank": 1
+   },
+   {
+    "id": "OFFI-070",
+    "rank": 1
+   },
+   {
+    "id": "OFFI-071",
+    "rank": 1
+   },
+   {
+    "id": "OFFI-072",
+    "rank": 1
+   },
+   {
+    "id": "OFFI-073",
+    "rank": 1
+   },
+   {
+    "id": "OFFI-074",
+    "rank": 2
+   },
+   {
+    "id": "OFFI-075",
+    "rank": 1
+   },
+   {
+    "id": "OFFI-076",
+    "rank": 1
+   },
+   {
+    "id": "OFFI-079",
+    "rank": 2
+   },
+   {
+    "id": "OFFI-080",
+    "rank": 0
+   },
+   {
+    "id": "OFFI-081",
+    "rank": 0
+   },
+   {
+    "id": "OFFI-082",
+    "rank": 1
+   },
+   {
+    "id": "OFFI-083",
+    "rank": 0
+   },
+   {
+    "id": "OFFI-084",
+    "rank": 1
+   },
+   {
+    "id": "OFFI-085",
+    "rank": 1
+   },
+   {
+    "id": "OFFI-086",
+    "rank": 1
+   },
+   {
+    "id": "OFFI-087",
+    "rank": 1
+   },
+   {
+    "id": "OFFI-088",
+    "rank": 0
+   },
+   {
+    "id": "OFFI-089",
+    "rank": 1
+   },
+   {
+    "id": "OFFI-090",
+    "rank": 1
+   },
+   {
+    "id": "OFFI-091",
+    "rank": 3
+   },
+   {
+    "id": "OFFI-092",
+    "rank": 4
+   },
+   {
+    "id": "OFFI-093",
+    "rank": 7
+   },
+   {
+    "id": "OFFI-094",
+    "rank": 1
+   },
+   {
+    "id": "OFFI-095",
+    "rank": 1
+   },
+   {
+    "id": "OFFI-096",
+    "rank": 2
+   },
+   {
+    "id": "OFFI-097",
+    "rank": 1
+   },
+   {
+    "id": "OFFI-098",
+    "rank": 2
+   },
+   {
+    "id": "OFFI-099",
+    "rank": 1
+   },
+   {
+    "id": "OFFI-100",
+    "rank": 1
+   }
+  ]
+ }
+}
