@@ -73,8 +73,9 @@ def run(split: str) -> dict:
     rows = []
     for item in qs:
         ans = search_result(item["q"], k=10)
-        hits = ans.hits if ans.kind == "ok" else []
-        conf = ans.confidence if ans.kind == "ok" else "none"
+        # no_direct_clause 也带回候选：不当作"答了"，但金标是否在候选里要单独看
+        hits = ans.hits if ans.kind in ("ok", "no_direct_clause") else []
+        conf = ans.confidence if ans.kind in ("ok", "no_direct_clause") else "none"
         rank = 0
         for i, h in enumerate(hits, 1):
             if is_hit(h, item["gold_doc"], item["gold_title"]):
@@ -84,9 +85,13 @@ def run(split: str) -> dict:
         rows.append({
             "id": item["id"], "q": item["q"], "cat": item["category"], "split": item["split"],
             "gold": item["gold_doc"], "rank": rank,
-            "ok1": int(bool(top) and rank == 1), "ok3": int(1 <= rank <= 3),
+            "ok1": int(ans.kind == "ok" and rank == 1),
+            "ok3": int(ans.kind == "ok" and 1 <= rank <= 3),
+            "cand1": int(ans.kind == "no_direct_clause" and rank == 1),
+            "cand3": int(ans.kind == "no_direct_clause" and 1 <= rank <= 3),
             "mrr": 1 / rank if rank else 0.0,
-            "answered": int(bool(top)),
+            "answered": int(ans.kind == "ok"),
+            "cand": int(ans.kind == "no_direct_clause"),
             "top": top.clause.doc_no if top else "",
             "top_status": top.clause.status if top else "",
             "conf": conf,
@@ -148,6 +153,12 @@ def report(res: dict) -> str:
         L.append(f"| out_of_scope | {b['n']} | — | — | — | 拒答 {b['rate']:.0%} ({lo:.0%}–{hi:.0%}) | — | — |")
     # 低置信：答了但首条只覆盖三四成提问词。它既不是拒答也不是"有把握"，
     # 单独报一行，避免用整体 hit@1 掩盖"多答出来的是错的多"。
+    cand = [r for r in res["rows"] if r.get("cand")]
+    if cand:
+        L.append("")
+        L.append(f"> 未下结论（no_direct_clause，只给候选）**{len(cand)} 条**，"
+                 f"其中金标就在候选第 1 名 **{sum(r['cand1'] for r in cand)}** 条、"
+                 f"前 3 名 **{sum(r['cand3'] for r in cand)}** 条。")
     low = [r for r in res["rows"] if r.get("conf") == "low"]
     if low:
         lh = sum(1 for r in low if r["ok1"])

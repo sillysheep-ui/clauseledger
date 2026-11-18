@@ -25,7 +25,8 @@ from app.retrieval.records import Clause
 
 MIN_SCORE = 3.0      # BM25 绝对分；低于它基本是"只共享了两个字"
 MIN_COVERAGE = 0.5   # 首条条款至少覆盖一半提问词，才算"有把握"
-MIN_ANSWER = 0.30    # 地板：低于它连"沾边"都算不上。0.30–0.5 只标低置信，不拒答"
+MIN_ANSWER = 0.30    # 词重叠地板：低于它连"沾边"都算不上（一个字都对不上）
+MIN_SCORE_STRONG = 6.0  # 敢说"这就是答案"的分数门槛；低于它只能说"可能相关""
 
 # 覆盖范围：只做上海。问题里出现别的城市，直接说没覆盖，不许拿上海条款凑。
 SUPPORTED_CITIES = {"上海"}
@@ -91,7 +92,7 @@ class Answer:
     """一次检索的完整结果。拒答也是结果，必须说清"查了什么、查了多少"。"""
     hits: list["Hit"]
     reason: str = ""          # 非空表示拒答
-    kind: str = "ok"          # ok | not_covered | out_of_domain | insufficient
+    kind: str = "ok"          # ok | not_covered | out_of_domain | insufficient | no_direct_clause
     n_docs: int = 0           # 本次实际检索覆盖的文档数
     n_candidates: int = 0     # 闸门之前召回并通过分数线的候选数
     # 拒答必须能自证"我查过"：没查就说"没有这条政策"，是本系统最不能犯的错。
@@ -99,8 +100,7 @@ class Answer:
     # 已知存在、但我们没拿到的文件——用它把"查不到"和"没有"分开说。
     gap: dict | None = None
     as_of: str = ""           # 效力判定的基准日（可能来自提问里的年份）
-    # high / low：low 表示"答得出来，但首条只覆盖了三四成提问词"。
-    # 不把它并进拒答——四态里 unknown 要能带着证据出现，而不是吞掉证据。
+    # high / low：low 表示"没有把握说这条就是答案"。no_direct_clause 时恒为 low。
     confidence: str = "high"
 
     @property
@@ -109,7 +109,12 @@ class Answer:
 
     @property
     def outcome(self) -> str:
-        """五类结局之一。报告按这五类分开计数，不合并成一个"拒答率"。"""
+        """结局分类。报告按类别分开计数，不合并成一个"拒答率"。
+
+        no_direct_clause 是"查到了候选、但没有一条能当答案"——它既不是拒绝检索，
+        也不是回答，所以单列。强制把它归进 answer 会高估准确率，归进 refused
+        又会掩盖"我们其实找到了可能相关的文件"。
+        """
         return "answer" if self.kind == "ok" else self.kind
 
 
@@ -218,15 +223,18 @@ def _load() -> tuple[bm25s.BM25, list[Clause], list[dict]]:
 
 def search(query: str, k: int = 8, *, status: tuple[str, ...] | None = None,
            min_score: float = MIN_SCORE, min_coverage: float = MIN_COVERAGE,
-           min_cand_cov: float = 0.25, min_answer: float = MIN_ANSWER) -> list[Hit]:
+           min_cand_cov: float = 0.25, min_answer: float = MIN_ANSWER,
+           min_score_strong: float = MIN_SCORE_STRONG) -> list[Hit]:
     return search_result(query, k=k, status=status, min_score=min_score,
                          min_answer=min_answer,
-                         min_coverage=min_coverage, min_cand_cov=min_cand_cov).hits
+                         min_coverage=min_coverage, min_cand_cov=min_cand_cov,
+                         min_score_strong=min_score_strong).hits
 
 
 def search_result(query: str, k: int = 8, *, status: tuple[str, ...] | None = None,
                   min_score: float = MIN_SCORE, min_coverage: float = MIN_COVERAGE,
-                  min_cand_cov: float = 0.25, min_answer: float = MIN_ANSWER) -> Answer:
+                  min_cand_cov: float = 0.25, min_answer: float = MIN_ANSWER,
+                  min_score_strong: float = MIN_SCORE_STRONG) -> Answer:
     from app.domain.validity import year_of as _year_of
     _y = _year_of(query)
     _as_of = f"{_y}-12-31" if _y else date.today().isoformat()
@@ -341,9 +349,18 @@ def search_result(query: str, k: int = 8, *, status: tuple[str, ...] | None = No
                       as_of=_as_of)
     # 0.35–0.5：给答案，但标低置信。理由见 docs/RETRIEVAL-LIT.md：
     # 15 条误拒里 8 条的正确答案就在 top-3，一刀切拒答是拿"不知道"当安全。
-    conf = "high" if out[0].coverage >= min_coverage else "low"
+    # 用检索分当"敢不敢下结论"的判据，不用覆盖率——
+    # 实测覆盖率在这批题上是反的：该答的 0.38–0.45，该拒的 0.50–0.67
+    #（"电子劳动合同"以 0.67 覆盖引到《启用电子证书的通知》）。
+    # 覆盖率的残余职责只有两个：拒答地板（0.30）和展示。
+    weak = out[0].score < min_score_strong
+    if weak:
+        return Answer(_prefer_effective(_collapse(out))[:k],
+                      "没有找到直接对应的条款；以下文件与问题共享部分关键词，但可能不是你要的规定",
+                      "no_direct_clause", n_docs, len(out),
+                      searched=_searched(n_docs, len(qt)), as_of=_as_of, confidence="low")
     return Answer(_prefer_effective(_collapse(out))[:k], "", "ok", n_docs, len(out),
-                  searched=_searched(n_docs, len(qt)), as_of=_as_of, confidence=conf)
+                  searched=_searched(n_docs, len(qt)), as_of=_as_of, confidence="high")
 
 
 def _status_rank(status: str) -> int:
