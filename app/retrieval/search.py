@@ -9,6 +9,7 @@
 from __future__ import annotations
 
 import hashlib
+import os
 import re
 
 import json
@@ -27,7 +28,13 @@ from app.retrieval.records import Clause
 MIN_SCORE = 3.0      # BM25 绝对分；低于它基本是"只共享了两个字"
 MIN_COVERAGE = 0.5   # 首条条款至少覆盖一半提问词，才算"有把握"
 MIN_ANSWER = 0.30    # 词重叠地板：低于它连"沾边"都算不上（一个字都对不上）
-MIN_SCORE_STRONG = 6.0  # 敢说"这就是答案"的分数门槛；低于它只能说"可能相关""
+MIN_SCORE_STRONG = 6.0  # 敢说"这就是答案"的分数门槛；低于它只能说"可能相关"
+
+# 召回模式：bm25（默认）/ dense / hybrid（BM25 + 稠密，RRF 融合）。
+# 默认不开混合：dev 上 +2~5pp 且配对检验不显著（p=0.267），代价是单查询 30–70ms
+# （BM25 是 2ms）与 95 MB 模型。开关存在是为了让"换召回方式"可复现，
+# 而不是假装它一定更好——见 docs/HYBRID.md。
+RECALL = os.environ.get("CLAUSELEDGER_RECALL", "bm25").lower()
 
 # 覆盖范围：只做上海。问题里出现别的城市，直接说没覆盖，不许拿上海条款凑。
 SUPPORTED_CITIES = {"上海"}
@@ -207,17 +214,35 @@ def content_terms(qs: set[str]) -> set[str]:
     return keep or qs
 
 
+_MODE = "none"   # 本次实际用的召回方式；"没检索"就是 none，不许写成 bm25
+
+
 def _searched(n_docs: int, n_queries: int) -> dict:
-    return {**index_meta(), "n_docs": n_docs, "n_queries": n_queries}
+    return {**index_meta(), "n_docs": n_docs, "n_queries": n_queries, "recall": _MODE}
+
+
+_LOADED: tuple | None = None
+_LOADED_KEY: tuple | None = None
 
 
 def _load() -> tuple[bm25s.BM25, list[Clause], list[dict]]:
+    """加载索引。带缓存：BM25 + 6 千条款 + 6 千子块每次重读约 1 秒，
+    而检索本身只要 2 毫秒——不缓存会让"混合召回慢"的结论失真。
+    键是索引文件的 mtime，重建索引自动失效。"""
+    global _LOADED, _LOADED_KEY
+    key = (str(INDEX),
+           (INDEX / "clauses.jsonl").stat().st_mtime_ns,
+           (INDEX / "children.jsonl").stat().st_mtime_ns,
+           (INDEX / "bm25").stat().st_mtime_ns)
+    if _LOADED is not None and _LOADED_KEY == key:
+        return _LOADED
     retriever = bm25s.BM25.load(str(INDEX / "bm25"))
     clauses = [Clause(**json.loads(l)) for l in
                (INDEX / "clauses.jsonl").read_text("utf-8").splitlines() if l.strip()]
     children = [json.loads(l) for l in
                 (INDEX / "children.jsonl").read_text("utf-8").splitlines() if l.strip()]
-    return retriever, clauses, children
+    _LOADED, _LOADED_KEY = (retriever, clauses, children), key
+    return _LOADED
 
 
 def search(query: str, k: int = 8, *, status: tuple[str, ...] | None = None,
@@ -246,11 +271,62 @@ def _answer_type_boost(query: str, out: list["Hit"], top_docs: int = 5) -> list[
     return out
 
 
+
+def recall_mode() -> str:
+    """实际生效的召回模式。模型/依赖缺失时如实降级，不假装。"""
+    if RECALL not in ("bm25", "dense", "hybrid"):
+        return "bm25"
+    if RECALL == "bm25":
+        return "bm25"
+    from app.retrieval import dense
+    return RECALL if dense.available() else "bm25"
+
+
+def _candidates(query: str, qt: list[str], retriever, children: list[dict],
+                pool: int) -> tuple[dict[int, tuple[float, str]], str]:
+    """一路或两路召回，返回 (pid -> (分数, 命中子块正文), 实际模式)。
+
+    分数口径：
+    * bm25：原来就是 BM25 分，阈值（3.0 / 6.0）是按它定的。
+    * hybrid：RRF 只给名次，分数**按当次最高的 BM25 分线性映射**——
+      这样下游阈值语义不变，顺序由融合决定。映射是刻意的：
+      两路分数量纲不同（BM25 能到 10+，余弦 0–1），直接相加没有意义。
+    * dense：余弦 ×10 粗映射到同一量级，仅作对照用。
+    """
+    from app.retrieval import dense
+
+    mode = recall_mode()
+    idx, scores = retriever.retrieve([qt], k=pool)
+    bm = [(int(i), float(s)) for i, s in zip(idx[0], scores[0])]
+    if mode == "bm25":
+        ranked = [(cid, s) for cid, s in bm]
+    else:
+        dr = [(cid, s) for cid, s in dense.rank(query, children, k=pool)]
+        if mode == "dense":
+            ranked = [(cid, 10.0 * s) for cid, s in dr]
+        else:
+            fused = dense.rrf([c for c, _ in bm], [c for c, _ in dr])
+            top = max((s for _, s in bm), default=0.0) or 1.0
+            ceil = fused[0][1] if fused else 1.0
+            ranked = [(cid, top * (r / ceil)) for cid, r in fused]
+
+    best: dict[int, tuple[float, str]] = {}
+    for cid, s in ranked:
+        ch = children[cid]
+        pid = int(ch["pid"])
+        if pid not in best or s > best[pid][0]:
+            best[pid] = (s, ch["text"])
+    return best, mode
+
 def search_result(query: str, k: int = 8, *, status: tuple[str, ...] | None = None,
                   min_score: float = MIN_SCORE, min_coverage: float = MIN_COVERAGE,
                   min_cand_cov: float = 0.25, min_answer: float = MIN_ANSWER,
                   min_score_strong: float = MIN_SCORE_STRONG) -> Answer:
     from app.domain.validity import year_of as _year_of
+    # 每次调用先把"实际召回方式"置空：提前返回（未覆盖/不在域内）时必须写 none，
+    # 不能把上一次调用的 bm25 留在痕迹里——那等于伪造"查过"。
+    global _MODE
+    _MODE = "none"
     _y = _year_of(query)
     _as_of = f"{_y}-12-31" if _y else date.today().isoformat()
     reason = refuse_reason(query)
@@ -275,13 +351,8 @@ def search_result(query: str, k: int = 8, *, status: tuple[str, ...] | None = No
                       searched=_searched(0, 0), as_of=_as_of)
     # 索引建在子块上（父子索引），取回的是子块，用 pid 回填父条款。
     # 子块数远多于条款数，候选要相对多取一些，否则去重后剩不下几条。
-    idx, scores = retriever.retrieve([qt], k=min(len(children), max(k * 8, 60)))
-    best: dict[int, tuple[float, str]] = {}   # pid -> (最高子块分, 命中子块正文)
-    for i, s in zip(idx[0], scores[0]):
-        ch = children[int(i)]
-        pid = int(ch["pid"])
-        if pid not in best or float(s) > best[pid][0]:
-            best[pid] = (float(s), ch["text"])
+    pool = min(len(children), max(k * 8, 60))
+    best, _MODE = _candidates(query, qt, retriever, children, pool)
     out: list[Hit] = []
     qset = set(qt)
     scope = ""
