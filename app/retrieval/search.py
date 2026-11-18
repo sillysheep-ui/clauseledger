@@ -405,7 +405,13 @@ def _attach_related(query: str, hits: list["Hit"], clauses: list[Clause],
     from app.retrieval import answertype as _at
     if not hits:
         return hits
-    h = hits[0]
+    for h in hits[:3]:
+        _related_for(query, h, clauses, limit)
+    return hits
+
+
+def _related_for(query: str, h: "Hit", clauses: list[Clause], limit: int = 2) -> None:
+    from app.retrieval import answertype as _at
     atype = _at.detect(query)
     qset = set(tokenize(query))
     pool = []
@@ -419,7 +425,6 @@ def _attach_related(query: str, hits: list["Hit"], clauses: list[Clause],
     pool.sort(key=lambda x: x[0], reverse=True)
     h.related = [{"path": list(c.path), "page": c.page, "text": c.text, "sec": c.sec}
                  for score, c in pool[:limit] if score > 0]
-    return hits
 
 
 def _collapse(hits: list[Hit]) -> list[Hit]:

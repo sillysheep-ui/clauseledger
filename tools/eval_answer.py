@@ -155,7 +155,10 @@ def run(limit: int = 0) -> dict:
         st.hits = [{"doc_no": h.clause.doc_no, "title": h.clause.title,
                     "citation": h.clause.citation, "page": h.clause.page,
                     "path": list(h.clause.path), "text": h.child or h.clause.text,
-                    "score": round(h.score, 3)} for h in ans.hits]
+                    "score": round(h.score, 3),
+                    "related": [{"path": r.get("path") or [], "page": r.get("page"),
+                                 "text": r.get("text") or ""} for r in (getattr(h, "related", []) or [])]}
+                   for h in ans.hits]
         card = cards.build(st)
         blob = norm(card.get("headline", "") + " " + " ".join(
             (it.get("quote") or "") for it in card.get("items") or []) + " " +

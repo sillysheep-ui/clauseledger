@@ -31,3 +31,17 @@ def test_bonus_is_capped():
 
 def test_bonus_default_zero():
     assert at.bonus("每人计发320元", "default") == 0.0
+
+
+def test_dates_are_not_numeric_facts():
+    """"2019年4月1日"不是"天数"事实——否则日期条款会压过写金额的那条。"""
+    assert at.bonus("本通知自2019年4月1日起实施。", "num") == 0.0
+    assert at.bonus("每人每月计发305元。", "num") > 0
+
+
+def test_related_clauses_are_attached_and_citable():
+    from app.retrieval.search import search_result
+    ans = search_result("2019年补充计发基本养老金的标准是多少", k=5)
+    assert ans.hits and ans.hits[0].related, "第一名应带同文件补充条款"
+    r = ans.hits[0].related[0]
+    assert r["text"] and r["path"], "补充条款要能给出路径，引用才可核验"

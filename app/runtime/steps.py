@@ -29,7 +29,12 @@ def _hit_dict(h, role: str = "") -> dict:
             "doc_no": c.doc_no, "title": c.title, "citation": c.citation,
             "page": c.page, "score": round(h.score, 3), "coverage": round(h.coverage, 3),
             "stale": h.stale, "scope": h.scope, "path": list(c.path),
-            "text": (h.child or c.text)[:400]}
+            "text": (h.child or c.text)[:400],
+            # 同文件的补充条款：卡片要"一个答案 + 这个文件里相关的几句"，
+            # 只给命中的一条会漏掉写着金额/期限的那条（实测答案级 15/64 → 21/64）。
+            "related": [{"path": r.get("path") or [], "page": r.get("page"),
+                         "text": (r.get("text") or "")[:400]}
+                        for r in (getattr(h, "related", []) or [])[:2]]}
 
 
 # ---------- steps ----------

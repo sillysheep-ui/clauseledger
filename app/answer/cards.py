@@ -44,9 +44,28 @@ def quote(text: str, limit: int = QUOTE_LIMIT) -> str:
     return (cut or text[:limit]).strip()
 
 
+def _related_citation(h: dict, r: dict) -> str:
+    path = " / ".join(r.get("path") or [])
+    page = r.get("page")
+    tail = f"（第 {page} 页）" if page else ""
+    return f"《{h.get('doc_no')}》{path}{tail}"
+
+
 def _evidence(hits: Iterable[dict], limit: int = 5) -> list[dict]:
     out = []
-    for h in list(hits)[:limit]:
+    for h in list(hits):
+        # 同文件的补充条款先展开：数字/日期常在"另一条"上，
+        # 只给命中的那一条会让用户看到"调整到 130 元"却看不到"每人 320 元"。
+        for r in (h.get("related") or [])[:2]:
+            if len(out) >= limit:
+                break
+            out.append({"doc_no": h.get("doc_no"), "title": h.get("title"),
+                        "citation": _related_citation(h, r), "page": r.get("page"),
+                        "path": list(r.get("path") or []),
+                        "quote": quote(r.get("text") or ""), "score": h.get("score"),
+                        "stale": h.get("stale") or "", "verified": None, "role": "support"})
+        if len(out) >= limit:
+            break
         text = h.get("text") or ""
         out.append({
             "doc_no": h.get("doc_no"),

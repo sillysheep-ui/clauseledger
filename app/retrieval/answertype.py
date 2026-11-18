@@ -19,6 +19,8 @@ from __future__ import annotations
 import re
 
 # 数字 + 单位：与 tools/eval_answer.py 的事实抽取同源，保证"能加分"和"能核验"是同一把尺子
+# 先剥掉完整日期，否则"2019年4月1日"里的"1日"会被当成"天数"事实（与 tools/eval_answer 同口径）
+FULL_DATE = re.compile(r"(?:19|20)\d{2}\s*年\s*\d{1,2}\s*月(?:\s*\d{1,2}\s*日)?|\d{1,2}\s*月\s*\d{1,2}\s*日")
 NUM_UNIT = re.compile(
     r"\d+(?:\.\d+)?\s*(?:万元|元|%|％|个月|个工作日|工作日|月|日|天|小时|岁|分|倍|人|次)"
 )
@@ -57,7 +59,7 @@ def bonus(text: str, atype: str) -> float:
     if not text or atype == "default":
         return 0.0
     if atype == "num":
-        n = len(NUM_UNIT.findall(text))
+        n = len(NUM_UNIT.findall(FULL_DATE.sub(" ", text)))
         # 0.9/个：条款里出现 1 个数字就值得往前挪一点，
         # 但不能让一条满是数字的表格压过真正的答案句——所以封顶 3.0
         return min(MAX_BONUS, 0.9 * n)
