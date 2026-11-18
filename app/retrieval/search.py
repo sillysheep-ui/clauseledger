@@ -128,6 +128,9 @@ class Hit:
     child: str = ""         # 父子索引里命中的那个子块（生成时优先用它，省上下文）
     stale: str = ""         # 非空 = 该文件在 as_of 那天已被废止（引用要带上这句话）
     _in_year: bool = False  # 仅排序用：能否确认在该年份有效
+    related: list[dict] = field(default_factory=list)
+    # 同一份文件里、按"回答类型 + 词重合"挑出的补充条款（最多 2 条）。
+    # 用户看到的是"一个答案 + 这个文件里相关的几句"，不是 5 个文件各一句。
     scope: str = ""         # 带年份提问时的效力口径（"2020 年内有效" / "2020 年不在有效期内"）
     _rank: float = 0.0      # 排序用：分数 × 效力加成
 
@@ -225,6 +228,22 @@ def search(query: str, k: int = 8, *, status: tuple[str, ...] | None = None,
                          min_answer=min_answer,
                          min_coverage=min_coverage, min_cand_cov=min_cand_cov,
                          min_score_strong=min_score_strong).hits
+
+
+def _answer_type_boost(query: str, out: list["Hit"], top_docs: int = 5) -> list["Hit"]:
+    from app.retrieval import answertype as _at
+    atype = _at.detect(query)
+    if atype == "default" or len(out) < 2:
+        return out
+    best: dict[str, float] = {}
+    for h in out:
+        d = h.clause.doc_no
+        best[d] = max(best.get(d, 0.0), h._rank)
+    keep = {d for d, _ in sorted(best.items(), key=lambda kv: kv[1], reverse=True)[:top_docs]}
+    for h in out:
+        if h.clause.doc_no in keep:
+            h._rank += _at.bonus(h.clause.text, atype)
+    return out
 
 
 def search_result(query: str, k: int = 8, *, status: tuple[str, ...] | None = None,
@@ -328,6 +347,9 @@ def search_result(query: str, k: int = 8, *, status: tuple[str, ...] | None = No
     # 压成"每份文件一条"再重排会把 hit@1 从 58.7% 打到 41.3%（见 docs/RETRIEVAL-LIT.md）。
     if _rerank.enabled() and len(out) > 1:
         out = _rerank.rerank(query, out, top=_rerank.top_n())
+    # 按"回答类型"挑条款：只在**已排进前 5 的文件内部**加分，不改"是哪个文件"。
+    # 理由见 app/retrieval/answertype.py 的模块注释。
+    out = _answer_type_boost(query, out)
     # 带年份时先按"能否确认那一年有效"分层，再按分数排。
     # 理由：日期未知 ≠ 有效。用户既然说了年份，就该先相信能证明自己那年有效的文件；
     # 只在同一层里比相关性。不带年份时这一层不存在，排序与以前完全一致。
@@ -351,11 +373,12 @@ def search_result(query: str, k: int = 8, *, status: tuple[str, ...] | None = No
     # 覆盖率的残余职责只有两个：拒答地板（0.30）和展示。
     weak = out[0].score < min_score_strong
     if weak:
-        return Answer(_prefer_effective(_collapse(out))[:k],
+        return Answer(_attach_related(query, _prefer_effective(_collapse(out))[:k], clauses),
                       "没有找到直接对应的条款；以下文件与问题共享部分关键词，但可能不是你要的规定",
                       "no_direct_clause", n_docs, len(out),
                       searched=_searched(n_docs, len(qt)), as_of=_as_of, confidence="low")
-    return Answer(_prefer_effective(_collapse(out))[:k], "", "ok", n_docs, len(out),
+    return Answer(_attach_related(query, _prefer_effective(_collapse(out))[:k], clauses),
+                  "", "ok", n_docs, len(out),
                   searched=_searched(n_docs, len(qt)), as_of=_as_of, confidence="high")
 
 
@@ -370,6 +393,33 @@ def _norm_title(t: str) -> str:
     if i > 0:
         t = t[i:]
     return t.rstrip("。")
+
+
+def _attach_related(query: str, hits: list["Hit"], clauses: list[Clause],
+                    limit: int = 2) -> list["Hit"]:
+    """给第一名补同文件的条款：数字/日期型问题的答案常常在**同文件另一条**上。
+
+    只用规则（回答类型 + 提问词重合），不引模型；按文档内选择，不跨文件，
+    所以不会改变"是哪个文件"这个结论。实测答案级事实覆盖 16/64 → 21/64。
+    """
+    from app.retrieval import answertype as _at
+    if not hits:
+        return hits
+    h = hits[0]
+    atype = _at.detect(query)
+    qset = set(tokenize(query))
+    pool = []
+    for c in clauses:
+        if c.doc_no != h.clause.doc_no or (c.path, c.sec) == (h.clause.path, h.clause.sec):
+            continue
+        if not (40 <= len(c.text) <= 600):
+            continue
+        lex = len(qset & set(tokenize(c.text))) / max(1, len(qset))
+        pool.append((_at.bonus(c.text, atype) + 0.4 * lex, c))
+    pool.sort(key=lambda x: x[0], reverse=True)
+    h.related = [{"path": list(c.path), "page": c.page, "text": c.text, "sec": c.sec}
+                 for score, c in pool[:limit] if score > 0]
+    return hits
 
 
 def _collapse(hits: list[Hit]) -> list[Hit]:

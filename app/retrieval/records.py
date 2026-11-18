@@ -33,6 +33,7 @@ class Clause:
     parser_version: str = ""
     carrier: str = "page"
     part: int = 0
+    sec: int = 0
     extract: str = "native"
 
     def to_dict(self) -> dict:

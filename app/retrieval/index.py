@@ -120,6 +120,7 @@ def collect(min_chars: int = 10) -> list[Clause]:
                 url=d.get("url", ""), parser_version=d.get("parser_version", ""),
                 carrier=c.get("carrier") or "page", extract=d.get("extract") or "native",
                 part=c.get("part") or 0,
+                sec=c.get("sec") or 0,
             ))
         if not doc:   # 1980–2000 年代的短通知常常整篇不分条，按段落兜底
             for j, b in enumerate(d.get("blocks", [])):

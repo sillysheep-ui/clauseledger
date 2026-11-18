@@ -44,7 +44,7 @@ def quote(text: str, limit: int = QUOTE_LIMIT) -> str:
     return (cut or text[:limit]).strip()
 
 
-def _evidence(hits: Iterable[dict], limit: int = 3) -> list[dict]:
+def _evidence(hits: Iterable[dict], limit: int = 5) -> list[dict]:
     out = []
     for h in list(hits)[:limit]:
         text = h.get("text") or ""
