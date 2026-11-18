@@ -20,6 +20,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import math
 import time
 import tracemalloc
@@ -31,7 +32,7 @@ from app.retrieval.index import INDEX, tokenize
 from app.retrieval.records import Clause
 from app.retrieval.search import Hit, _collapse, _prefer_effective
 
-QS = Path("eval/questions_v2.json")
+QS = Path(os.environ.get("CLAUSELEDGER_QUESTIONS", "eval/questions_v2.json"))
 REPORTS = Path("eval/reports")
 CACHE = INDEX / "dense_children.npz"
 MODEL = "BAAI/bge-small-zh-v1.5"
@@ -41,13 +42,13 @@ RRF_K = 60
 
 # ---------- 语料 ----------
 
-def load_corpus() -> tuple[list[Clause], list[dict], list[dict]]:
+def load_corpus(splits: set[str] = frozenset({"dev"})) -> tuple[list[Clause], list[dict], list[dict]]:
     clauses = [Clause(**json.loads(l)) for l in
                (INDEX / "clauses.jsonl").read_text("utf-8").splitlines() if l.strip()]
     children = [json.loads(l) for l in
                 (INDEX / "children.jsonl").read_text("utf-8").splitlines() if l.strip()]
     qs = [q for q in json.loads(QS.read_text("utf-8"))
-          if q.get("split") == "dev" and q.get("category") == "official"
+          if q.get("split") in splits and q.get("category") == "official"
           and not q.get("ambiguous") and not q.get("stale")]
     return clauses, children, qs
 
@@ -191,10 +192,12 @@ def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--methods", default="A,B,C,D")
     ap.add_argument("--out", default="")
+    ap.add_argument("--split", default="dev", help="dev 或 dev+test")
     a = ap.parse_args()
     want = {m.strip().upper() for m in a.methods.split(",") if m.strip()}
 
-    clauses, children, qs = load_corpus()
+    splits = {x.strip() for x in a.split.split("+") if x.strip()}
+    clauses, children, qs = load_corpus(splits)
     print(f"语料：{len(clauses)} 条款 / {len(children)} 子块 / dev 题 {len(qs)} 条", flush=True)
 
     tracemalloc.start()

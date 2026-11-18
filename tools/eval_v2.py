@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import math
 import re
 import subprocess
@@ -21,7 +22,7 @@ from pathlib import Path
 from app.retrieval.index import tokenize
 from app.retrieval.search import search, search_result, MIN_ANSWER, MIN_COVERAGE
 
-QS = Path("eval/questions_v2.json")
+QS = Path(os.environ.get("CLAUSELEDGER_QUESTIONS", "eval/questions_v2.json"))
 REPORTS = Path("eval/reports")
 
 

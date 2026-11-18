@@ -1,0 +1,19 @@
+{
+ "file": "eval/questions_v3.json",
+ "sha256": "90705580d7e179c9575c1927a503005a2116de32606fcdd9de2af97810802adf",
+ "total": 227,
+ "official": 192,
+ "new": 24,
+ "splits": {
+  "dev": 135,
+  "test": 56,
+  "holdout": 36
+ },
+ "rules": [
+  "v2 原题不动",
+  "标题≥0.75+年份一致+LCS≥10",
+  "问题年份落金标有效期",
+  "单文档≤3题",
+  "test/holdout 不参与调参"
+ ]
+}

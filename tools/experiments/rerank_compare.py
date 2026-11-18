@@ -45,9 +45,11 @@ def main() -> None:
     ap.add_argument("--model", default=DEFAULT_MODEL)
     ap.add_argument("--cands", type=int, default=30, help="参与重排的父条款数")
     ap.add_argument("--out", default="")
+    ap.add_argument("--split", default="dev", help="dev 或 dev+test")
     a = ap.parse_args()
 
-    clauses, children, qs = load_corpus()
+    splits = {x.strip() for x in a.split.split("+") if x.strip()}
+    clauses, children, qs = load_corpus(splits)
     print(f"语料：{len(clauses)} 条款 / {len(children)} 子块 / dev 官方题 {len(qs)} 条", flush=True)
 
     retriever, _ = build_bm25([c["text"] for c in children], use_bigram=False)
