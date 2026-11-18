@@ -23,9 +23,10 @@ def _norm(s: str) -> str:
     return re.sub(r"\s+", "", s or "")
 
 
-def _hit_dict(h) -> dict:
+def _hit_dict(h, role: str = "") -> dict:
     c = h.clause
-    return {"doc_no": c.doc_no, "title": c.title, "citation": c.citation,
+    return {"role": role,
+            "doc_no": c.doc_no, "title": c.title, "citation": c.citation,
             "page": c.page, "score": round(h.score, 3), "coverage": round(h.coverage, 3),
             "stale": h.stale, "scope": h.scope, "path": list(c.path),
             "text": (h.child or c.text)[:400]}

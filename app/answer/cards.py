@@ -58,6 +58,7 @@ def _evidence(hits: Iterable[dict], limit: int = 3) -> list[dict]:
             "score": h.get("score"),
             "stale": h.get("stale") or "",
             "verified": None,      # 由 verify 节点回填
+            "role": h.get("role") or "",
         })
     return out
 
