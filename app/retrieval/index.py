@@ -14,6 +14,8 @@ from pathlib import Path
 import jieba
 import bm25s
 
+from app.retrieval import lexicon
+
 from app.retrieval.children import split_children
 from app.retrieval.records import Clause, status_of
 
@@ -23,22 +25,35 @@ PROCESSED = Path(os.environ.get("CLAUSELEDGER_PROCESSED", "data/processed"))
 INDEX = Path(os.environ.get("CLAUSELEDGER_INDEX", "data/index"))
 
 # 领域词：jieba 默认词典会把"丧假""居转户"切碎，这里补上
-USER_WORDS = ["丧假", "居转户", "工伤认定", "缴费基数", "养老保险", "医疗保险",
-              "失业保险", "生育保险", "公积金", "最低工资", "经济补偿", "劳动仲裁",
-              "视同缴费", "过渡性养老金", "特殊工种", "提前退休", "遗属待遇"]
+# 词表在 data/fixtures/lexicon.json，不在这里。理由见 app/retrieval/lexicon.py。
+USER_WORDS = lexicon.segmentation_words()
 
 STOP = set("的了和与及或是在对按依据根据本条第款该项其这那为以等并")
 RE_PUNCT = re.compile(r"[\s\u3000，。、；：！？（）()《》〈〉“”\"'·—…,.;:!?\[\]【】]+")
 
 
-def tokenize(text: str) -> list[str]:
-    text = RE_PUNCT.sub(" ", text)
-    return [t for t in jieba.lcut(text) if len(t) > 1 and t not in STOP]
+_READY = False
 
 
-def _setup() -> None:
+def _setup(force: bool = False) -> None:
+    """把用户词灌进 jieba。必须**自动**执行——
+
+    原先只在 `collect()` / `build()` 里调，结果任何直接 `import tokenize` 的调用方
+    （诊断脚本、词表体检）拿到的都是"没加用户词"的分词结果：17 个词里 11 个 df=0。
+    分词对不对，不该取决于调用顺序。
+    """
+    global _READY
+    if _READY and not force:
+        return
     for w in USER_WORDS:
         jieba.add_word(w)
+    _READY = True
+
+
+def tokenize(text: str) -> list[str]:
+    _setup()
+    text = RE_PUNCT.sub(" ", text)
+    return [t for t in jieba.lcut(text) if len(t) > 1 and t not in STOP]
 
 
 def _path(p) -> list[str]:

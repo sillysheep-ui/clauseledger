@@ -19,6 +19,7 @@ from pathlib import Path
 import bm25s
 
 from app.domain.registry import DocRegistry
+from app.retrieval import lexicon
 from app.retrieval import rerank as _rerank
 from app.retrieval.index import INDEX, tokenize
 from app.retrieval.records import Clause
@@ -83,8 +84,8 @@ def refuse_reason(query: str) -> str | None:
         if k in query:
             return f"未接入{dept}发布的政策（当前只接入上海市人社局的文件）"
     return None
-QUESTION_WORDS = {"哪些", "什么", "怎么", "如何", "多少", "是否", "能否", "可以",
-                  "需要", "请问", "一下", "几天", "多久", "有没有"}
+# 词表在 data/fixtures/lexicon.json（见 app/retrieval/lexicon.py）
+QUESTION_WORDS = lexicon.question_words()
 
 
 @dataclass
@@ -194,12 +195,7 @@ def index_meta() -> dict:
 # 提问里的"水分词"：几乎每份文件都出现，出现了也不代表它回答了这个问题。
 # 覆盖率的分母如果把它们算进去，问题问得越长、覆盖率越低——**闸门实际上在惩罚"问得具体"**。
 # 所以分母只算"有区分度"的词。阈值不动（仍是 0.5），改的是分母。
-WATER = set("""
-的 了 是 有 在 和 与 或 及 等 为 对 从 到 把 被 让 给 向 于 就 都 也 还 又 很 更 最 不 没 没有
-多少 哪些 哪个 怎么 怎样 什么 如何 为什么 是否 可以 能否 需要 应当 应该 请问 一下 一般 通常
-本市 上海 上海市 文件 规定 办法 通知 意见 有关 关于 进行 相关 以上 以下 其他 以及 根据 按照
-对于 其中 目前 现在 今年 去年 明年 期间 时候 时间 情况 问题 内容 方面 部分 有关
-""".split())
+WATER = lexicon.water()
 
 
 def content_terms(qs: set[str]) -> set[str]:
