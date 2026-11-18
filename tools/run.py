@@ -17,6 +17,36 @@ from pathlib import Path
 from app.runtime import Engine, Store
 
 
+def _print_card(card: dict) -> None:
+    kind = card.get("kind")
+    if kind == "verdict":
+        sc = card.get("score") or {}
+        print(f"【判定卡】{card['headline']}")
+        print(f"   分数：已知 {sc.get('known')} / 上限 {sc.get('upper')} / 标准 {sc.get('standard')}")
+        basis = card.get("basis") or []
+        for b in basis[:6]:
+            print(f"   ✓ {b['label']}  {b.get('points')} 分  （第 {b.get('page')} 页）")
+        if card.get("missing"):
+            print(f"   ? 待确认：{'、'.join(card['missing'][:6])}")
+        if card.get("not_claimed"):
+            print(f"   本卡未覆盖：{'、'.join(card['not_claimed'])}")
+    elif kind == "standard":
+        print(f"【标准卡】{card['headline']}")
+        for it in card.get("items") or []:
+            print(f"   · {it['quote'][:120]}")
+            print(f"     —— {it['citation']}")
+        if card.get("depends_on"):
+            print(f"   取决于：{'、'.join(card['depends_on'])}")
+    else:
+        print(f"【拒答卡】{card['headline']}")
+        if card.get("reason"):
+            print(f"   原因：{card['reason']}")
+        se = card.get("searched") or {}
+        print(f"   检索范围：{se.get('n_docs', 0)} 份文件 / {se.get('n_queries', 0)} 条候选条款")
+        for it in (card.get("evidence") or [])[:3]:
+            print(f"   · {it['quote'][:100]}  —— {it['citation']}")
+
+
 def _print_state(s) -> None:
     print(f"run {s.run_id}  {s.status}/{s.step}")
     print(f"问：{s.question}")
@@ -34,10 +64,12 @@ def _print_state(s) -> None:
         if j.get("reason"):
             line += f"  （{j['reason']}）"
         print(line)
-    if s.answer and s.answer.get("text"):
-        print(f"答：{s.answer['text']}")
+    if s.answer and s.answer.get("card"):
+        _print_card(s.answer["card"])
         for v in (s.answer.get("verified") or []):
             print(f"   引用核验 {'✓' if v['verbatim'] else '✗'} {v['citation']}")
+    elif s.answer and s.answer.get("text"):
+        print(f"答：{s.answer['text']}")
     if s.action:
         a = s.action
         n = len(a.get("items") or [])

@@ -16,14 +16,16 @@ def client(tmp_path, monkeypatch):
 
 
 def test_create_run_stops_at_gate(client):
-    r = client.post("/api/runs", json={"question": "正高级工程师评审条件是什么"}).json()
+    r = client.post("/api/runs", json={"question": "硕士毕业落户能加多少分",
+                                       "profile": {"degree": "master"}}).json()
     assert r["status"] == "waiting"
     assert r["gate"]["kind"] == "judgement"
     assert r["hits"][0]["citation"]
 
 
 def test_resume_advances_to_done(client):
-    r = client.post("/api/runs", json={"question": "正高级工程师评审条件是什么"}).json()
+    r = client.post("/api/runs", json={"question": "硕士毕业落户能加多少分",
+                                       "profile": {"degree": "master"}}).json()
     r2 = client.post(f"/api/runs/{r['run_id']}/resume",
                      json={"action": "confirm_unknown", "by": "tester"}).json()
     assert r2["status"] == "done"
@@ -31,14 +33,16 @@ def test_resume_advances_to_done(client):
 
 
 def test_resume_on_done_is_409(client):
-    r = client.post("/api/runs", json={"question": "正高级工程师评审条件是什么"}).json()
+    r = client.post("/api/runs", json={"question": "硕士毕业落户能加多少分",
+                                       "profile": {"degree": "master"}}).json()
     client.post(f"/api/runs/{r['run_id']}/resume", json={"action": "confirm_unknown"})
     again = client.post(f"/api/runs/{r['run_id']}/resume", json={"action": "approve"})
     assert again.status_code == 409
 
 
 def test_events_visible(client):
-    r = client.post("/api/runs", json={"question": "正高级工程师评审条件是什么"}).json()
+    r = client.post("/api/runs", json={"question": "硕士毕业落户能加多少分",
+                                       "profile": {"degree": "master"}}).json()
     got = client.get(f"/api/runs/{r['run_id']}?events=1").json()
     assert got["events"][0]["kind"] == "run_created"
     assert any(e["kind"] == "gate_opened" for e in got["events"])

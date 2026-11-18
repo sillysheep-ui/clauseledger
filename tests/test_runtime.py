@@ -37,8 +37,11 @@ PROFILE = {
 }
 
 
+MINI = {"degree": "master"}   # 信息不全 → 判定为 unknown，但不是"没有判定器"
+
+
 def test_unknown_stops_at_judgement_gate(eng):
-    s = eng.run("正高级工程师评审条件是什么")
+    s = eng.run("硕士毕业落户能加多少分", MINI)
     assert s.status == "waiting"
     assert s.gate["kind"] == "judgement"
     assert s.judgement["verdict"] == "unknown"
@@ -49,7 +52,7 @@ def test_unknown_stops_at_judgement_gate(eng):
 
 
 def test_resume_confirm_unknown_finishes_without_action(eng):
-    s = eng.run("正高级工程师评审条件是什么")
+    s = eng.run("硕士毕业落户能加多少分", MINI)
     s = eng.resume(s.run_id, {"action": "confirm_unknown", "by": "tester"})
     assert s.status == "done"
     assert s.judgement["confirmed"] is True
@@ -83,7 +86,7 @@ def test_deny_leaves_world_untouched(eng):
 
 
 def test_resume_does_not_repeat_finished_steps(eng):
-    s = eng.run("正高级工程师评审条件是什么")
+    s = eng.run("硕士毕业落户能加多少分", MINI)
     before = started(eng.store, s.run_id)
     assert before[-1] == "gate_judgement"
 
@@ -96,7 +99,7 @@ def test_resume_does_not_repeat_finished_steps(eng):
 
 
 def test_events_are_append_only_with_sequence(eng):
-    s = eng.run("正高级工程师评审条件是什么")
+    s = eng.run("硕士毕业落户能加多少分", MINI)
     ev = eng.store.events(s.run_id)
     assert [e["seq"] for e in ev] == list(range(1, len(ev) + 1))
     # 走完，再试一次恢复：必须拒绝，且历史一行不改
@@ -120,7 +123,7 @@ def test_blocked_city_never_retrieves(eng):
 
 
 def test_state_roundtrip_is_json(eng):
-    s = eng.run("正高级工程师评审条件是什么")
+    s = eng.run("硕士毕业落户能加多少分", MINI)
     blob = s.to_json()
     back = type(s).from_json(blob)
     assert back.run_id == s.run_id and back.status == s.status
@@ -131,7 +134,7 @@ def test_resume_from_a_fresh_process(tmp_path, monkeypatch):
     """模拟"进程重启"：内存里什么都不留，只有磁盘上的 state.json。"""
     monkeypatch.setenv("CLAUSELEDGER_WORLD", str(tmp_path / "world.json"))
     a = Engine(Store(tmp_path / "runs"))
-    s = a.run("正高级工程师评审条件是什么")
+    s = a.run("硕士毕业落户能加多少分", MINI)
     assert s.status == "waiting"
 
     b = Engine(Store(tmp_path / "runs"))          # 新实例 = 新进程

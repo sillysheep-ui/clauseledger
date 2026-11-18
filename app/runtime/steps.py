@@ -26,7 +26,7 @@ def _norm(s: str) -> str:
 def _hit_dict(h) -> dict:
     c = h.clause
     return {"doc_no": c.doc_no, "title": c.title, "citation": c.citation,
-            "score": round(h.score, 3), "coverage": round(h.coverage, 3),
+            "page": c.page, "score": round(h.score, 3), "coverage": round(h.coverage, 3),
             "stale": h.stale, "scope": h.scope, "path": list(c.path),
             "text": (h.child or c.text)[:400]}
 
@@ -82,6 +82,9 @@ def judge(state, decision):
 
 def gate_judgement(state, decision):
     j = state.judgement or {}
+    # 没有判定器时不出判定，走标准卡；让"缺规则"去拦人，等于每道题都拦
+    if not j.get("source") or j.get("source") == "none":
+        return
     if j.get("verdict") != "unknown" or j.get("confirmed") or j.get("blocked"):
         return
     act = decide(decision)
@@ -100,20 +103,16 @@ def gate_judgement(state, decision):
 
 
 def compose(state, decision):
-    """组装答案：**只解释判定，不产生判定**。"""
-    j = state.judgement or {}
-    cites = [h["citation"] for h in state.hits[:3]]
-    if state.answer and state.answer.get("refusal"):
-        text = state.answer["refusal"]
-    elif j.get("verdict") == "satisfied":
-        text = f"满足。已知得分 {j.get('total_known')}（标准 {j.get('standard')}）。"
-    elif j.get("verdict") == "unsatisfied":
-        text = f"不满足。上限 {j.get('total_upper')}，低于标准 {j.get('standard')}。"
-    elif j.get("verdict") == "direct":
-        text = f"符合直落条件：{j.get('direct')}。"
-    else:
-        text = "无法判定。缺少可结构化的条件，或该事项尚未接入判定器。"
-    state.answer = {**(state.answer or {}), "text": text, "citations": cites}
+    """组装答案：**只解释判定，不产生判定**。
+
+    三种卡：能判定 → 判定卡；有条款、缺你的信息 → 标准卡；没接入/没政策 → 拒答卡。
+    每句话要么是条款的逐字片段，要么被标成"需要你确认"。
+    """
+    from app.answer import cards
+    card = cards.build(state)
+    state.answer = {**(state.answer or {}), "card": card,
+                    "text": card.get("headline", ""),
+                    "citations": [e["citation"] for e in card.get("evidence", [])]}
 
 
 def verify(state, decision):
