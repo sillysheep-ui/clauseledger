@@ -1,0 +1,7 @@
+{
+ "file": "eval/questions_paraphrase.json",
+ "sha256_12": "92f0378db0bb",
+ "total": 64,
+ "note": "22 条原有（m0 阶段手写）+ 42 条来自 v3 official 的 dev/test 题口语化改写；金标沿用原题",
+ "frozen": "2026-11-19"
+}
