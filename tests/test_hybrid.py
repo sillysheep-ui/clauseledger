@@ -29,7 +29,8 @@ def test_rrf_ignores_raw_scores_only_ranks():
     assert [c for c, _ in dense.rrf(a, b)] == [10, 21, 11, 20]
 
 
-def test_recall_mode_defaults_to_bm25(monkeypatch):
+def test_recall_mode_respects_bm25_override(monkeypatch):
+    # 默认已切 hybrid；显式设 bm25 时必须真的走 bm25（回退路径要可测）
     monkeypatch.setattr(S, "RECALL", "bm25")
     assert S.recall_mode() == "bm25"
 

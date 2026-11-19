@@ -1,0 +1,222 @@
+[
+ {
+  "id": "PARA-001",
+  "q": "公司想申请工伤预防项目，得准备哪些材料？",
+  "category": "paraphrase",
+  "split": "dev",
+  "gold_doc": "沪人社规〔2018〕46号",
+  "gold_title": "关于印发《上海市工伤预防费使用管理试行办法》的通知",
+  "from": "OFFI-001",
+  "source": "https://rsj.sh.gov.cn/tzcjd_17352_17352/20230118/t0035_1412932.html"
+ },
+ {
+  "id": "PARA-002",
+  "q": "评正高级工程师那个通知，是按什么文件定的？",
+  "category": "paraphrase",
+  "split": "dev",
+  "gold_doc": "沪人社规〔2018〕21号",
+  "gold_title": "关于本市开展正高级工程师职称评审工作的通知",
+  "from": "OFFI-003",
+  "source": "https://rsj.sh.gov.cn/tzcjd_17352_17352/20200617/t0035_1377188.html"
+ },
+ {
+  "id": "PARA-003",
+  "q": "招人拿的扩岗补助和吸纳就业补贴，能不能同时领？",
+  "category": "paraphrase",
+  "split": "dev",
+  "gold_doc": "沪人社规〔2024〕18号",
+  "gold_title": "上海市人力资源和社会保障局 上海市教育委员会 上海市财政局关于落实2024年度一次性扩岗补助政策有关工作的通知",
+  "from": "OFFI-004",
+  "source": "https://rsj.sh.gov.cn/tzcjd_17352_17352/20241014/t0035_1428145.html"
+ },
+ {
+  "id": "PARA-004",
+  "q": "什么样的单位才有资格报工伤预防项目？",
+  "category": "paraphrase",
+  "split": "dev",
+  "gold_doc": "沪人社规〔2018〕46号",
+  "gold_title": "关于印发《上海市工伤预防费使用管理试行办法》的通知",
+  "from": "OFFI-005",
+  "source": "https://rsj.sh.gov.cn/tzcjd_17352_17352/20230118/t0035_1412932.html"
+ },
+ {
+  "id": "PARA-005",
+  "q": "工伤预防项目进了预算以后，具体怎么落地？",
+  "category": "paraphrase",
+  "split": "dev",
+  "gold_doc": "沪人社规〔2018〕46号",
+  "gold_title": "关于印发《上海市工伤预防费使用管理试行办法》的通知",
+  "from": "OFFI-006",
+  "source": "https://rsj.sh.gov.cn/tzcjd_17352_17352/20230118/t0035_1412932.html"
+ },
+ {
+  "id": "PARA-006",
+  "q": "为啥要让建筑工地都上工伤保险？",
+  "category": "paraphrase",
+  "split": "dev",
+  "gold_doc": "沪人社福发〔2015〕34号",
+  "gold_title": "关于进一步做好本市建筑业工伤保险工作若干意见的通知",
+  "from": "OFFI-007",
+  "source": "https://rsj.sh.gov.cn/tzcjd_17352_17352/20200617/t0035_1377107.html"
+ },
+ {
+  "id": "PARA-007",
+  "q": "项目参保的人工伤期满了，后面的待遇怎么办？",
+  "category": "paraphrase",
+  "split": "dev",
+  "gold_doc": "沪人社福发〔2015〕34号",
+  "gold_title": "关于进一步做好本市建筑业工伤保险工作若干意见的通知",
+  "from": "OFFI-008",
+  "source": "https://rsj.sh.gov.cn/tzcjd_17352_17352/20200617/t0035_1377107.html"
+ },
+ {
+  "id": "PARA-008",
+  "q": "企业组织的线上培训都学啥、怎么学？",
+  "category": "paraphrase",
+  "split": "dev",
+  "gold_doc": "沪人社职〔2020〕49号",
+  "gold_title": "关于做好本市受疫情影响企业职工线上职业培训补贴工作的通知",
+  "from": "OFFI-009",
+  "source": "https://rsj.sh.gov.cn/tzcjd_17352_17352/20200617/t0035_1377194.html"
+ },
+ {
+  "id": "PARA-009",
+  "q": "自己交社保的灵活就业人员，去哪儿办就业登记？",
+  "category": "paraphrase",
+  "split": "dev",
+  "gold_doc": "沪人社规〔2023〕25号",
+  "gold_title": "上海市人力资源和社会保障局 上海市财政局关于进一步做好灵活就业人员就业创业工作有关事项的补充通知",
+  "from": "OFFI-010",
+  "source": "https://rsj.sh.gov.cn/tzcjd_17352_17352/20231026/t0035_1419079.html"
+ },
+ {
+  "id": "PARA-010",
+  "q": "工伤的人去外地看病，住宿吃饭的钱谁出、多少？",
+  "category": "paraphrase",
+  "split": "dev",
+  "gold_doc": "沪人社规〔2019〕22号",
+  "gold_title": "关于本市工伤人员外省市就医食宿费标准的通知",
+  "from": "OFFI-012",
+  "source": "https://rsj.sh.gov.cn/tzcjd_17352_17352/20200617/t0035_1377156.html"
+ },
+ {
+  "id": "PARA-011",
+  "q": "换工作了，职业年金怎么转过去？",
+  "category": "paraphrase",
+  "split": "dev",
+  "gold_doc": "沪人社规〔2019〕29号",
+  "gold_title": "关于贯彻落实《人力资源社会保障部、财政部关于机关事业单位基本养老保险关系和职业年金转移接续若干问题的通知》的通知",
+  "from": "OFFI-013",
+  "source": "https://rsj.sh.gov.cn/tzcjd_17352_17352/20200617/t0035_1377170.html"
+ },
+ {
+  "id": "PARA-012",
+  "q": "公益性岗位的工资和社保谁给保障？",
+  "category": "paraphrase",
+  "split": "dev",
+  "gold_doc": "沪人社规〔2025〕31号",
+  "gold_title": "上海市人力资源和社会保障局 上海市财政局关于印发《上海市公益性岗位开发管理办法》的通知",
+  "from": "OFFI-014",
+  "source": "https://rsj.sh.gov.cn/tzcjd_17352_17352/20260114/t0035_1437967.html"
+ },
+ {
+  "id": "PARA-013",
+  "q": "做养老护理、家政的，技能补贴有什么新说法？",
+  "category": "paraphrase",
+  "split": "dev",
+  "gold_doc": "沪人社规〔2024〕20号",
+  "gold_title": "上海市人力资源和社会保障局等七部门关于进一步加强本市重点产业领域技能人才培养试点工作的通知",
+  "from": "OFFI-015",
+  "source": "https://rsj.sh.gov.cn/tzcjd_17352_17352/20241204/t0035_1429238.html"
+ },
+ {
+  "id": "PARA-014",
+  "q": "职称电子证书从什么时候开始用？以后还发纸的吗？",
+  "category": "paraphrase",
+  "split": "dev",
+  "gold_doc": "沪人社规〔2019〕33号",
+  "gold_title": "关于本市启用专业技术资格电子证书的通知",
+  "from": "OFFI-016",
+  "source": "https://rsj.sh.gov.cn/tzcjd_17352_17352/20200617/t0035_1377167.html"
+ },
+ {
+  "id": "PARA-015",
+  "q": "2020年城乡居民养老金涨钱，哪些人能涨？",
+  "category": "paraphrase",
+  "split": "dev",
+  "gold_doc": "沪人社规〔2020〕6号",
+  "gold_title": "关于2020年调整本市城乡居民养老保险领取养老金人员养老金的通知",
+  "from": "OFFI-017",
+  "source": "https://rsj.sh.gov.cn/tzcjd_17352_17352/20200617/t0035_1377185.html"
+ },
+ {
+  "id": "PARA-016",
+  "q": "外卖骑手这类人的职业伤害预防费怎么用？",
+  "category": "paraphrase",
+  "split": "dev",
+  "gold_doc": "沪人社规〔2018〕46号",
+  "gold_title": "关于印发《上海市工伤预防费使用管理试行办法》的通知",
+  "from": "OFFI-018",
+  "source": "https://rsj.sh.gov.cn/tzcjd_17352_17352/20230118/t0035_1412932.html"
+ },
+ {
+  "id": "PARA-017",
+  "q": "过年发的那笔一次性补助，发给哪些人？",
+  "category": "paraphrase",
+  "split": "dev",
+  "gold_doc": "沪人社规〔2019〕41号",
+  "gold_title": "关于2020年“元旦、春节”期间对家庭生活困难的失业人员发放一次性补助的通知",
+  "from": "OFFI-019",
+  "source": "https://rsj.sh.gov.cn/tzcjd_17352_17352/20200617/t0035_1377173.html"
+ },
+ {
+  "id": "PARA-018",
+  "q": "每年的工伤预防重点领域是怎么定下来的？",
+  "category": "paraphrase",
+  "split": "dev",
+  "gold_doc": "沪人社规〔2018〕46号",
+  "gold_title": "关于印发《上海市工伤预防费使用管理试行办法》的通知",
+  "from": "OFFI-020",
+  "source": "https://rsj.sh.gov.cn/tzcjd_17352_17352/20230118/t0035_1412932.html"
+ },
+ {
+  "id": "PARA-019",
+  "q": "证书真假在哪儿查？能自己打印吗？",
+  "category": "paraphrase",
+  "split": "dev",
+  "gold_doc": "沪人社规〔2019〕33号",
+  "gold_title": "关于本市启用专业技术资格电子证书的通知",
+  "from": "OFFI-021",
+  "source": "https://rsj.sh.gov.cn/tzcjd_17352_17352/20200617/t0035_1377167.html"
+ },
+ {
+  "id": "PARA-020",
+  "q": "被征地农民的养老生活费，2019年是怎么调的？",
+  "category": "paraphrase",
+  "split": "dev",
+  "gold_doc": "沪人社规〔2019〕12号",
+  "gold_title": "关于2019年调整本市征地养老人员生活费标准的通知",
+  "from": "OFFI-022",
+  "source": "https://rsj.sh.gov.cn/tzcjd_17352_17352/20200617/t0035_1377145.html"
+ },
+ {
+  "id": "PARA-021",
+  "q": "2020年养老金涨多少、怎么涨？",
+  "category": "paraphrase",
+  "split": "dev",
+  "gold_doc": "沪人社规〔2020〕4号",
+  "gold_title": "关于2020年调整本市企业退休人员基本养老金的通知",
+  "from": "OFFI-023",
+  "source": "https://rsj.sh.gov.cn/tzcjd_17352_17352/20200617/t0035_1377189.html"
+ },
+ {
+  "id": "PARA-022",
+  "q": "征地以后给人员的就业和保障方案，一般写些什么？",
+  "category": "paraphrase",
+  "split": "dev",
+  "gold_doc": "沪人社规〔2020〕3号",
+  "gold_title": "关于切实做好本市被征地人员就业和社会保障办理工作的通知",
+  "from": "OFFI-024",
+  "source": "https://rsj.sh.gov.cn/tzcjd_17352_17352/20200617/t0035_1377183.html"
+ }
+]

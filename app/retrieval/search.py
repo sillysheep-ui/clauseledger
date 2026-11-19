@@ -34,7 +34,7 @@ MIN_SCORE_STRONG = 6.0  # 敢说"这就是答案"的分数门槛；低于它只�
 # 默认不开混合：dev 上 +2~5pp 且配对检验不显著（p=0.267），代价是单查询 30–70ms
 # （BM25 是 2ms）与 95 MB 模型。开关存在是为了让"换召回方式"可复现，
 # 而不是假装它一定更好——见 docs/HYBRID.md。
-RECALL = os.environ.get("CLAUSELEDGER_RECALL", "bm25").lower()
+RECALL = os.environ.get("CLAUSELEDGER_RECALL", "hybrid").lower()
 
 # 覆盖范围：只做上海。问题里出现别的城市，直接说没覆盖，不许拿上海条款凑。
 SUPPORTED_CITIES = {"上海"}
@@ -301,7 +301,14 @@ def _candidates(query: str, qt: list[str], retriever, children: list[dict],
     if mode == "bm25":
         ranked = [(cid, s) for cid, s in bm]
     else:
-        dr = [(cid, s) for cid, s in dense.rank(query, children, k=pool)]
+        try:
+            dr = [(cid, s) for cid, s in dense.rank(query, children, k=pool)]
+        except Exception:
+            # 模型没下下来、MPS 不可用、缓存损坏——一律退回 BM25，并把模式如实改回去。
+            # 宁可慢一点降级，也不能让一次检索抛异常。
+            mode = "bm25"
+            ranked = [(cid, s) for cid, s in bm]
+            return _to_pids(ranked, children), mode
         if mode == "dense":
             ranked = [(cid, 10.0 * s) for cid, s in dr]
         else:
@@ -310,13 +317,19 @@ def _candidates(query: str, qt: list[str], retriever, children: list[dict],
             ceil = fused[0][1] if fused else 1.0
             ranked = [(cid, top * (r / ceil)) for cid, r in fused]
 
+    return _to_pids(ranked, children), mode
+
+
+def _to_pids(ranked: list[tuple[int, float]],
+             children: list[dict]) -> dict[int, tuple[float, str]]:
+    """子块 → 父条款：同一 pid 取最高分子块，并记住命中那段的原文。"""
     best: dict[int, tuple[float, str]] = {}
     for cid, s in ranked:
         ch = children[cid]
         pid = int(ch["pid"])
         if pid not in best or s > best[pid][0]:
             best[pid] = (s, ch["text"])
-    return best, mode
+    return best
 
 def search_result(query: str, k: int = 8, *, status: tuple[str, ...] | None = None,
                   min_score: float = MIN_SCORE, min_coverage: float = MIN_COVERAGE,
