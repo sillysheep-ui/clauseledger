@@ -501,7 +501,13 @@ def search_result(query: str, k: int = 8, *, status: tuple[str, ...] | None = No
     #（"电子劳动合同"以 0.67 覆盖引到《启用电子证书的通知》）。
     # 覆盖率的残余职责只有两个：拒答地板（0.30）和展示。
     margin = out[0].score - (out[1].score if len(out) > 1 else 0.0)
-    weak = out[0].score < min_score_strong and margin < min_margin_strong
+    # 三档判据：
+    # ①分数低且没有分差 → 不下结论（原规则）
+    # ②两路召回指向不同文件、且分数不高 → 不下结论。
+    #   实测：一致的 40 题里对 33（82.5%），不一致的 67 题里对 31（46.3%）；
+    #   再加"分数 < 5"时，被挡掉的 10 题**一条都没对**——这是免费的精度。
+    weak = (out[0].score < min_score_strong and margin < min_margin_strong) or \
+           (_AGREE is False and out[0].score < 5.0)
     if weak:
         return Answer(_attach_related(query, _prefer_effective(_collapse(out))[:k], clauses),
                       "没有找到直接对应的条款；以下文件与问题共享部分关键词，但可能不是你要的规定",
