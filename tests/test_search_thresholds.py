@@ -17,13 +17,14 @@ def test_search_forwards_all_thresholds(monkeypatch):
 
     monkeypatch.setattr(S, "search_result", fake)
     S.search("任意", k=3, min_score=1.5, min_coverage=0.7, min_cand_cov=0.9,
-             min_answer=0.2, min_score_strong=5.5)
+             min_answer=0.2, min_score_strong=5.5, min_margin_strong=2.5)
     assert seen["k"] == 3
     assert seen["min_score"] == 1.5
     assert seen["min_coverage"] == 0.7
     assert seen["min_cand_cov"] == 0.9, "search() 又吞掉一个阈值参数"
     assert seen["min_answer"] == 0.2, "search() 吞掉了 min_answer"
     assert seen["min_score_strong"] == 5.5, "search() 吞掉了 min_score_strong"
+    assert seen["min_margin_strong"] == 2.5, "search() 吞掉了 min_margin_strong"
 
 
 def test_unreachable_threshold_actually_refuses():
@@ -37,13 +38,13 @@ def test_unreachable_threshold_actually_refuses():
     assert S.search_result(q, k=5, min_answer=1.01).outcome != "answer"
     assert S.search_result(q, k=5, min_cand_cov=1.01).hits == []
     # 0.5 这条覆盖率线已经不再决定"拒不拒"，只用于展示；敢不敢下结论看分数
-    assert S.search_result(q, k=5, min_score_strong=999).confidence == "low"
+    assert S.search_result(q, k=5, min_score_strong=999, min_margin_strong=999).confidence == "low"
 
 
 def test_no_direct_clause_keeps_candidates_but_does_not_claim_answer():
     """分数不硬时不许说"就是这条"——但仍要把候选交出来，不能假装没查到。"""
     q = "失业保险金标准"
-    a = S.search_result(q, k=5, min_score_strong=999.0)
+    a = S.search_result(q, k=5, min_score_strong=999.0, min_margin_strong=999.0)
     if not a.hits:
         import pytest
         pytest.skip("索引未构建")
@@ -52,5 +53,5 @@ def test_no_direct_clause_keeps_candidates_but_does_not_claim_answer():
     assert a.confidence == "low"
     assert a.hits, "no_direct_clause 必须保留候选"
 
-    b = S.search_result(q, k=5, min_score_strong=0.0, min_coverage=0.0, min_answer=0.0)
+    b = S.search_result(q, k=5, min_score_strong=0.0, min_margin_strong=0.0, min_coverage=0.0, min_answer=0.0)
     assert b.kind == "ok", "分数门槛放到 0 就该正常作答"

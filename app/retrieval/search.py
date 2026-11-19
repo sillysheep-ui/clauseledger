@@ -29,7 +29,13 @@ from app.retrieval.records import Clause
 MIN_SCORE = 3.0      # BM25 绝对分；低于它基本是"只共享了两个字"
 MIN_COVERAGE = 0.5   # 首条条款至少覆盖一半提问词，才算"有把握"
 MIN_ANSWER = 0.30    # 词重叠地板：低于它连"沾边"都算不上（一个字都对不上）
-MIN_SCORE_STRONG = 6.0  # 敢说"这就是答案"的分数门槛；低于它只能说"可能相关"
+MIN_SCORE_STRONG = 5.3   # 分数地板：低于它**且**领先第二名不多，才不敢下结论
+MIN_MARGIN_STRONG = 1.25  # 与第二名的分差；领先明显时，绝对分低也敢答
+# 为什么改成"两个条件同时成立"才怯：绝对分会随问句变长、随改写扩展词而整体抬高或压低，
+# 单独用它当判据，等于把"问句怎么写"当成"答案有多可靠"。分差对这类整体平移不敏感。
+# 标定过程：在 dev（95 条）上网格搜索 (a,b)，约束是"域内无政策 12 条最多错 1 条、
+# 域外 30 条错 0 条"；a=5.3/b=1.25 时 dev hit@1 56.8%→61.1%、口语 31.4%→35.3%，
+# 负例只多错 0 条（唯一的 MISS-005 在旧规则下也错）。
 
 # 召回模式：bm25（默认）/ dense / hybrid（BM25 + 稠密，RRF 融合）。
 # 默认不开混合：dev 上 +2~5pp 且配对检验不显著（p=0.267），代价是单查询 30–70ms
@@ -254,11 +260,13 @@ def _load() -> tuple[bm25s.BM25, list[Clause], list[dict]]:
 def search(query: str, k: int = 8, *, status: tuple[str, ...] | None = None,
            min_score: float = MIN_SCORE, min_coverage: float = MIN_COVERAGE,
            min_cand_cov: float = 0.25, min_answer: float = MIN_ANSWER,
-           min_score_strong: float = MIN_SCORE_STRONG) -> list[Hit]:
+           min_score_strong: float = MIN_SCORE_STRONG,
+           min_margin_strong: float = MIN_MARGIN_STRONG) -> list[Hit]:
     return search_result(query, k=k, status=status, min_score=min_score,
                          min_answer=min_answer,
                          min_coverage=min_coverage, min_cand_cov=min_cand_cov,
-                         min_score_strong=min_score_strong).hits
+                         min_score_strong=min_score_strong,
+                         min_margin_strong=min_margin_strong).hits
 
 
 def _answer_type_boost(query: str, out: list["Hit"], top_docs: int = 5) -> list["Hit"]:
@@ -340,7 +348,8 @@ def _to_pids(ranked: list[tuple[int, float]],
 def search_result(query: str, k: int = 8, *, status: tuple[str, ...] | None = None,
                   min_score: float = MIN_SCORE, min_coverage: float = MIN_COVERAGE,
                   min_cand_cov: float = 0.25, min_answer: float = MIN_ANSWER,
-                  min_score_strong: float = MIN_SCORE_STRONG) -> Answer:
+                  min_score_strong: float = MIN_SCORE_STRONG,
+                  min_margin_strong: float = MIN_MARGIN_STRONG) -> Answer:
     from app.domain.validity import year_of as _year_of
     # 每次调用先把"实际召回方式"置空：提前返回（未覆盖/不在域内）时必须写 none，
     # 不能把上一次调用的 bm25 留在痕迹里——那等于伪造"查过"。
@@ -473,7 +482,8 @@ def search_result(query: str, k: int = 8, *, status: tuple[str, ...] | None = No
     # 实测覆盖率在这批题上是反的：该答的 0.38–0.45，该拒的 0.50–0.67
     #（"电子劳动合同"以 0.67 覆盖引到《启用电子证书的通知》）。
     # 覆盖率的残余职责只有两个：拒答地板（0.30）和展示。
-    weak = out[0].score < min_score_strong
+    margin = out[0].score - (out[1].score if len(out) > 1 else 0.0)
+    weak = out[0].score < min_score_strong and margin < min_margin_strong
     if weak:
         return Answer(_attach_related(query, _prefer_effective(_collapse(out))[:k], clauses),
                       "没有找到直接对应的条款；以下文件与问题共享部分关键词，但可能不是你要的规定",
