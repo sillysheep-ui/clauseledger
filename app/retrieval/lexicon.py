@@ -31,6 +31,7 @@ class Lexicon:
     segmentation: tuple[str, ...]
     question_words: frozenset[str]
     water: frozenset[str]
+    colloquial: tuple[dict, ...] = ()
     version: int = 0
     path: str = ""
 
@@ -39,6 +40,7 @@ class Lexicon:
             "segmentation": len(self.segmentation),
             "question_words": len(self.question_words),
             "water": len(self.water),
+            "colloquial": len(self.colloquial),
             "version": self.version,
             "path": self.path,
         }
@@ -67,6 +69,7 @@ def load(path: Path | None = None, *, fresh: bool = False) -> Lexicon:
         segmentation=tuple(dict.fromkeys(raw.get("segmentation") or ())),
         question_words=frozenset(raw.get("question_words") or ()),
         water=frozenset(raw.get("water") or ()),
+        colloquial=tuple(raw.get("colloquial") or ()),
         version=int(raw.get("version") or 0),
         path=str(p),
     )
@@ -84,6 +87,11 @@ def question_words() -> set[str]:
 
 def water() -> set[str]:
     return set(load().water)
+
+
+def colloquial() -> list[dict]:
+    """口语→政策词映射表（`rewrite` 层用）。"""
+    return [dict(x) for x in load().colloquial]
 
 
 def reload() -> Lexicon:
