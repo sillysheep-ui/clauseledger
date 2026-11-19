@@ -223,7 +223,10 @@ def content_terms(qs: set[str]) -> set[str]:
 
 
 _MODE = "none"
-_AGREE: bool | None = None   # 本次实际用的召回方式；"没检索"就是 none，不许写成 bm25
+_AGREE: bool | None = None
+_DOC_ALPHA = float(os.environ.get("CLAUSELEDGER_DOCAGG", "0") or 0)
+_TITLE_W = float(os.environ.get("CLAUSELEDGER_TITLE_W", "0.6") or 0)
+_COV_W = float(os.environ.get("CLAUSELEDGER_COV_W", "0") or 0)   # 本次实际用的召回方式；"没检索"就是 none，不许写成 bm25
 _RW = None       # 本次命中过的口语改写（写进 searched，供答案展示）
 
 
@@ -271,6 +274,37 @@ def search(query: str, k: int = 8, *, status: tuple[str, ...] | None = None,
                          min_coverage=min_coverage, min_cand_cov=min_cand_cov,
                          min_score_strong=min_score_strong,
                          min_margin_strong=min_margin_strong).hits
+
+
+def _doc_aggregate(out: list, alpha: float) -> list:
+    """按"文件"聚合分数后再排：max + alpha × 其余前三条之和。
+
+    为什么要：同一个问题的答案常常散在一份文件的几条里，每条都只沾一点，
+    单条分数打不过别家"恰好全中"的一条。但我们给用户的本来就是一份文件
+    （卡片按文件组织），所以应该按文件比，而不是按单条比。
+    alpha=0 等于原来的单条排序。
+    """
+    if alpha <= 0 or len(out) < 2:
+        return out
+    groups: dict[str, list] = {}
+    order: list[str] = []
+    for h in out:
+        d = h.clause.doc_no
+        if d not in groups:
+            groups[d] = []
+            order.append(d)
+        groups[d].append(h)
+    scored = []
+    for d in order:
+        hs = groups[d]
+        rs = sorted((h._rank for h in hs), reverse=True)
+        s = rs[0] + alpha * sum(rs[1:4])
+        scored.append((s, order.index(d), d, hs))
+    scored.sort(key=lambda x: (x[0], -x[1]), reverse=True)
+    flat = []
+    for _, __, ___, hs in scored:
+        flat.extend(hs)
+    return flat
 
 
 def _answer_type_boost(query: str, out: list["Hit"], top_docs: int = 5) -> list["Hit"]:
@@ -461,7 +495,7 @@ def search_result(query: str, k: int = 8, *, status: tuple[str, ...] | None = No
         # 标题命中加权：用户问的是"这件事"，文件标题写着这件事，比正文里顺带提一句更有分量
         title_hits = len(qset & set(tokenize(c.title)))
         h = Hit(c, score, round(cov, 2),
-                _rank=score * boost + 0.6 * title_hits + (0.5 if _in_year else 0.0))
+                _rank=score * boost * (1 + _COV_W * cov) + _TITLE_W * title_hits + (0.5 if _in_year else 0.0))
         h.child = child_text   # 命中的具体那一段，生成时优先用它
         h.stale = stale
         h.scope = scope
@@ -487,6 +521,10 @@ def search_result(query: str, k: int = 8, *, status: tuple[str, ...] | None = No
         out.sort(key=lambda h: (h._in_year, h._rank), reverse=True)
     else:
         out.sort(key=lambda h: h._rank, reverse=True)
+    # 文档级聚合必须在**最后一次排序之后**做，否则会被下一次 sort 覆盖
+    # （和重排那次的死代码是同一个坑：写对了逻辑，却被后面的排序丢掉）。
+    if _DOC_ALPHA > 0:
+        out = _doc_aggregate(out, _DOC_ALPHA)
     n_docs = len({h.clause.doc_no for h in out})
     if not out:
         return Answer([], "没有条款达到相关性下限", "insufficient", n_docs, 0,
