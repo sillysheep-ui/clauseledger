@@ -21,6 +21,7 @@ import bm25s
 
 from app.domain.registry import DocRegistry
 from app.retrieval import lexicon
+from app.retrieval import confidence as _conf
 from app.retrieval import rerank as _rerank
 from app.retrieval.index import INDEX, tokenize
 from app.retrieval import rewrite
@@ -501,13 +502,22 @@ def search_result(query: str, k: int = 8, *, status: tuple[str, ...] | None = No
     #（"电子劳动合同"以 0.67 覆盖引到《启用电子证书的通知》）。
     # 覆盖率的残余职责只有两个：拒答地板（0.30）和展示。
     margin = out[0].score - (out[1].score if len(out) > 1 else 0.0)
+    min_confidence = _conf.threshold()
     # 三档判据：
     # ①分数低且没有分差 → 不下结论（原规则）
     # ②两路召回指向不同文件、且分数不高 → 不下结论。
     #   实测：一致的 40 题里对 33（82.5%），不一致的 67 题里对 31（46.3%）；
     #   再加"分数 < 5"时，被挡掉的 10 题**一条都没对**——这是免费的精度。
-    weak = (out[0].score < min_score_strong and margin < min_margin_strong) or \
-           (_AGREE is False and out[0].score < 5.0)
+    # 判据：BM25 + 语义，两者一起看。只看 BM25 会惩罚"语义对、用词不同"的条款
+    # （重排/稠密把它顶到第一时，判据反而说不敢答）。实测 AUC：BM25 0.731、
+    # 分差 0.659、语义余弦 0.704、三者组合 0.767。
+    _cos = _conf.cosine(query, out[0].child or out[0].clause.text)
+    _ff = _conf.score(out[0].score, margin, _cos) if _cos is not None else None
+    if _ff is not None:
+        weak = _ff < min_confidence
+    else:
+        weak = (out[0].score < min_score_strong and margin < min_margin_strong) or \
+               (_AGREE is False and out[0].score < 5.0)
     if weak:
         return Answer(_attach_related(query, _prefer_effective(_collapse(out))[:k], clauses),
                       "没有找到直接对应的条款；以下文件与问题共享部分关键词，但可能不是你要的规定",
