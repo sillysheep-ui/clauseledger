@@ -23,6 +23,7 @@ from app.domain.registry import DocRegistry
 from app.retrieval import lexicon
 from app.retrieval import rerank as _rerank
 from app.retrieval.index import INDEX, tokenize
+from app.retrieval import rewrite
 from app.retrieval.records import Clause
 
 MIN_SCORE = 3.0      # BM25 绝对分；低于它基本是"只共享了两个字"
@@ -215,10 +216,15 @@ def content_terms(qs: set[str]) -> set[str]:
 
 
 _MODE = "none"   # 本次实际用的召回方式；"没检索"就是 none，不许写成 bm25
+_RW = None       # 本次命中过的口语改写（写进 searched，供答案展示）
 
 
 def _searched(n_docs: int, n_queries: int) -> dict:
-    return {**index_meta(), "n_docs": n_docs, "n_queries": n_queries, "recall": _MODE}
+    d = {**index_meta(), "n_docs": n_docs, "n_queries": n_queries, "recall": _MODE}
+    if _RW is not None and _RW.hits:
+        d["rewrites"] = _RW.hits
+    return d
+
 
 
 _LOADED: tuple | None = None
@@ -338,8 +344,9 @@ def search_result(query: str, k: int = 8, *, status: tuple[str, ...] | None = No
     from app.domain.validity import year_of as _year_of
     # 每次调用先把"实际召回方式"置空：提前返回（未覆盖/不在域内）时必须写 none，
     # 不能把上一次调用的 bm25 留在痕迹里——那等于伪造"查过"。
-    global _MODE
+    global _MODE, _RW
     _MODE = "none"
+    _RW = None
     _y = _year_of(query)
     _as_of = f"{_y}-12-31" if _y else date.today().isoformat()
     reason = refuse_reason(query)
@@ -362,10 +369,15 @@ def search_result(query: str, k: int = 8, *, status: tuple[str, ...] | None = No
     if not qt:
         return Answer([], "问题里没有可用于检索的词", "insufficient",
                       searched=_searched(0, 0), as_of=_as_of)
+    # 口语→政策词：**只用于检索**，不参与覆盖率（否则分母被撑大，闸门反而更严）。
+    rw = rewrite.apply(query)
+    _RW = rw
+    qt_ret = list(qt) + [t for term in rw.terms for t in tokenize(term)
+                         if t not in qt and t not in QUESTION_WORDS]
     # 索引建在子块上（父子索引），取回的是子块，用 pid 回填父条款。
     # 子块数远多于条款数，候选要相对多取一些，否则去重后剩不下几条。
     pool = min(len(children), max(k * 8, 60))
-    best, _MODE = _candidates(query, qt, retriever, children, pool)
+    best, _MODE = _candidates(query, qt_ret, retriever, children, pool)
     out: list[Hit] = []
     qset = set(qt)
     scope = ""
@@ -427,13 +439,19 @@ def search_result(query: str, k: int = 8, *, status: tuple[str, ...] | None = No
         h.scope = scope
         h._in_year = _in_year
         out.append(h)
-    # 可选重排：必须在 _collapse 之前——条款级才有足够信号，
-    # 压成"每份文件一条"再重排会把 hit@1 从 58.7% 打到 41.3%（见 docs/RETRIEVAL-LIT.md）。
-    if _rerank.enabled() and len(out) > 1:
-        out = _rerank.rerank(query, out, top=_rerank.top_n())
     # 按"回答类型"挑条款：只在**已排进前 5 的文件内部**加分，不改"是哪个文件"。
     # 理由见 app/retrieval/answertype.py 的模块注释。
     out = _answer_type_boost(query, out)
+    out.sort(key=lambda h: h._rank, reverse=True)
+    # 可选重排放在最后：它是**顺序的最终裁决者**。
+    # 早先的实现把重排放在这里之前、之后又按 `_rank` 排一次，等于把重排结果丢掉——
+    # 所以"重排没效果"其实是死代码，不是模型没用。修法：重排完把顺序写回 `_rank`，
+    # 量级保持不变（只做微小递减），这样后面的年份分层仍然生效。
+    if _rerank.enabled() and len(out) > 1:
+        out = _rerank.rerank(query, out, top=_rerank.top_n())
+        top = max((h._rank for h in out), default=0.0)
+        for i, h in enumerate(out):
+            h._rank = top - i * 1e-3
     # 带年份时先按"能否确认那一年有效"分层，再按分数排。
     # 理由：日期未知 ≠ 有效。用户既然说了年份，就该先相信能证明自己那年有效的文件；
     # 只在同一层里比相关性。不带年份时这一层不存在，排序与以前完全一致。
