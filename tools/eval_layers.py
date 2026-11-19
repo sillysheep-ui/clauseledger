@@ -27,7 +27,7 @@ import argparse
 import json
 from pathlib import Path
 
-from tools.eval_v2 import is_hit, wilson
+from tools.eval_v2 import is_hit, same_family, wilson
 
 QUESTIONS = Path("eval/questions_v3.json")
 PARAPHRASE = Path("eval/questions_paraphrase.json")
@@ -56,6 +56,7 @@ def surface(rows: list[dict], ks=(5, 10, 50)) -> dict:
 
     n = len(rows)
     ranks: list[int | None] = []
+    fam = 0
     for q in rows:
         ans = search_result(q["q"], k=max(ks), **RELAX)
         rank = None
@@ -64,8 +65,10 @@ def surface(rows: list[dict], ks=(5, 10, 50)) -> dict:
                 rank = i
                 break
         ranks.append(rank)
+        if rank is None and ans.hits and same_family(ans.hits[0], q.get("gold_title") or ""):
+            fam += 1
 
-    out = {"n": n}
+    out = {"n": n, "family_wrong": fam}
     for k in ks:
         got = sum(1 for r in ranks if r and r <= k)
         out[f"R@{k}"] = (got, n)
@@ -143,6 +146,7 @@ def main() -> None:
         d = decide(rows)
         print(f"- L1 召回：R@5 {pct(s['R@5'])}｜R@10 {pct(s['R@10'])}｜R@50 {pct(s['R@50'])}")
         print(f"- L2 排序：P@1|R@10 {pct(s['P@1|R@10'])}｜P@1|R@50 {pct(s['P@1|R@50'])}")
+        print(f"- 同族错版（标题同、文号不同）作 top-1：{s['family_wrong']} 题")
         print(f"- L3 决策：作答 {d['answered']}/{d['n']} = {d['answered']/d['n']:.0%}"
               f"｜作答精度 {d['correct']}/{max(1,d['answered'])} = {d['correct']/max(1,d['answered']):.0%}")
         print()

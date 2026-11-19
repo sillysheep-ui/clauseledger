@@ -42,9 +42,24 @@ def wilson(k: int, n: int, z: float = 1.96) -> tuple[float, float]:
     return ((c - m) / d, (c + m) / d)
 
 
-def is_hit(h, gold_doc: str, gold_title: str) -> bool:
-    if h.clause.doc_no == gold_doc:
-        return True
+def is_hit(h, gold_doc: str, gold_title: str, loose: bool = False) -> bool:
+    """主口径：**严格按文号**。
+
+    历史上这里还允许"标题同族"算命中，后果是 2019 年的旧版本被当成 2025 年
+    问题的正确答案——恰好是这个项目最想抓的错误（拿已失效版本回答）。所以
+    默认改为严格匹配；`loose=True` 只为回归旧数字保留，不能当主口径。
+
+    只有金标没有文号时才退回标题匹配。
+    """
+    if gold_doc:
+        return h.clause.doc_no == gold_doc
+    if loose:
+        return norm_title(h.clause.title) == norm_title(gold_title)
+    return norm_title(h.clause.title) == norm_title(gold_title)
+
+
+def same_family(h, gold_title: str) -> bool:
+    """同一标题家族但文号不同——这是"错版"，不是命中。"""
     return norm_title(h.clause.title) == norm_title(gold_title)
 
 
