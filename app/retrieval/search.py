@@ -221,12 +221,15 @@ def content_terms(qs: set[str]) -> set[str]:
     return keep or qs
 
 
-_MODE = "none"   # 本次实际用的召回方式；"没检索"就是 none，不许写成 bm25
+_MODE = "none"
+_AGREE: bool | None = None   # 本次实际用的召回方式；"没检索"就是 none，不许写成 bm25
 _RW = None       # 本次命中过的口语改写（写进 searched，供答案展示）
 
 
 def _searched(n_docs: int, n_queries: int) -> dict:
     d = {**index_meta(), "n_docs": n_docs, "n_queries": n_queries, "recall": _MODE}
+    if _AGREE is not None:
+        d["agree"] = _AGREE
     if _RW is not None and _RW.hits:
         d["rewrites"] = _RW.hits
     return d
@@ -297,7 +300,7 @@ def recall_mode() -> str:
 
 
 def _candidates(query: str, qt: list[str], retriever, children: list[dict],
-                pool: int) -> tuple[dict[int, tuple[float, str]], str]:
+                pool: int) -> tuple[dict[int, tuple[float, str]], str, dict]:
     """一路或两路召回，返回 (pid -> (分数, 命中子块正文), 实际模式)。
 
     分数口径：
@@ -312,6 +315,7 @@ def _candidates(query: str, qt: list[str], retriever, children: list[dict],
     mode = recall_mode()
     idx, scores = retriever.retrieve([qt], k=pool)
     bm = [(int(i), float(s)) for i, s in zip(idx[0], scores[0])]
+    paths: dict = {"bm25": [c for c, _ in bm], "dense": None}
     if mode == "bm25":
         ranked = [(cid, s) for cid, s in bm]
     else:
@@ -322,7 +326,8 @@ def _candidates(query: str, qt: list[str], retriever, children: list[dict],
             # 宁可慢一点降级，也不能让一次检索抛异常。
             mode = "bm25"
             ranked = [(cid, s) for cid, s in bm]
-            return _to_pids(ranked, children), mode
+            return _to_pids(ranked, children), mode, paths
+        paths["dense"] = [c for c, _ in dr]
         if mode == "dense":
             ranked = [(cid, 10.0 * s) for cid, s in dr]
         else:
@@ -331,7 +336,7 @@ def _candidates(query: str, qt: list[str], retriever, children: list[dict],
             ceil = fused[0][1] if fused else 1.0
             ranked = [(cid, top * (r / ceil)) for cid, r in fused]
 
-    return _to_pids(ranked, children), mode
+    return _to_pids(ranked, children), mode, paths
 
 
 def _to_pids(ranked: list[tuple[int, float]],
@@ -353,9 +358,10 @@ def search_result(query: str, k: int = 8, *, status: tuple[str, ...] | None = No
     from app.domain.validity import year_of as _year_of
     # 每次调用先把"实际召回方式"置空：提前返回（未覆盖/不在域内）时必须写 none，
     # 不能把上一次调用的 bm25 留在痕迹里——那等于伪造"查过"。
-    global _MODE, _RW
+    global _MODE, _RW, _AGREE
     _MODE = "none"
     _RW = None
+    _AGREE = None
     _y = _year_of(query)
     _as_of = f"{_y}-12-31" if _y else date.today().isoformat()
     reason = refuse_reason(query)
@@ -386,7 +392,19 @@ def search_result(query: str, k: int = 8, *, status: tuple[str, ...] | None = No
     # 索引建在子块上（父子索引），取回的是子块，用 pid 回填父条款。
     # 子块数远多于条款数，候选要相对多取一些，否则去重后剩不下几条。
     pool = min(len(children), max(k * 8, 60))
-    best, _MODE = _candidates(query, qt_ret, retriever, children, pool)
+    best, _MODE, _paths = _candidates(query, qt_ret, retriever, children, pool)
+    # 两路 top-1 是不是同一份文件：这不是"分数"，是**两套不同的词法/语义视图有没有
+    # 指向同一个答案**。实测（122 题）一致时正确率 65.9%，不一致时 30.9%。
+    _agree = None
+    try:
+        if _paths.get("dense"):
+            _a = clauses[_paths["bm25"][0]].doc_no if _paths["bm25"] else None
+            _b = clauses[_paths["dense"][0]].doc_no if _paths["dense"] else None
+            if _a and _b:
+                _agree = (_a == _b)
+                _AGREE = _agree
+    except (IndexError, KeyError):
+        _agree = None
     out: list[Hit] = []
     qset = set(qt)
     scope = ""

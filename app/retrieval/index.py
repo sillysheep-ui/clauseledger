@@ -24,6 +24,16 @@ import os
 PROCESSED = Path(os.environ.get("CLAUSELEDGER_PROCESSED", "data/processed"))
 INDEX = Path(os.environ.get("CLAUSELEDGER_INDEX", "data/index"))
 
+# 结构前缀（STARA 式"非本地上下文"）：把"这份文件是什么、条款在哪、父条在讲什么"
+# 拼进**被索引的文本**，但不算进条款正文。开关是为了能 A/B。
+# 关：CLAUSELEDGER_PREFIX=0（默认，行为与原来完全一致）
+PREFIX = os.environ.get("CLAUSELEDGER_PREFIX", "0") not in ("", "0", "false", "no")
+
+# 上下文（Anthropic Contextual Retrieval 的直译）：由 tools/experiments/contextual.py
+# 预先为每条条款生成一句"它讲什么"，建索引时拼在子块前面。
+# 与 PREFIX 分开：PREFIX 拼的是结构字段（文号/标题/路径），CONTEXT 拼的是**模型写的内容**。
+CONTEXT = os.environ.get("CLAUSELEDGER_CONTEXT", "0") not in ("", "0", "false", "no")
+
 # 领域词：jieba 默认词典会把"丧假""居转户"切碎，这里补上
 # 词表在 data/fixtures/lexicon.json，不在这里。理由见 app/retrieval/lexicon.py。
 USER_WORDS = lexicon.segmentation_words()
@@ -158,6 +168,47 @@ def _dedupe(clauses: list[Clause]) -> list[Clause]:
     return list(best.values())
 
 
+def _parent_map(clauses: list[Clause]) -> dict[int, int]:
+    """pid -> 最近的父条款下标（同 part、path 是前缀、且比它长）。"""
+    by_key: dict[tuple, int] = {}
+    for pid, c in enumerate(clauses):
+        by_key[(c.part, tuple(c.path))] = pid
+    out: dict[int, int] = {}
+    for pid, c in enumerate(clauses):
+        for cut in range(len(c.path) - 1, 0, -1):
+            p = by_key.get((c.part, tuple(c.path[:cut])))
+            if p is not None:
+                out[pid] = p
+                break
+    return out
+
+
+def _header(c: Clause, parent: Clause | None) -> str:
+    """索引前缀。三种模式用来做消融：
+
+    full   文号 + 标题 + 路径 + 父条首句（Anthropic/STARA 的直译）
+    parent 只放父条首句（定义、适用范围、对象）
+    path   只放路径
+
+    之所以要分模式：文号与标题对同一份文件的所有子块都一样，**不增加区分度**
+    却把文档拉长，BM25 会按长度归一化扣分。父条首句才是"这句在讲谁"的信息。
+    """
+    mode = os.environ.get("CLAUSELEDGER_PREFIX_MODE", "full")
+    if mode == "parent":
+        if parent is None:
+            return ""
+        return re.split(r"[。；\n]", parent.text.strip())[0][:40]
+    if mode == "path":
+        return " › ".join(c.path[-3:]) if c.path else c.label
+    path = " › ".join(c.path[-3:]) if c.path else c.label
+    head = f"《{c.doc_no}》{c.title[:30]} {path}"
+    if parent is not None and len(c.text) < 120:
+        first = re.split(r"[。；\n]", parent.text.strip())[0][:40]
+        if first:
+            head += " " + first
+    return head
+
+
 def build_children(clauses: list[Clause]) -> list[dict]:
     """父子索引：索引建在子块上，返回时回填父条款。
 
@@ -165,10 +216,24 @@ def build_children(clauses: list[Clause]) -> list[dict]:
     jsonl 里不好定位；下标在同一个索引版本内是稳定的。
     """
     out: list[dict] = []
+    parents = _parent_map(clauses) if PREFIX else {}
+    ctx: dict = {}
+    if CONTEXT:
+        import json as _json
+        from pathlib import Path as _Path
+        f = _Path(os.environ.get("CLAUSELEDGER_CTX_CACHE", "data/cache/ctx.json"))
+        if f.exists():
+            ctx = _json.loads(f.read_text("utf-8"))
+        print(f"[index] 上下文 {len(ctx)} 条")
     for pid, c in enumerate(clauses):
+        head = _header(c, clauses[parents[pid]] if pid in parents else None) if PREFIX else ""
         for k, (s, e) in enumerate(split_children(c.text)):
-            out.append({"cid": f"{pid}:{k}", "pid": pid, "start": s, "end": e,
-                        "text": c.text[s:e]})
+            chunk = c.text[s:e]
+            row = {"cid": f"{pid}:{k}", "pid": pid, "start": s, "end": e, "text": chunk}
+            add = " ".join(x for x in (ctx.get(str(pid), ""), head) if x)
+            if add:
+                row["index_text"] = add + " " + chunk
+            out.append(row)
     return out
 
 
@@ -184,7 +249,12 @@ def build() -> dict:
         "\n".join(json.dumps(x, ensure_ascii=False) for x in children), "utf-8")
 
     # 索引建在子块上：长条款里的那一句话不再被几万字稀释
-    corpus = [tokenize(x["text"]) for x in children]
+    # index_text 只在开了前缀时存在；text 永远是原条款切片（引用、展示都用它）
+    # 上下文要不要进 BM25：BM25 有长度归一化，把 35 token 的子块拉到 55 token
+    # 会被扣分；向量不受这个影响。默认两边都进（忠实复刻），可关掉 BM25 一侧做对照。
+    use_bm25_ctx = os.environ.get("CLAUSELEDGER_CTX_BM25", "1") not in ("", "0", "false", "no")
+    corpus = [tokenize((x.get("index_text") or x["text"]) if use_bm25_ctx else x["text"])
+              for x in children]
     retriever = bm25s.BM25()
     retriever.index(corpus)
     retriever.save(str(INDEX / "bm25"))

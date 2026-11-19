@@ -55,3 +55,29 @@ def test_no_direct_clause_keeps_candidates_but_does_not_claim_answer():
 
     b = S.search_result(q, k=5, min_score_strong=0.0, min_margin_strong=0.0, min_coverage=0.0, min_answer=0.0)
     assert b.kind == "ok", "分数门槛放到 0 就该正常作答"
+
+
+def test_two_path_agreement_is_recorded(monkeypatch):
+    """两路召回是否指向同一份文件，必须写进 searched —— 它是"敢不敢答"的依据之一。"""
+    from app.retrieval import search as S
+
+    ret, clauses, children = S._load()
+    best = S._to_pids([(0, 9.0)], children)
+    monkeypatch.setattr(S, "_candidates",
+                        lambda *a, **k: (best, "hybrid", {"bm25": [0], "dense": [0]}))
+    ans = S.search_result("失业保险金怎么领", k=3, min_coverage=0.0, min_cand_cov=0.0,
+                          min_score=0.0, min_score_strong=0.0)
+    assert ans.searched["agree"] is True
+
+
+def test_two_path_disagreement_is_recorded(monkeypatch):
+    from app.retrieval import search as S
+
+    ret, clauses, children = S._load()
+    best = S._to_pids([(0, 9.0)], children)
+    other = next(i for i, c in enumerate(clauses) if c.doc_no != clauses[0].doc_no)
+    monkeypatch.setattr(S, "_candidates",
+                        lambda *a, **k: (best, "hybrid", {"bm25": [0], "dense": [other]}))
+    ans = S.search_result("失业保险金怎么领", k=3, min_coverage=0.0, min_cand_cov=0.0,
+                          min_score=0.0, min_score_strong=0.0)
+    assert ans.searched["agree"] is False

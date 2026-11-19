@@ -39,7 +39,8 @@ def children_key(children: list[dict]) -> str:
     """子块集合的指纹：内容变了，向量缓存就必须重算。"""
     h = hashlib.sha256()
     for c in children:
-        h.update(f"{c['cid']}|{c['text']}".encode("utf-8"))
+        # 也把 index_text 算进指纹：同一条子块在"开前缀/不开前缀"下是不同的索引对象
+        h.update(f"{c['cid']}|{c['text']}|{c.get('index_text','')}".encode("utf-8"))
     return h.hexdigest()[:12]
 
 
@@ -79,7 +80,10 @@ def matrix(children: list[dict]) -> np.ndarray:
                 return _MATRIX
         except Exception:
             pass  # 缓存坏了就当没有，重算一次
-    emb = _model().encode([c["text"] for c in children], normalize_embeddings=True,
+    # 忠实复刻 Anthropic/STARA：上下文要**同时**进向量索引，否则只测了 BM25 一侧
+    use_prefix = os.environ.get("CLAUSELEDGER_DENSE_PREFIX", "1") not in ("", "0", "false", "no")
+    texts = [(c.get("index_text") or c["text"]) if use_prefix else c["text"] for c in children]
+    emb = _model().encode(texts, normalize_embeddings=True,
                           batch_size=32, show_progress_bar=False)
     _MATRIX, _CACHE_KEY = np.asarray(emb, dtype=np.float32), key
     CACHE.parent.mkdir(parents=True, exist_ok=True)
