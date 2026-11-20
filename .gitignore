@@ -60,3 +60,10 @@ data/world/
 
 # 模型缓存（沙箱不允许写 ~/.cache）
 .hf-cache/
+
+# 运行时状态与 trace（可重建，不入库）
+data/runtime.db
+data/runtime.db-wal
+data/runtime.db-shm
+data/runs/
+data/world/

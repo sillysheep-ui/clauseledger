@@ -10,11 +10,31 @@ from __future__ import annotations
 import hashlib
 import json
 import os
+import tempfile
 from pathlib import Path
 
 
 def _world() -> Path:
     return Path(os.environ.get("CLAUSELEDGER_WORLD", "data/world/actions.json"))
+
+
+def _use_db() -> bool:
+    return os.environ.get("CLAUSELEDGER_STORE", "sqlite").lower() != "files"
+
+
+def _mirror() -> None:
+    """把库里的条目导出到 mock 世界文件（人看、CLI 打印用）。"""
+    from . import db
+    try:
+        items = db.world_items()
+        _write({"applied": {str(i.get("key") or n): i for n, i in enumerate(items)}})
+    except Exception:  # noqa: BLE001 - 镜像只是给人看的，失败不影响幂等与落库
+        return
+
+
+def now() -> str:
+    from .state import now as _now
+    return _now()
 
 
 def key_of(run_id: str, kind: str, payload: dict) -> str:
@@ -33,9 +53,16 @@ def _read() -> dict:
 def _write(data: dict) -> None:
     p = _world()
     p.parent.mkdir(parents=True, exist_ok=True)
-    tmp = p.with_suffix(".tmp")
-    tmp.write_text(json.dumps(data, ensure_ascii=False, indent=2), "utf-8")
-    os.replace(tmp, p)
+    # 并发下不能共用同一个 .tmp 名：两个线程会互相 rename 掉对方的临时文件
+    fd, tmp = tempfile.mkstemp(prefix=p.name, suffix=".tmp", dir=str(p.parent))
+    try:
+        with os.fdopen(fd, "w", encoding="utf-8") as f:
+            f.write(json.dumps(data, ensure_ascii=False, indent=2))
+        os.replace(tmp, p)
+    except Exception:
+        if os.path.exists(tmp):
+            os.unlink(tmp)
+        raise
 
 
 def apply(run_id: str, kind: str, payload: dict) -> dict:
@@ -43,8 +70,16 @@ def apply(run_id: str, kind: str, payload: dict) -> dict:
 
     返回 `{"applied": 新增条数, "reused": 已存在条数, "keys": [...]}`。
     条目可能是多条（一次批准写 5 条待办），所以幂等粒度也是"条"而不是"批"。
+
+    SQLite 后端把"幂等键"放进 `actions` 表，靠主键冲突去重（一个事务）；
+    `data/world/actions.json` 只是给人看的镜像，从库里导出，不承担判定。
     """
     items = payload.get("items") or [payload]
+    if _use_db():
+        from . import db
+        res = db.apply_items(run_id, kind, items, now())
+        _mirror()
+        return res
     data = _read()
     new = reused = 0
     keys = []
@@ -62,5 +97,8 @@ def apply(run_id: str, kind: str, payload: dict) -> dict:
 
 
 def count(kind: str | None = None) -> int:
+    if _use_db():
+        from . import db
+        return len(db.world_items(kind))
     rows = _read()["applied"].values()
     return sum(1 for r in rows if kind is None or r["kind"] == kind)

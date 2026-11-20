@@ -7,6 +7,7 @@
 """
 from __future__ import annotations
 
+from . import tracing
 from .gates import PendingGate
 from .state import STEPS, RunState
 from .steps import STEPS_FN
@@ -25,9 +26,9 @@ class Engine:
     # ---- 创建 ----
     def start(self, question: str, profile: dict | None = None) -> RunState:
         state = RunState(run_id=self.store.new_id() if hasattr(self.store, "new_id") else _id(),
-                         question=question, profile=profile or {})
-        self.store.save(state)
-        self.store.event(state, "run", "run_created", {"question": question})
+                         question=question, profile=profile or {},
+                         trace_id=tracing.new_trace_id())
+        self.store.commit(state, "run", "run_created", {"question": question})
         return state
 
     # ---- 推进 ----
@@ -39,27 +40,27 @@ class Engine:
             self.store.event(state, name, "step_started", {"attempt": len(state.done_steps) + 1})
             t0 = time.time()
             try:
-                nxt = fn(state, decision)
+                with tracing.use_trace(state.trace_id), tracing.span(
+                        f"step.{name}", **{"run.id": state.run_id, "step": name,
+                                           "attempt": len(state.done_steps) + 1}):
+                    nxt = fn(state, decision)
             except PendingGate as g:
                 state.gate = g.as_dict()
                 state.status = "waiting"
                 state.updated_at = state.gate["opened_at"]
-                self.store.event(state, name, "gate_opened", {"kind": g.kind, "question": g.question,
-                                                              "payload": g.payload})
-                self.store.save(state)
+                self.store.commit(state, name, "gate_opened",
+                                  {"kind": g.kind, "question": g.question, "payload": g.payload})
                 return state
             except Exception as e:  # noqa: BLE001 - 失败必须落盘，不能静默
                 state.fail(f"{type(e).__name__}: {e}")
-                self.store.event(state, name, "step_failed", {"error": state.error})
-                self.store.save(state)
+                self.store.commit(state, name, "step_failed", {"error": state.error})
                 return state
             decision = None          # 决定只消费一次
-            self.store.event(state, name, "step_finished",
-                             {"ms": int((time.time() - t0) * 1000)})
             if name not in state.done_steps:
                 state.done_steps.append(name)
             state.advance_to(nxt or _next(name))
-            self.store.save(state)
+            self.store.commit(state, name, "step_finished",
+                              {"ms": int((time.time() - t0) * 1000)})
         return state
 
     # ---- 恢复 ----

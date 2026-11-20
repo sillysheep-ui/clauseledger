@@ -6,7 +6,7 @@
 **一句话架构**：规则下结论，检索负责找条款，LLM 只负责解释。
 **名字取自账本**：只追加不覆盖、可对账、可回放。
 
-`Python 3.13` · `FastAPI` · 混合召回（BM25 + bge-small-zh）· 状态落 `data/runs/<id>/{state.json,events.jsonl}`
+`Python 3.13` · `FastAPI` · 混合召回（BM25 + bge-small-zh）· 状态与事件落 SQLite（`data/runtime.db`，WAL）· 每步一个 OTel span（`data/runs/traces.jsonl`）
 
 > **实际用了什么，写什么**：LangGraph、Postgres/pgvector、MCP、OTel 目前只在设计里
 > （`docs/ARCHITECTURE.md` / `docs/FOUNDATION.md`），代码还没接。等接了再写进这一行。

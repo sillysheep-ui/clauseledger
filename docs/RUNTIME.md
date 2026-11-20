@@ -127,3 +127,39 @@ curl -s localhost:8000/api/runs -H 'content-type: application/json' \
 2. **S8-C 界面**：判定卡 → 证据链（点开原文跳页码）→ 审批 → 审计时间线
 3. **副作用线换真 MCP**：`mock 办理计划` 服务 + `actions.py` 的 `_write` 替换
 4. **judge 扩面**：第二个判定器，证明四态不是为落户定制的
+
+
+## 存储：为什么从 JSONL 换到 SQLite
+
+一开始是"一个 run 一个目录 + state.json + events.jsonl"，很好读，但有两个并发缺陷：
+
+- **事件序号靠数行数**：两个请求同时 resume 同一个 run，都读到最后一行 `seq=N`，于是都写 `N+1`；
+- **幂等靠读全表**：`actions.apply()` 是"读 `actions.json` → 算差集 → 写回"，两个线程同时进来会各写一遍。
+
+演示时单线程看不出来，但这恰好是"可恢复 + 恰好一次"最该证明的地方，所以换成 SQLite：
+
+| 原来 | 现在 |
+|---|---|
+| `data/runs/<id>/state.json` | `runs(run_id, state, updated_at)` |
+| `data/runs/<id>/events.jsonl`（seq 数行） | `events(run_id, seq)` 主键，`MAX(seq)+1` 在写事务内算 |
+| `data/world/actions.json`（读改写） | `actions(key)` 主键 = 幂等键，`INSERT OR IGNORE` |
+
+三条实现细节：
+
+- `PRAGMA journal_mode=WAL` + `BEGIN IMMEDIATE`：写锁先拿到，再读 `MAX(seq)`；
+- 进程内再加一把 `threading.RLock`（跨线程串行化），跨进程靠 SQLite 自己的锁与 10s busy timeout；
+- `Store.commit(state, step, kind, payload)` 把"状态 + 事件"放进**一个事务**；事件写失败时状态不前进（有测试）。
+
+`CLAUSELEDGER_STORE=files` 可以退回文件后端（对照、排障用）。
+
+## trace：一个 run 一棵树
+
+每个 step 一个 span，落 `data/runs/traces.jsonl`（`CLAUSELEDGER_OTEL=0` 可关）。
+父子关系由 OTel 的上下文维护，`run_id`/`step`/`attempt` 作为属性。
+
+跨进程恢复时不能靠内存里的父 span，所以 `trace_id` 存在 `RunState.trace_id` 里，
+恢复时用 `tracing.use_trace()` 伪造一个远端父上下文——**新进程产生的 span 仍挂回同一棵树**。
+（实测：一次 run + 一次 resume，8 个 span 共用一个 trace_id。）
+
+审计看 `events`（业务语义、只追加），调试看 `traces`（调用树、耗时）。两套都留，
+因为它们的失效方式不同：event 丢了审计断链，span 丢了只是排查变慢。

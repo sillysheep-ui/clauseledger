@@ -10,3 +10,16 @@ os.environ.setdefault("CLAUSELEDGER_RECALL", "bm25")
 
 # 单测不加载语义模型：置信度退回旧判据（BM25 + 分差）
 os.environ.setdefault("CLAUSELEDGER_CONF", "0")
+
+import tempfile
+from pathlib import Path
+
+import pytest
+
+_DB_DIR = Path(tempfile.mkdtemp(prefix="cl-test-db-"))
+
+
+@pytest.fixture(autouse=True)
+def _isolated_runtime_db(tmp_path, monkeypatch):
+    """每个测试一个库：否则 run/events/actions 会跨测试累积。"""
+    monkeypatch.setenv("CLAUSELEDGER_DB", str(tmp_path / "runtime.db"))

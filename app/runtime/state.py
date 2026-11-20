@@ -35,6 +35,7 @@ class RunState:
     updated_at: str = field(default_factory=now)
     step: str = "normalize"
     status: str = "running"          # running | waiting | done | failed
+    trace_id: str = ""               # 跨进程恢复也挂回同一棵 span 树（见 tracing.use_trace）
     # --- 输入 ---
     city: str | None = None
     year: int | None = None
