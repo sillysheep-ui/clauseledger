@@ -383,186 +383,223 @@ def _to_pids(ranked: list[tuple[int, float]],
             best[pid] = (s, ch["text"])
     return best
 
+@dataclass
+class Cand:
+    """召回层产物：只有检索分和从条款静态算出的量，**没有排序加权**。"""
+
+    clause: Clause
+    score: float          # 检索器原始分（BM25，或 RRF 映射后的分）
+    child: str            # 命中的子块原文
+    coverage: float       # 提问实词在该条款里的覆盖（未四舍五入）
+    title_hits: int       # 标题里命中的提问词数
+
+
+@dataclass
+class Pool:
+    query: str
+    qt: list[str]
+    qset: set[str]
+    cands: list[Cand]
+    clauses: list[Clause]
+    mode: str
+    paths: dict
+    agree: bool | None
+
+
+def pool(query: str, k: int = 8, *, pool_size: int | None = None) -> Pool:
+    """召回层：只回答"有哪些候选"，不负责谁该排前面。
+
+    这里可以换检索器（bm25 / dense / hybrid），也可以带口语改写——
+    它们改的都是"拿什么去检索"。但**不加标题权重、不按年份删、不合并版本**，
+    否则召回层和排序层就分不开了（指标再也解释不清）。
+    """
+    global _MODE, _RW, _AGREE
+    _MODE = "none"
+    _RW = None
+    _AGREE = None
+    retriever, clauses, children = _load()
+    qt = [t for t in tokenize(query) if t not in QUESTION_WORDS]
+    if not qt:
+        return Pool(query, qt, set(), [], clauses, "none", {}, None)
+    # 口语→政策词：只用于检索，不参与覆盖率（否则分母被撑大，闸门反而更严）。
+    rw = rewrite.apply(query)
+    _RW = rw
+    qt_ret = list(qt) + [t for term in rw.terms for t in tokenize(term)
+                         if t not in qt and t not in QUESTION_WORDS]
+    # 索引建在子块上（父子索引），取回的是子块，用 pid 回填父条款。
+    size = pool_size or min(len(children), max(k * 8, 60))
+    best, mode, paths = _candidates(query, qt_ret, retriever, children, size)
+    _MODE = mode
+    # 两路 top-1 是不是同一份文件：这不是分数，是两套视图有没有指向同一个答案。
+    agree = None
+    try:
+        if paths.get("dense"):
+            a = clauses[paths["bm25"][0]].doc_no if paths["bm25"] else None
+            b = clauses[paths["dense"][0]].doc_no if paths["dense"] else None
+            if a and b:
+                agree = (a == b)
+                _AGREE = agree
+    except (IndexError, KeyError):
+        agree = None
+    qset = set(qt)
+    _qt = content_terms(qset)
+    cands: list[Cand] = []
+    for pid, (score, child_text) in best.items():
+        c = clauses[pid]
+        cov = len(_qt & set(tokenize(c.text))) / max(1, len(_qt))
+        cands.append(Cand(c, score, child_text, cov, len(qset & set(tokenize(c.title)))))
+    return Pool(query, qt, qset, cands, clauses, mode, paths, agree)
+
+
+def filter_candidates(cands: list[Cand], *, status: tuple[str, ...] | None = None,
+                      min_score: float = MIN_SCORE,
+                      min_cand_cov: float = 0.25) -> list[Cand]:
+    """候选过滤：确定性筛子，只删不加权。"""
+    out: list[Cand] = []
+    for cd in cands:
+        if status is not None and cd.clause.status not in status:
+            continue
+        if cd.score < min_score:
+            continue
+        # 两级阈值：候选过滤可以松（保住召回），拒答判定必须严（挡住瞎答）
+        if cd.coverage < min_cand_cov:
+            continue
+        out.append(cd)
+    return out
+
+
+def rank_candidates(cands: list[Cand], p: Pool, *, year: int | None,
+                    rels: dict) -> list[Hit]:
+    """排序层：唯一给候选加权、分层、合并的地方。"""
+    from app.domain.validity import in_force
+
+    out: list[Hit] = []
+    for cd in cands:
+        c = cd.clause
+        # 现行有效优先：同年份文件文本高度相似、分数接近，靠状态打破平手
+        boost = 1.08 if c.status == "effective" else 1.0
+        # 已废止：只标注、不改分——我们还没有可靠的"替代关系"，不该拿分数猜。
+        stale = _REPEALED.get(c.doc_no, "")
+        scope = ""
+        # 带年份提问时先筛后排：那一年明确不在有效期内，直接不进候选。
+        # 日期未知的文件不筛（不知道 ≠ 无效），但分层时算低等级（不知道 ≠ 有效）。
+        _in_year = False
+        if year:
+            _m = _DOCS_BY_NO.get(c.doc_no) or {}
+            _known = bool(_m.get("effective_from") or _m.get("effective_to"))
+            if _known and not in_force(_m, year, rels):
+                continue
+            _in_year = _known and in_force(_m, year, rels)
+            meta = _DOCS_BY_NO.get(c.doc_no)
+            if meta is not None:
+                if in_force(meta, year, rels):
+                    boost *= 1.2
+                    stale, scope = "", f"{year} 年内有效"
+                else:
+                    boost *= 0.8
+                    stale = f"{year} 年不在有效期内"
+                    scope = f"{year} 年不在有效期内"
+        h = Hit(cd.clause, cd.score, round(cd.coverage, 2),
+                _rank=cd.score * boost * (1 + _COV_W * cd.coverage)
+                + _TITLE_W * cd.title_hits + (0.5 if _in_year else 0.0))
+        h.child = cd.child
+        h.stale = stale
+        h.scope = scope
+        h._in_year = _in_year
+        out.append(h)
+    # 按"回答类型"挑条款：只在已排进前 5 的文件内部加分，不改"是哪个文件"。
+    out = _answer_type_boost(p.query, out)
+    out.sort(key=lambda h: h._rank, reverse=True)
+    # 可选重排是顺序的最终裁决者：重排完把顺序写回 `_rank`（量级不变，只做微小递减），
+    # 这样后面的年份分层仍然生效。
+    if _rerank.enabled() and len(out) > 1:
+        out = _rerank.rerank(p.query, out, top=_rerank.top_n())
+        top = max((h._rank for h in out), default=0.0)
+        for i, h in enumerate(out):
+            h._rank = top - i * 1e-3
+    if year:
+        out.sort(key=lambda h: (h._in_year, h._rank), reverse=True)
+    else:
+        out.sort(key=lambda h: h._rank, reverse=True)
+    # 文档级聚合必须在最后一次排序之后做，否则会被下一次 sort 覆盖。
+    if _DOC_ALPHA > 0:
+        out = _doc_aggregate(out, _DOC_ALPHA)
+    return out
+
+
+def decide(p: Pool, out: list[Hit], *, k: int, as_of: str,
+           min_answer: float = MIN_ANSWER,
+           min_score_strong: float = MIN_SCORE_STRONG,
+           min_margin_strong: float = MIN_MARGIN_STRONG) -> Answer:
+    """决策层：只回答"敢不敢说"，不改顺序。"""
+    n_docs = len({h.clause.doc_no for h in out})
+    if not out:
+        return Answer([], "没有条款达到相关性下限", "insufficient", n_docs, 0,
+                      searched=_searched(n_docs, len(p.qt)), gap=_gap(p.qt), as_of=as_of)
+    if out[0].coverage < min_answer:
+        return Answer([], f"首条条款只覆盖 {out[0].coverage:.0%} 的提问词", "insufficient",
+                      n_docs, len(out), searched=_searched(n_docs, len(p.qt)),
+                      gap=_gap(p.qt), as_of=as_of)
+    # 覆盖率的残余职责只有两个：拒答地板和展示；"敢不敢下结论"看检索分 + 分差 + 语义。
+    margin = out[0].score - (out[1].score if len(out) > 1 else 0.0)
+    _cos = _conf.cosine(p.query, out[0].child or out[0].clause.text)
+    _ff = _conf.score(out[0].score, margin, _cos) if _cos is not None else None
+    if _ff is not None:
+        weak = _ff < _conf.threshold()
+    else:
+        weak = (out[0].score < min_score_strong and margin < min_margin_strong) or \
+               (_AGREE is False and out[0].score < 5.0)
+    hits = _attach_related(p.query, _prefer_effective(_collapse(out))[:k], p.clauses)
+    if weak:
+        return Answer(hits,
+                      "没有找到直接对应的条款；以下文件与问题共享部分关键词，但可能不是你要的规定",
+                      "no_direct_clause", n_docs, len(out),
+                      searched=_searched(n_docs, len(p.qt)), as_of=as_of, confidence="low")
+    return Answer(hits, "", "ok", n_docs, len(out),
+                  searched=_searched(n_docs, len(p.qt)), as_of=as_of, confidence="high")
+
+
 def search_result(query: str, k: int = 8, *, status: tuple[str, ...] | None = None,
                   min_score: float = MIN_SCORE, min_coverage: float = MIN_COVERAGE,
                   min_cand_cov: float = 0.25, min_answer: float = MIN_ANSWER,
                   min_score_strong: float = MIN_SCORE_STRONG,
                   min_margin_strong: float = MIN_MARGIN_STRONG) -> Answer:
     from app.domain.validity import year_of as _year_of
-    # 每次调用先把"实际召回方式"置空：提前返回（未覆盖/不在域内）时必须写 none，
-    # 不能把上一次调用的 bm25 留在痕迹里——那等于伪造"查过"。
+
+    # 每次调用先清空"上次的召回痕迹"：提前返回（未覆盖/不在域内）时必须写 none，
+    # 不能把上一次的 hybrid 留在 searched 里——那等于伪造"查过"。
     global _MODE, _RW, _AGREE
     _MODE = "none"
     _RW = None
     _AGREE = None
+    reason = refuse_reason(query)
     _y = _year_of(query)
     _as_of = f"{_y}-12-31" if _y else date.today().isoformat()
-    reason = refuse_reason(query)
     if reason:
         kind = "not_covered" if reason.startswith(("未覆盖", "未接入")) else "out_of_domain"
         # 连索引都没进：n_queries=0。这种结局绝不能是 no_policy（那是"查过没有"）。
         return Answer([], reason, kind, n_docs=0, searched=_searched(0, 0), as_of=_as_of)
-    retriever, clauses, children = _load()
-    from app.domain.validity import in_force
     from app.domain.validity import load as _load_rels
+
     _rels = _load_rels()
-    year, as_of = _y, _as_of
+    year = _y
     global _REPEALED, _REPEAL_SRC
-    if as_of not in _BY_DAY:
-        _BY_DAY[as_of] = _repealed_as_of(as_of, _rels)
-    _REPEALED = _BY_DAY[as_of]
+    if _as_of not in _BY_DAY:
+        _BY_DAY[_as_of] = _repealed_as_of(_as_of, _rels)
+    _REPEALED = _BY_DAY[_as_of]
     _DOCS_BY_NO.update(docs_meta())
     if not _REPEAL_SRC:
         _REPEAL_SRC = {e["source"] for v in _rels.values() for e in v}
-    qt = [t for t in tokenize(query) if t not in QUESTION_WORDS]
-    if not qt:
+    p = pool(query, k)
+    if not p.qt:
         return Answer([], "问题里没有可用于检索的词", "insufficient",
                       searched=_searched(0, 0), as_of=_as_of)
-    # 口语→政策词：**只用于检索**，不参与覆盖率（否则分母被撑大，闸门反而更严）。
-    rw = rewrite.apply(query)
-    _RW = rw
-    qt_ret = list(qt) + [t for term in rw.terms for t in tokenize(term)
-                         if t not in qt and t not in QUESTION_WORDS]
-    # 索引建在子块上（父子索引），取回的是子块，用 pid 回填父条款。
-    # 子块数远多于条款数，候选要相对多取一些，否则去重后剩不下几条。
-    pool = min(len(children), max(k * 8, 60))
-    best, _MODE, _paths = _candidates(query, qt_ret, retriever, children, pool)
-    # 两路 top-1 是不是同一份文件：这不是"分数"，是**两套不同的词法/语义视图有没有
-    # 指向同一个答案**。实测（122 题）一致时正确率 65.9%，不一致时 30.9%。
-    _agree = None
-    try:
-        if _paths.get("dense"):
-            _a = clauses[_paths["bm25"][0]].doc_no if _paths["bm25"] else None
-            _b = clauses[_paths["dense"][0]].doc_no if _paths["dense"] else None
-            if _a and _b:
-                _agree = (_a == _b)
-                _AGREE = _agree
-    except (IndexError, KeyError):
-        _agree = None
-    out: list[Hit] = []
-    qset = set(qt)
-    scope = ""
-    _out_of_year = 0
-    for pid, (score, child_text) in best.items():
-        c = clauses[pid]
-        if status is not None and c.status not in status:
-            continue
-        if score < min_score:
-            continue
-        # 覆盖率算在**父条款**上：回填之后我们看到的是父条款，用子块的覆盖率
-        # 会低估（子块只是父条款的一段）。代价是长条款的覆盖率仍然偏乐观——
-        # 这是已知偏差，记在 docs/EVAL.md 的局限里。
-        _qt = content_terms(qset)
-        cov = len(_qt & set(tokenize(c.text))) / max(1, len(_qt))
-        # 两级阈值：候选过滤可以松（保住召回），拒答判定必须严（挡住瞎答）
-        if cov < min_cand_cov:
-            continue
-        # 现行有效优先：同年份文件文本高度相似、分数接近，靠状态打破平手
-        boost = 1.08 if c.status == "effective" else 1.0
-        # 已废止的文件：不是删掉，是降权并留痕——用户仍可能问"当年的规定"，
-        # 但系统必须知道它现在不作数。实测 9 道题就是被这份"看起来仍有效"的文件带偏的。
-        # 已废止：**只标注、不改分**。实测降权 0.5 让 hit@1 55.3%→54.3%、
-        # 提权废止源 1.3 让 hit@3 70%→65%，两种都更差——说明我们还没有可靠的
-        # "替代关系"，不该拿分数去猜。标注进引用，让人看见。
-        stale = _REPEALED.get(c.doc_no, "")
-        # 带年份提问时**先筛后排**：那一年明确不在有效期内的，直接不进候选。
-        # 只做加权（1.2/0.8）实测无效——同主题跨年文件的文本几乎逐字相同，
-        # BM25 分差远大于 20%，加权改不动顺序；而"问 2019 年却拿 2026 年的文件答"
-        # 不是排序问题，是**选错了年份**，只能靠过滤。
-        # 日期未知（unknown）的文件不筛：不知道 ≠ 无效。
-        _in_year = False
-        if year:
-            _m = _DOCS_BY_NO.get(c.doc_no) or {}
-            # "日期未知"既不能证明有效、也不能证明无效：
-            # 过滤时放过（不知道 ≠ 无效），分层时算低等级（不知道 ≠ 有效）。
-            _known = bool(_m.get("effective_from") or _m.get("effective_to"))
-            if _known and not in_force(_m, year, _rels):
-                _out_of_year += 1
-                continue
-            _in_year = _known and in_force(_m, year, _rels)
-        # 提问里带年份时，改判"那一年有没有效"：
-        # 问 2020 年的规定，不能拿 2026 年的文件答，也不该把当年有效的旧文件标成"已作废"。
-        if year:
-            meta = _DOCS_BY_NO.get(c.doc_no)
-            if meta is not None:
-                if in_force(meta, year, _rels):
-                    boost *= 1.2
-                    stale, scope = "", f"{year} 年内有效"
-                else:
-                    boost *= 0.8
-                    stale, scope = f"{year} 年不在有效期内", f"{year} 年不在有效期内"
-        # 标题命中加权：用户问的是"这件事"，文件标题写着这件事，比正文里顺带提一句更有分量
-        title_hits = len(qset & set(tokenize(c.title)))
-        h = Hit(c, score, round(cov, 2),
-                _rank=score * boost * (1 + _COV_W * cov) + _TITLE_W * title_hits + (0.5 if _in_year else 0.0))
-        h.child = child_text   # 命中的具体那一段，生成时优先用它
-        h.stale = stale
-        h.scope = scope
-        h._in_year = _in_year
-        out.append(h)
-    # 按"回答类型"挑条款：只在**已排进前 5 的文件内部**加分，不改"是哪个文件"。
-    # 理由见 app/retrieval/answertype.py 的模块注释。
-    out = _answer_type_boost(query, out)
-    out.sort(key=lambda h: h._rank, reverse=True)
-    # 可选重排放在最后：它是**顺序的最终裁决者**。
-    # 早先的实现把重排放在这里之前、之后又按 `_rank` 排一次，等于把重排结果丢掉——
-    # 所以"重排没效果"其实是死代码，不是模型没用。修法：重排完把顺序写回 `_rank`，
-    # 量级保持不变（只做微小递减），这样后面的年份分层仍然生效。
-    if _rerank.enabled() and len(out) > 1:
-        out = _rerank.rerank(query, out, top=_rerank.top_n())
-        top = max((h._rank for h in out), default=0.0)
-        for i, h in enumerate(out):
-            h._rank = top - i * 1e-3
-    # 带年份时先按"能否确认那一年有效"分层，再按分数排。
-    # 理由：日期未知 ≠ 有效。用户既然说了年份，就该先相信能证明自己那年有效的文件；
-    # 只在同一层里比相关性。不带年份时这一层不存在，排序与以前完全一致。
-    if year:
-        out.sort(key=lambda h: (h._in_year, h._rank), reverse=True)
-    else:
-        out.sort(key=lambda h: h._rank, reverse=True)
-    # 文档级聚合必须在**最后一次排序之后**做，否则会被下一次 sort 覆盖
-    # （和重排那次的死代码是同一个坑：写对了逻辑，却被后面的排序丢掉）。
-    if _DOC_ALPHA > 0:
-        out = _doc_aggregate(out, _DOC_ALPHA)
-    n_docs = len({h.clause.doc_no for h in out})
-    if not out:
-        return Answer([], "没有条款达到相关性下限", "insufficient", n_docs, 0,
-                      searched=_searched(n_docs, len(qt)), gap=_gap(qt), as_of=_as_of)
-    if out[0].coverage < min_answer:
-        return Answer([], f"首条条款只覆盖 {out[0].coverage:.0%} 的提问词", "insufficient",
-                      n_docs, len(out), searched=_searched(n_docs, len(qt)), gap=_gap(qt),
-                      as_of=_as_of)
-    # 0.35–0.5：给答案，但标低置信。理由见 docs/RETRIEVAL-LIT.md：
-    # 15 条误拒里 8 条的正确答案就在 top-3，一刀切拒答是拿"不知道"当安全。
-    # 用检索分当"敢不敢下结论"的判据，不用覆盖率——
-    # 实测覆盖率在这批题上是反的：该答的 0.38–0.45，该拒的 0.50–0.67
-    #（"电子劳动合同"以 0.67 覆盖引到《启用电子证书的通知》）。
-    # 覆盖率的残余职责只有两个：拒答地板（0.30）和展示。
-    margin = out[0].score - (out[1].score if len(out) > 1 else 0.0)
-    min_confidence = _conf.threshold()
-    # 三档判据：
-    # ①分数低且没有分差 → 不下结论（原规则）
-    # ②两路召回指向不同文件、且分数不高 → 不下结论。
-    #   实测：一致的 40 题里对 33（82.5%），不一致的 67 题里对 31（46.3%）；
-    #   再加"分数 < 5"时，被挡掉的 10 题**一条都没对**——这是免费的精度。
-    # 判据：BM25 + 语义，两者一起看。只看 BM25 会惩罚"语义对、用词不同"的条款
-    # （重排/稠密把它顶到第一时，判据反而说不敢答）。实测 AUC：BM25 0.731、
-    # 分差 0.659、语义余弦 0.704、三者组合 0.767。
-    _cos = _conf.cosine(query, out[0].child or out[0].clause.text)
-    _ff = _conf.score(out[0].score, margin, _cos) if _cos is not None else None
-    if _ff is not None:
-        weak = _ff < min_confidence
-    else:
-        weak = (out[0].score < min_score_strong and margin < min_margin_strong) or \
-               (_AGREE is False and out[0].score < 5.0)
-    if weak:
-        return Answer(_attach_related(query, _prefer_effective(_collapse(out))[:k], clauses),
-                      "没有找到直接对应的条款；以下文件与问题共享部分关键词，但可能不是你要的规定",
-                      "no_direct_clause", n_docs, len(out),
-                      searched=_searched(n_docs, len(qt)), as_of=_as_of, confidence="low")
-    return Answer(_attach_related(query, _prefer_effective(_collapse(out))[:k], clauses),
-                  "", "ok", n_docs, len(out),
-                  searched=_searched(n_docs, len(qt)), as_of=_as_of, confidence="high")
+    cands = filter_candidates(p.cands, status=status, min_score=min_score,
+                              min_cand_cov=min_cand_cov)
+    out = rank_candidates(cands, p, year=year, rels=_rels)
+    return decide(p, out, k=k, as_of=_as_of, min_answer=min_answer,
+                  min_score_strong=min_score_strong,
+                  min_margin_strong=min_margin_strong)
 
 
 def _status_rank(status: str) -> int:
