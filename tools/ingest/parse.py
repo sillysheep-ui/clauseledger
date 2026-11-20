@@ -17,7 +17,7 @@ CRUMB = ("您现在的位置", "当前位置", "相关链接", "首页 >", "首�
 FOOTER = re.compile(r"(打印本页|分享到|相关稿件|相关链接|返回顶部|关闭窗口|字体[:：]|上一篇|下一篇|扫一扫)")
 
 # 解析器版本：偏移量只在同一版本内有效，换版本必须重算引用
-PARSER_VERSION = "0.3.17"
+PARSER_VERSION = "0.3.18"
 
 
 @dataclass
@@ -192,6 +192,51 @@ def _merge_wrapped(lines: list[str]) -> list[str]:
     return out
 
 
+# 纯页码行：「— 3 —」「- 12 -」「3 / 56」
+PAGE_NO = re.compile(r"^\s*(?:[—\-–]\s*\d{1,4}\s*[—\-–]|\d{1,4}\s*/\s*\d{1,4})\s*$")
+# 注意：不能把"单独一行数字"当页码丢掉——PDF 里「〔2021〕」常被拆成「20」「21」两行，
+# 一丢就整份文件没有年份（实测踩过，两份评测金标因此不可检索）。
+# 句末标点：这些结尾的行是"完整的一句"，不该把下一行粘进来
+TERM = re.compile(r"[。；！？：:」』)）]$")
+
+
+def _squeeze_cjk(line: str) -> str:
+    """把「上 海 市」这种为排版加的字间空格去掉。
+
+    红头文件常用散排标题，PDF 抽出来就是每个字之间一个空格；不合并的话，
+    分词会把它们切成单字，而单字在索引里会被丢掉（长度 <2），整段标题消失。
+    """
+    prev = None
+    while prev != line:
+        prev = line
+        line = re.sub(r"(?<=[\u4e00-\u9fa5])\s+(?=[\u4e00-\u9fa5])", "", line)
+    return line
+
+
+def _merge_fragments(lines: list[str]) -> list[str]:
+    """把被 PDF 拆碎的片段拼回去。
+
+    实测：`沪人社规〔2021〕15号` 在文本层里是八行——「沪人社」「规」「〔」
+    「20」「21」「〕」「15」「号」。旧规则"汉字少于 2 个的行丢掉"会把这些行
+    全部扔掉，于是文号变成「〔 〕号」、正文里的「2021 年」变成「年」，
+    整份文件的**数字全部消失**（全库 5 份 PDF 就是这样，其中两份是评测金标）。
+    """
+    out: list[str] = []
+    for raw in lines:
+        ln = _squeeze_cjk(_clean(raw))
+        if not ln.strip() or PAGE_NO.match(ln):
+            continue
+        # 碎片：汉字少于 2 个、且不是完整句子 → 粘到上一行，不加分隔
+        ln = re.sub(r"^[—\-–]\s*\d{1,4}\s*[—\-–]", "", ln).strip()
+        if not ln:
+            continue
+        if out and len(CN.findall(ln)) < 2 and not TERM.search(ln):
+            out[-1] = out[-1] + ln
+        else:
+            out.append(ln)
+    return out
+
+
 def parse_pdf(data: bytes, path: str | None = None) -> Parsed:
     from pypdf import PdfReader
 
@@ -220,15 +265,13 @@ def parse_pdf(data: bytes, path: str | None = None) -> Parsed:
         if sum(len(CN.findall(t)) for t in texts) > total:
             blocks: list[Block] = []
             for pg, t in enumerate(texts, 1):
-                lines = [_clean(x) for x in t.splitlines()]
-                for ln in _merge_wrapped([x for x in lines if len(CN.findall(x)) >= 2]):
+                for ln in _merge_wrapped(_merge_fragments(t.splitlines())):
                     blocks.append(Block(len(blocks), "para", ln, page=pg))
             return Parsed(blocks, title, extract="ocr", ocr_conf=round(conf, 3))
 
     blocks: list[Block] = []
     for pg, t in pages:
-        lines = [_clean(x) for x in t.splitlines()]
-        for ln in _merge_wrapped([x for x in lines if len(CN.findall(x)) >= 2]):
+        for ln in _merge_wrapped(_merge_fragments(t.splitlines())):
             blocks.append(Block(len(blocks), "para", ln, page=pg))
     return Parsed(blocks, title)
 

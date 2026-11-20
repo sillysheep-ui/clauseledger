@@ -50,6 +50,8 @@ def load(path: Path, cats: tuple[str, ...], splits: tuple[str, ...]) -> list[dic
             continue
         if q.get("split") and q["split"] not in splits:
             continue
+        if q.get("ambiguous"):
+            continue
         out.append(q)
     return out
 
