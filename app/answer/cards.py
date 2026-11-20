@@ -24,6 +24,8 @@ import re
 from typing import Any, Iterable
 
 QUOTE_LIMIT = 240
+QUOTE_SHORT = 400      # 条款本身就这么长，整条给，不切
+DIGIT = re.compile(r"\d")
 SENT = re.compile(r"[^。；！？\n]{1,400}[。；！？]?")
 
 
@@ -32,15 +34,29 @@ def _norm(s: str) -> str:
 
 
 def quote(text: str, limit: int = QUOTE_LIMIT) -> str:
-    """截一段**完整句子**，不切断词。"""
+    """取一段**完整句子**，不切断词。
+
+    短条款（<= QUOTE_SHORT）整条给——引文只有 240 字时，答案常被切在
+    "……调整到每人每月" 后面，用户看到半句、我们却以为"给了原文"。
+
+    长条款优先从**带数字的那一句**开始取：金额、期限、比例都在数字句里，
+    而条款开头往往是"根据……制定本办法"这类没有信息量的引语。
+    """
     text = (text or "").strip()
-    if len(text) <= limit:
+    if len(text) <= QUOTE_SHORT:
         return text
-    cut = ""
-    for m in SENT.finditer(text):
-        if m.end() > limit:
+    sents = [m.group(0) for m in SENT.finditer(text)]
+    start = 0
+    for i, s in enumerate(sents):
+        if DIGIT.search(s) and i < len(sents) - 1:
+            start = i
             break
-        cut = m.group(0)
+    cut, used = "", 0
+    for s in sents[start:]:
+        if used and used + len(s) > limit:
+            break
+        cut += s
+        used += len(s)
     return (cut or text[:limit]).strip()
 
 
@@ -51,7 +67,7 @@ def _related_citation(h: dict, r: dict) -> str:
     return f"《{h.get('doc_no')}》{path}{tail}"
 
 
-def _evidence(hits: Iterable[dict], limit: int = 5) -> list[dict]:
+def _evidence(hits: Iterable[dict], limit: int = 8) -> list[dict]:
     out = []
     for h in list(hits):
         # 同文件的补充条款先展开：数字/日期常在"另一条"上，
