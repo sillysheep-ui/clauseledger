@@ -23,9 +23,12 @@ from sentence_transformers import CrossEncoder
 
 from app.retrieval.records import Clause
 from app.retrieval.search import Hit, _collapse, _prefer_effective
-
 from tools.experiments.recall_compare import (
-    bm25_rank, build_bm25, load_corpus, mcnemar, to_pids,
+    bm25_rank,
+    build_bm25,
+    load_corpus,
+    mcnemar,
+    to_pids,
 )
 
 REPORTS = Path("eval/reports")

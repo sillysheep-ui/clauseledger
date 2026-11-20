@@ -12,6 +12,7 @@ import json
 import os
 from pathlib import Path
 
+
 def _world() -> Path:
     return Path(os.environ.get("CLAUSELEDGER_WORLD", "data/world/actions.json"))
 

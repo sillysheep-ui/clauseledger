@@ -16,8 +16,8 @@ import time
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
-from tools.ingest.parse import PARSER_VERSION
 from tools.ingest.carriers import rebuild
+from tools.ingest.parse import PARSER_VERSION
 from tools.ingest.pipeline import reparse
 
 OUT = Path("data/processed")

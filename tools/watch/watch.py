@@ -10,7 +10,7 @@ import json
 import re
 import time
 from dataclasses import asdict, dataclass, field
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from urllib.parse import urljoin
 
@@ -89,7 +89,7 @@ def fetch_column(base: str, max_pages: int | None = None, client: httpx.Client |
             if r.status_code != 200:
                 break
             items += parse_rows(r.text, base)
-        return Snapshot(column=base, fetched_at=datetime.now(timezone.utc).isoformat(timespec="seconds"),
+        return Snapshot(column=base, fetched_at=datetime.now(UTC).isoformat(timespec="seconds"),
                         pages=pages, items=items)
     finally:
         if own:

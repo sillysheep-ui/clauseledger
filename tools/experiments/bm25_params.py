@@ -21,10 +21,14 @@ from pathlib import Path
 
 import bm25s
 
-from tools.experiments.recall_compare import (
-    bm25_rank, evaluate, load_corpus, mcnemar, to_pids,
-)
 from app.retrieval.index import tokenize
+from tools.experiments.recall_compare import (
+    bm25_rank,
+    evaluate,
+    load_corpus,
+    mcnemar,
+    to_pids,
+)
 
 
 def build(texts: list[str], k1: float, b: float, method: str = "lucene"):

@@ -20,8 +20,8 @@ from __future__ import annotations
 
 import argparse
 import json
-import os
 import math
+import os
 import time
 import tracemalloc
 from pathlib import Path
@@ -222,7 +222,6 @@ def main() -> None:
     ranked: dict[str, list] = {}
 
     def run_one(name: str, fn) -> None:
-        t0 = time.perf_counter()
         out, lat = [], []
         for q in qs:
             t1 = time.perf_counter()

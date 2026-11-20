@@ -5,8 +5,9 @@
 """
 import pytest
 
-from tools.ingest import browser, cdp, fetch as fetch_mod
-from tools.ingest.fetch import FetchError, Fetched, fetch_smart
+from tools.ingest import browser, cdp
+from tools.ingest import fetch as fetch_mod
+from tools.ingest.fetch import Fetched, FetchError, fetch_smart
 
 
 def _ok(via, n=500):

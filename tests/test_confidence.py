@@ -1,5 +1,4 @@
 """置信度：三项加权，且"模型不可用"时要能退回旧规则。"""
-import os
 
 from app.retrieval import confidence as C
 from app.retrieval.search import search_result

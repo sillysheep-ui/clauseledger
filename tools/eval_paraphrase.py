@@ -12,7 +12,6 @@ from __future__ import annotations
 
 import argparse
 import json
-import math
 import os
 from collections import Counter
 from pathlib import Path

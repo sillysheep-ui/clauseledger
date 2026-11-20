@@ -207,14 +207,17 @@ def rebuild(rec: dict) -> dict:
     for c in p.main.clauses:
         c.carrier = p.main.label
         clauses.append(c)
+    main_paths = {tuple(c.path) for c in p.main.clauses}
     for sup, partial in p.supplements:
-        keep_paths = {p for _, p in pset} if partial else None
+        # partial=True 表示该载体与主副本大量重叠，只取主副本没有的路径；
+        # 这里以前写的是 `{p for _, p in pset}`，pset 从未定义——
+        # 一旦真有"部分重叠"的载体就会 NameError（语料里恰好没触发，属于躲过去的 bug）。
         off = len(blocks)
         for b in sup.blocks:
             blocks.append(Block(len(blocks), b.kind, b.text, b.page))
         sbase = base
         for c in sup.clauses:
-            if keep_paths is not None and c.path in keep_paths:
+            if partial and tuple(c.path) in main_paths:
                 continue
             key = (c.path, _norm(c.text))
             if key in seen:

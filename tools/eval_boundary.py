@@ -63,7 +63,7 @@ def build(n: int = 20, seed: int = 7, out: Path = OUT) -> None:
              "每条给四段：上一行末尾 / 本条开头 / 本条结尾 / 下一行开头。",
              "判：上边界对不对、下边界对不对、错在哪。", ""]
     meta = []
-    for i, (rec, c, lv, total) in enumerate(picked, 1):
+    for i, (rec, c, _lv, total) in enumerate(picked, 1):
         idx = rec["clauses"].index(c)
         prev = rec["clauses"][idx - 1] if idx > 0 else None
         nxt = rec["clauses"][idx + 1] if idx + 1 < len(rec["clauses"]) else None

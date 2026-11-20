@@ -12,15 +12,15 @@ from __future__ import annotations
 
 import argparse
 import json
-import os
 import math
+import os
 import re
 import subprocess
 import time
 from pathlib import Path
 
 from app.retrieval.index import tokenize
-from app.retrieval.search import search, search_result, MIN_ANSWER, MIN_COVERAGE
+from app.retrieval.search import MIN_ANSWER, MIN_COVERAGE, search_result
 
 QS = Path(os.environ.get("CLAUSELEDGER_QUESTIONS", "eval/questions_v2.json"))
 REPORTS = Path("eval/reports")

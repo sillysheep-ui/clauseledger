@@ -110,7 +110,7 @@ class Clause:
 
 
 # 「本通知第一条第二款…」在 PDF 里换行后行首长得像标题，其实是被引用的条款
-CROSSREF = re.compile(r"^第[{NUM}\d]{{1,4}}\s*[条章节]\s*第".format(NUM=NUM))
+CROSSREF = re.compile(rf"^第[{NUM}\d]{{1,4}}\s*[条章节]\s*第")
 
 
 # 附录/附表/附件：正文之外的一整片名单，没有编号，不切开就会把最后一条撑到上万字
@@ -158,7 +158,7 @@ def split_clauses(blocks: list[Block], doc_no: str = "") -> list[Clause]:
         part_of.append(cur)
 
     pos, cursor = [], 0
-    for i, (_, _, txt, _) in enumerate(lines):
+    for _i, (_, _, txt, _) in enumerate(lines):
         pos.append(cursor)
         cursor += len(txt) + 1
 

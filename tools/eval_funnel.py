@@ -107,7 +107,7 @@ def main() -> None:
         st = eng.run(text)
         ans = (st.answer or {}).get("card") or {}
         ans_kind = (st.answer or {}).get("kind") or ""
-        kind = ans.get("kind") or "refusal"
+        kind = ans.get("kind") or "refusal"  # noqa: F841
         txt = card_text(ans)
         docs = card_docs(ans)
 

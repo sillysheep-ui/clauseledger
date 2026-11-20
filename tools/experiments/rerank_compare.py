@@ -25,10 +25,14 @@ import time
 from pathlib import Path
 
 from app.retrieval.records import Clause
-from app.retrieval.search import Hit, _collapse, _prefer_effective
-
 from tools.experiments.recall_compare import (
-    build_bm25, bm25_rank, evaluate, load_corpus, mcnemar, production_reference, to_pids,
+    bm25_rank,
+    build_bm25,
+    evaluate,
+    load_corpus,
+    mcnemar,
+    production_reference,
+    to_pids,
 )
 
 REPORTS = Path("eval/reports")

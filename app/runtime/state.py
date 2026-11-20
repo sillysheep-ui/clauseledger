@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import json
 from dataclasses import asdict, dataclass, field
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any, Literal
 
 StepName = Literal[
@@ -24,7 +24,7 @@ STEPS: list[str] = [
 
 
 def now() -> str:
-    return datetime.now(timezone.utc).astimezone().isoformat(timespec="seconds")
+    return datetime.now(UTC).astimezone().isoformat(timespec="seconds")
 
 
 @dataclass
@@ -55,7 +55,7 @@ class RunState:
         return json.dumps(asdict(self), ensure_ascii=False, indent=2)
 
     @classmethod
-    def from_json(cls, text: str) -> "RunState":
+    def from_json(cls, text: str) -> RunState:
         return cls(**json.loads(text))
 
     # ---- 便捷 ----

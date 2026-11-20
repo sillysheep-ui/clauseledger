@@ -12,11 +12,11 @@ from __future__ import annotations
 import argparse
 import json
 import re
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from pathlib import Path
 
-from app.domain.validity import load as load_rels, status_at
-from app.retrieval.records import status_of
+from app.domain.validity import load as load_rels
+from app.domain.validity import status_at
 from app.retrieval.search import search_result, tokenize
 
 PROCESSED = Path("data/processed")

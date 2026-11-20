@@ -9,10 +9,9 @@
 from __future__ import annotations
 
 import hashlib
+import json
 import os
 import re
-
-import json
 from dataclasses import dataclass, field
 from datetime import date
 from pathlib import Path
@@ -20,11 +19,10 @@ from pathlib import Path
 import bm25s
 
 from app.domain.registry import DocRegistry
-from app.retrieval import lexicon
 from app.retrieval import confidence as _conf
+from app.retrieval import lexicon, rewrite
 from app.retrieval import rerank as _rerank
 from app.retrieval.index import INDEX, tokenize
-from app.retrieval import rewrite
 from app.retrieval.records import Clause
 
 MIN_SCORE = 3.0      # BM25 绝对分；低于它基本是"只共享了两个字"
@@ -106,7 +104,7 @@ QUESTION_WORDS = lexicon.question_words()
 @dataclass
 class Answer:
     """一次检索的完整结果。拒答也是结果，必须说清"查了什么、查了多少"。"""
-    hits: list["Hit"]
+    hits: list[Hit]
     reason: str = ""          # 非空表示拒答
     kind: str = "ok"          # ok | not_covered | out_of_domain | insufficient | no_direct_clause
     n_docs: int = 0           # 本次实际检索覆盖的文档数
@@ -307,7 +305,7 @@ def _doc_aggregate(out: list, alpha: float) -> list:
     return flat
 
 
-def _answer_type_boost(query: str, out: list["Hit"], top_docs: int = 5) -> list["Hit"]:
+def _answer_type_boost(query: str, out: list[Hit], top_docs: int = 5) -> list[Hit]:
     from app.retrieval import answertype as _at
     atype = _at.detect(query)
     if atype == "default" or len(out) < 2:
@@ -405,7 +403,8 @@ def search_result(query: str, k: int = 8, *, status: tuple[str, ...] | None = No
         # 连索引都没进：n_queries=0。这种结局绝不能是 no_policy（那是"查过没有"）。
         return Answer([], reason, kind, n_docs=0, searched=_searched(0, 0), as_of=_as_of)
     retriever, clauses, children = _load()
-    from app.domain.validity import in_force, load as _load_rels
+    from app.domain.validity import in_force
+    from app.domain.validity import load as _load_rels
     _rels = _load_rels()
     year, as_of = _y, _as_of
     global _REPEALED, _REPEAL_SRC
@@ -579,14 +578,13 @@ def _norm_title(t: str) -> str:
     return t.rstrip("。")
 
 
-def _attach_related(query: str, hits: list["Hit"], clauses: list[Clause],
-                    limit: int = 2) -> list["Hit"]:
+def _attach_related(query: str, hits: list[Hit], clauses: list[Clause],
+                    limit: int = 2) -> list[Hit]:
     """给第一名补同文件的条款：数字/日期型问题的答案常常在**同文件另一条**上。
 
     只用规则（回答类型 + 提问词重合），不引模型；按文档内选择，不跨文件，
     所以不会改变"是哪个文件"这个结论。实测答案级事实覆盖 16/64 → 21/64。
     """
-    from app.retrieval import answertype as _at
     if not hits:
         return hits
     for h in hits[:3]:
@@ -594,7 +592,7 @@ def _attach_related(query: str, hits: list["Hit"], clauses: list[Clause],
     return hits
 
 
-def _related_for(query: str, h: "Hit", clauses: list[Clause], limit: int = 2) -> None:
+def _related_for(query: str, h: Hit, clauses: list[Clause], limit: int = 2) -> None:
     from app.retrieval import answertype as _at
     atype = _at.detect(query)
     qset = set(tokenize(query))

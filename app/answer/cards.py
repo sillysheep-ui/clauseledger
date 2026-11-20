@@ -21,7 +21,8 @@
 from __future__ import annotations
 
 import re
-from typing import Any, Iterable
+from collections.abc import Iterable
+from typing import Any
 
 QUOTE_LIMIT = 240
 QUOTE_SHORT = 400      # 条款本身就这么长，整条给，不切

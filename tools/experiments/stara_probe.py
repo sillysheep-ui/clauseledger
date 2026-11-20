@@ -83,7 +83,7 @@ def main() -> None:
         cache = json.loads(CACHE.read_text("utf-8"))
 
     rows = [r for r in load_official() if facts(r["a"])]
-    total = got_cur = got_union = got_stara = 0
+    total = got_union = got_stara = 0
     picked = 0
     detail = []
     for r in rows:

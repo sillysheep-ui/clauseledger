@@ -18,9 +18,13 @@ from pathlib import Path
 
 from app.retrieval.records import Clause
 from app.retrieval.search import Hit, _collapse, _prefer_effective
-
 from tools.experiments.recall_compare import (
-    bm25_rank, build_bm25, dense_matrix, dense_rank, load_corpus, to_pids,
+    bm25_rank,
+    build_bm25,
+    dense_matrix,
+    dense_rank,
+    load_corpus,
+    to_pids,
 )
 
 REPORTS = Path("eval/reports")
@@ -64,7 +68,7 @@ def main() -> None:
         pools["dense"].append(d)
         pools["union"].append(u)
 
-    print("\n候选池上限（金标在池内的题数 / 均为 %d）" % len(qs))
+    print(f"\n候选池上限（金标在池内的题数 / 均为 {len(qs)}）")
     print("| K | BM25 | 稠密 | 并集 |")
     print("|---|---|---|---|")
     for k in KS:

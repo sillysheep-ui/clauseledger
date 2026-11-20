@@ -19,7 +19,6 @@
 from __future__ import annotations
 
 import hashlib
-import json
 import os
 from pathlib import Path
 
@@ -40,7 +39,7 @@ def children_key(children: list[dict]) -> str:
     h = hashlib.sha256()
     for c in children:
         # 也把 index_text 算进指纹：同一条子块在"开前缀/不开前缀"下是不同的索引对象
-        h.update(f"{c['cid']}|{c['text']}|{c.get('index_text','')}".encode("utf-8"))
+        h.update(f"{c['cid']}|{c['text']}|{c.get('index_text','')}".encode())
     return h.hexdigest()[:12]
 
 

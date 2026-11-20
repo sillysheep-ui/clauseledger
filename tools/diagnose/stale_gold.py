@@ -67,7 +67,7 @@ def main() -> None:
         top = a.hits[0].clause
         g = docs.get(q["gold_doc"], {})
         t = docs.get(top.doc_no, {})
-        gtext, ttext = body(g), body(t)
+        ttext = body(t)
 
         # A：新文件是否点名金标文号
         named = flat(q["gold_doc"]) in flat(ttext)

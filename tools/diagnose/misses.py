@@ -48,7 +48,7 @@ def main() -> None:
         # 不过滤：min_score 负、覆盖率门槛 0，看真实排序
         a = search_result(q["q"], k=args.k, min_score=-1.0,
                           min_coverage=-1.0, min_cand_cov=0.0)
-        gold, gtitle = q["gold_doc"], q.get("gold_title", "")
+        gold = q["gold_doc"]
         rank = None
         best = None
         for i, h in enumerate(a.hits, 1):

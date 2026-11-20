@@ -1,0 +1,42 @@
+[project]
+name = "clauseledger"
+version = "0.4.0"
+description = "ClauseLedger · 条款账本——可核对的政策问答（检索取证 + 四态判定 + 审计）"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+  "httpx==0.28.1",
+  "beautifulsoup4==4.13.5",
+  "lxml==6.1.1",
+  "pypdf==7.0.1",
+  "pypdfium2==5.15.2",
+  "python-docx==1.2.0",
+  "bm25s==0.3.16",
+  "jieba==0.42.1",
+  "numpy==2.3.5",
+  "fastapi==0.137.1",
+  "uvicorn==0.49.0",
+]
+
+[project.optional-dependencies]
+dense = ["sentence-transformers==5.6.0", "torch==2.12.0"]
+otel = ["opentelemetry-api==1.38.0", "opentelemetry-sdk==1.38.0"]
+ocr = ["ocrmac==1.0.1"]          # macOS Vision，换 Linux 时替换 backend
+browser = ["playwright==1.65.0"]
+dev = ["pytest==8.4.2", "ruff==0.15.6"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
+
+[tool.ruff]
+line-length = 110
+target-version = "py311"
+exclude = [".venv", "data", ".uv-cache", ".hf-cache", ".pw-browsers"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
+# 只留"可能出错"的规则，纯风格的在脚本里不值得改：
+# B905/B023 是 zip 严格性与闭包捕获，现有用法都在同一轮内立即消费；
+# E741(l/I/O)/E702(分号)/B007 是命名与排版习惯。
+ignore = ["E501", "B008", "B905", "B023", "E741", "E702", "B007"]

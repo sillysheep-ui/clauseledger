@@ -69,7 +69,7 @@ def main() -> None:
 
     print(f"dev 官方 {len(rows)} 条：答 {len(ok)} / 拒 {len(refused)}；"
           f"已答中 hit@1 {h1}/{len(ok)} = {100*h1/max(1,len(ok)):.0f}%")
-    print(f"拒绝里按闸分类：" + ", ".join(
+    print("拒绝里按闸分类：" + ", ".join(
         f"{k} {sum(1 for r in refused if r['gate']==k)}"
         for k in sorted({r["gate"] for r in refused})))
     print()

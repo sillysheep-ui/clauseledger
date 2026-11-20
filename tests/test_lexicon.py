@@ -1,10 +1,6 @@
 """词表是数据，不是代码。这几条守着"改了文件就生效、不依赖调用顺序"。"""
 
 import json
-import os
-from pathlib import Path
-
-import pytest
 
 from app.retrieval import index, lexicon
 

@@ -1,7 +1,6 @@
 """父子索引：子块切分与回填父条款。"""
-import json
 
-from app.retrieval.children import MAX, MIN, split_children
+from app.retrieval.children import MAX, split_children
 from app.retrieval.index import build_children
 from app.retrieval.records import Clause
 

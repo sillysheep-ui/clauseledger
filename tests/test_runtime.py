@@ -11,8 +11,7 @@ import json
 
 import pytest
 
-from app.runtime import Engine, Store
-from app.runtime import actions
+from app.runtime import Engine, Store, actions
 from app.runtime.state import STEPS
 
 

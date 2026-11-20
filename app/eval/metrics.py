@@ -11,8 +11,8 @@ from __future__ import annotations
 
 import math
 from collections import Counter
+from collections.abc import Sequence
 from dataclasses import dataclass
-from typing import Sequence
 
 # 四态判定 + 明确拒答。顺序固定，混淆矩阵按此排列。
 VERDICTS: tuple[str, ...] = (

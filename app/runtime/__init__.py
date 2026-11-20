@@ -4,7 +4,7 @@
 """
 from .engine import Engine
 from .gates import PendingGate
-from .state import RunState, STEPS
+from .state import STEPS, RunState
 from .store import Store
 
 __all__ = ["Engine", "RunState", "STEPS", "Store", "PendingGate"]

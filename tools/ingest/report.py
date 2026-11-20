@@ -38,7 +38,6 @@ def main() -> None:
 
     print("\n## 抽取路径（文本是怎么来的）\n")
     atts = [a for d in docs for a in d['attachments']]
-    import collections as _c
     print("| 路径 | 附件数 | 平均字符 | 说明 |")
     print("|---|---|---|---|")
     for path, note in (("native", "原生文本层"), ("ocr", "渲染 + Vision OCR"),

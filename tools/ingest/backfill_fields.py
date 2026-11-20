@@ -9,9 +9,8 @@ import argparse
 import collections
 import json
 import os
-from pathlib import Path
-
 from datetime import date
+from pathlib import Path
 
 from tools.ingest.dates import sign_date
 from tools.ingest.fields import agency_of, published_at_of

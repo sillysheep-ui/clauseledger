@@ -12,7 +12,7 @@ from __future__ import annotations
 
 import json
 from collections import Counter
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 COV = Path("data/coverage.json")

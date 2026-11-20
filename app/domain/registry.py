@@ -74,7 +74,7 @@ class DocRegistry:
         self._by_no = entries or {}
 
     @classmethod
-    def load(cls, path: Path) -> "DocRegistry":
+    def load(cls, path: Path) -> DocRegistry:
         entries: dict[str, DocEntry] = {}
         for line in path.read_text("utf-8").splitlines():
             if not line.strip():
@@ -84,7 +84,7 @@ class DocRegistry:
         return cls(entries)
 
     @classmethod
-    def empty(cls) -> "DocRegistry":
+    def empty(cls) -> DocRegistry:
         return cls({})
 
     def __len__(self) -> int:

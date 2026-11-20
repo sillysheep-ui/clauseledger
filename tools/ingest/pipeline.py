@@ -7,11 +7,11 @@ from __future__ import annotations
 
 import json
 import re
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 from tools.ingest.clause import split_clauses
-from tools.ingest.fetch import fetch, fetch_smart, sha
+from tools.ingest.fetch import fetch, fetch_smart
 from tools.ingest.parse import PARSER_VERSION, Block, parse_any
 
 CST = timezone(timedelta(hours=8))

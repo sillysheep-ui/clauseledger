@@ -7,19 +7,16 @@
 from __future__ import annotations
 
 import json
-import re
+import os
 import re
 from pathlib import Path
 
-import jieba
 import bm25s
+import jieba
 
 from app.retrieval import lexicon
-
 from app.retrieval.children import split_children
 from app.retrieval.records import Clause, status_of
-
-import os
 
 PROCESSED = Path(os.environ.get("CLAUSELEDGER_PROCESSED", "data/processed"))
 INDEX = Path(os.environ.get("CLAUSELEDGER_INDEX", "data/index"))
@@ -162,7 +159,8 @@ def _dedupe(clauses: list[Clause]) -> list[Clause]:
         if old is None:
             best[key] = c
             continue
-        rank = lambda x: (x.status == "effective", x.effective_from or "", x.doc_no)
+        def rank(x):
+            return (x.status == "effective", x.effective_from or "", x.doc_no)
         if rank(c) > rank(old):
             best[key] = c
     return list(best.values())

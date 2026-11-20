@@ -49,7 +49,7 @@ class CoverageIndex:
         self.totals = doc.get("totals", {})
 
     @classmethod
-    def load(cls, path: str | Path = "data/coverage.json") -> "CoverageIndex":
+    def load(cls, path: str | Path = "data/coverage.json") -> CoverageIndex:
         return cls(json.loads(Path(path).read_text("utf-8")))
 
     def check(self, city: str, matter: str | None = None) -> Coverage:

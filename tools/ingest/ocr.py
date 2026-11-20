@@ -8,8 +8,8 @@
 from __future__ import annotations
 
 import subprocess
-import threading
 import tempfile
+import threading
 from pathlib import Path
 
 OCR_MIN_CONF = 0.5   # 平均置信度低于此值，逐页丢弃
@@ -29,7 +29,6 @@ def ocr_pdf(path: str | Path, workers: int = 2) -> tuple[list[str], float]:
     from concurrent.futures import ThreadPoolExecutor
 
     import pypdfium2
-
     from ocrmac import ocrmac
 
     with _OCR_GATE:
