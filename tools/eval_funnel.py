@@ -101,7 +101,10 @@ def main() -> None:
     rows_out = []
 
     for q in rows:
-        st = eng.run(q["q"])
+        if q.get("ambiguous"):
+            continue
+        text = q.get("q_ctx") or q["q"]
+        st = eng.run(text)
         ans = (st.answer or {}).get("card") or {}
         ans_kind = (st.answer or {}).get("kind") or ""
         kind = ans.get("kind") or "refusal"
@@ -109,7 +112,7 @@ def main() -> None:
         docs = card_docs(ans)
 
         gate_ok = bool((st.coverage or {}).get("allows_retrieval", True))
-        a2 = search_result(q["q"], k=10, **RELAX)
+        a2 = search_result(text, k=10, **RELAX)
         rank = None
         for i, h in enumerate(a2.hits, 1):
             if h.clause.doc_no == q["gold_doc"]:
@@ -147,7 +150,7 @@ def main() -> None:
         rows_out.append(dict(id=q.get("id"), q=q["q"], rank=rank, kind=ans_kind, trace=traceable,
                              ev_gold=ev_gold, cov=cov, ok_a=ok_a, ok_b=ok_b))
 
-    n = len(rows)
+    n = sum(1 for q in rows if not q.get("ambiguous"))
     tag = "口语" if a.paraphrase else f"官方 {a.split}"
     print(f"# 端到端漏斗（{tag}，n={n}）\n")
     print(f"- S1 覆盖闸放行：{pct(s1, n)}")
