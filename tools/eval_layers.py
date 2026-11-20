@@ -34,6 +34,7 @@ PARAPHRASE = Path("eval/questions_paraphrase.json")
 MISSING = Path("eval/questions_missing.json")
 
 # 放开所有阈值：这一层只问"候选里有没有"，不问"敢不敢答"
+CTX = False
 RELAX = dict(min_score=0.0, min_cand_cov=0.0, min_coverage=0.0,
              min_answer=-1.0, min_score_strong=-1.0, min_margin_strong=-1.0)
 
@@ -42,6 +43,9 @@ def load(path: Path, cats: tuple[str, ...], splits: tuple[str, ...]) -> list[dic
     rows = json.loads(path.read_text("utf-8"))
     out = []
     for q in rows:
+        if CTX and q.get("q_ctx"):
+            q = dict(q)
+            q["q"] = q["q_ctx"]
         if cats and q.get("category") not in cats:
             continue
         if q.get("split") and q["split"] not in splits:
@@ -118,9 +122,12 @@ def pct(pair: tuple[int, int]) -> str:
 
 
 def main() -> None:
+    global CTX
     ap = argparse.ArgumentParser()
     ap.add_argument("--split", default="dev", choices=("dev", "dev+test", "all"))
+    ap.add_argument("--ctx", action="store_true", help="用补了主语的问法（q_ctx）")
     a = ap.parse_args()
+    CTX = bool(a.ctx)
     splits = ("dev",) if a.split == "dev" else (("dev", "test") if a.split == "dev+test" else ("dev", "test", "holdout"))
 
     groups = {

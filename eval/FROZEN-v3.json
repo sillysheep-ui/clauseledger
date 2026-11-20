@@ -1,6 +1,6 @@
 {
  "file": "eval/questions_v3.json",
- "sha256": "90705580d7e179c9575c1927a503005a2116de32606fcdd9de2af97810802adf",
+ "sha256": "fc65418eaaf20d9e7fa92597f8049754184d91294944858bf256cdef61086a70",
  "total": 227,
  "official": 192,
  "new": 24,
@@ -15,5 +15,7 @@
   "问题年份落金标有效期",
   "单文档≤3题",
   "test/holdout 不参与调参"
- ]
+ ],
+ "ctx_field": "q_ctx（22 条补回原页面主语，评测用 --ctx 切换）",
+ "note": "原问法保留在 q 字段，两个口径都报"
 }
