@@ -67,3 +67,5 @@ data/runtime.db-wal
 data/runtime.db-shm
 data/runs/
 data/world/
+
+data/reports/generate-eval.json
