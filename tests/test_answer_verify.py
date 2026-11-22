@@ -1,3 +1,5 @@
+import pytest
+
 from app.answer.context import Evidence
 from app.answer.generate import Draft
 from app.answer.verify import check
@@ -38,3 +40,40 @@ def test_rules_numbers_are_allowed():
     d = Draft(sentences=[{"text": "按规则算得 71 分。", "cites": ["E1"]}])
     r = check(d, ev(), rules_text="已知 71 分 / 标准 72 分")
     assert r.kept, r.issues
+
+
+def test_assemble_expands_within_anchor_docs():
+    """新装配：锚点文件内多条都进上下文，而不是只给命中那一条的邻居。"""
+    pytest.importorskip("bm25s")
+    from pathlib import Path as _P
+
+    if not _P("data/index/clauses.jsonl").exists():
+        pytest.skip("语料不入库")
+    from app.answer import context
+    from app.retrieval.search import search_result
+
+    a = search_result("失业保险金怎么领", k=3, min_answer=0, min_score_strong=0,
+                      min_margin_strong=0)
+    ev = context.assemble("失业保险金怎么领", a.hits, max_chars=12000)
+    docs = [e.doc_no for e in ev]
+    assert len(ev) >= 5
+    # 至少有一份文件贡献了 2 条以上（同文件展开）
+    assert any(docs.count(d) >= 2 for d in set(docs))
+    # 每条都有引用串，可回溯
+    assert all(e.citation for e in ev)
+
+
+def test_assemble_legacy_switch(monkeypatch):
+    pytest.importorskip("bm25s")
+    from pathlib import Path as _P
+
+    if not _P("data/index/clauses.jsonl").exists():
+        pytest.skip("语料不入库")
+    from app.answer import context
+    from app.retrieval.search import search_result
+
+    a = search_result("失业保险金怎么领", k=3, min_answer=0, min_score_strong=0,
+                      min_margin_strong=0)
+    monkeypatch.setenv("CLAUSELEDGER_ASSEMBLE", "legacy")
+    ev = context.assemble("失业保险金怎么领", a.hits)
+    assert ev and all(e.role in ("hit", "parent", "neighbor") for e in ev)
