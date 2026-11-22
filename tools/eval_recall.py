@@ -15,12 +15,11 @@ from __future__ import annotations
 import argparse
 import json
 import os
-import re
 import time
 from pathlib import Path
 
 from app.retrieval import search as S
-from tools.eval_answer import covered_sentences, norm as _norm
+from tools.eval_answer import covered_sentences
 
 QS = "eval/questions_v3.json"
 ANSWERS = "eval/official_answers.json"
