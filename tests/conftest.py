@@ -11,6 +11,9 @@ os.environ.setdefault("CLAUSELEDGER_RECALL", "bm25")
 # 单测不加载语义模型：置信度退回旧判据（BM25 + 分差）
 os.environ.setdefault("CLAUSELEDGER_CONF", "0")
 
+# 重排默认开启（产品默认），但单测不该加载 400 MB cross-encoder
+os.environ.setdefault("CLAUSELEDGER_RERANK", "0")
+
 import tempfile
 from pathlib import Path
 
