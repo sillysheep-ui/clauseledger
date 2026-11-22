@@ -6,6 +6,7 @@
 
 七条不变量（全部机械可判）：
 
+  I0 偏移一致   条款文本 == 全文[start:end]（文本与区间漂移会立刻暴露）
   I1 标签自洽   条款文本必须以自己的编号开头（切在句中会立刻违反）
   I2 父含子     父条款文本必须包含子条款文本（区间没算对会漏字）
   I3 区间有序   子条款 start 递增，且落在父区间内
@@ -42,6 +43,7 @@ class Report:
     clauses: int
     chars: int
     blocks: int
+    i0_bad: list[str] = field(default_factory=list)
     i1_bad: list[str] = field(default_factory=list)
     i2_bad: list[str] = field(default_factory=list)
     i3_bad: list[str] = field(default_factory=list)
@@ -73,8 +75,11 @@ def check(rec: dict) -> Report:
                carrier=carrier(rec), clauses=len(clauses),
                chars=sum(len(ln) for ln in lines), blocks=len(blocks))
 
+    full = "\n".join((b.get("text") or "") for b in blocks)
     for c in clauses:
         c["_n"] = norm(c["text"])
+        if full[c["start"]:c["end"]] != c["text"]:
+            r.i0_bad.append(c["path"])
 
     # 主键重复：path 是"编号路径"，同一份文件里 通知正文 与 附件办法 可能各有「一、」
     # 2026-11-14：附录切分后同一 path 会有多个 sec，path 单独不再能判重
@@ -170,21 +175,22 @@ def main() -> None:
         by[r.carrier].append(r)
 
     print(f"文档 {len(reports)} 份｜条款 {sum(r.clauses for r in reports):,} 条\n")
-    head = ("载体", "份数", "条款", "I1标签", "I2父含子", "I3区间", "I4重叠", "I6碎片", "I7粘连", "path重复")
-    print("{:<10}{:>5}{:>7}{:>8}{:>9}{:>8}{:>8}{:>8}{:>8}{:>12}".format(*head))
+    head = ("载体", "份数", "条款", "I0偏移", "I1标签", "I2父含子", "I3区间", "I4重叠", "I6碎片", "I7粘连", "path重复")
+    print("{:<10}{:>5}{:>7}{:>8}{:>8}{:>9}{:>8}{:>8}{:>8}{:>8}{:>12}".format(*head))
     for k in sorted(by, key=lambda x: -len(by[x])):
         g = by[k]
-        print("{:<10}{:>5}{:>7}{:>8}{:>9}{:>8}{:>8}{:>8}{:>8}{:>10}".format(
+        print("{:<10}{:>5}{:>7}{:>8}{:>8}{:>9}{:>8}{:>8}{:>8}{:>8}{:>10}".format(
             k, len(g), sum(r.clauses for r in g),
+            sum(len(r.i0_bad) for r in g),
             sum(len(r.i1_bad) for r in g), sum(len(r.i2_bad) for r in g),
             sum(len(r.i3_bad) for r in g), sum(len(r.i4_bad) for r in g),
             sum(r.i6_bad for r in g), sum(r.i7_bad for r in g),
             f"{sum(r.dup_path for r in g):,}"))
 
-    bad = [r for r in reports if r.i1_bad or r.i2_bad or r.i3_bad or r.i4_bad]
+    bad = [r for r in reports if r.i0_bad or r.i1_bad or r.i2_bad or r.i3_bad or r.i4_bad]
     print(f"\n有硬违规的文档 {len(bad)} 份")
     for r in sorted(bad, key=lambda r: -(len(r.i1_bad) + len(r.i2_bad) + len(r.i3_bad) + len(r.i4_bad)))[:a.top]:
-        print(f"  {r.doc} [{r.carrier}] 条款{r.clauses} I1={len(r.i1_bad)} I2={len(r.i2_bad)} "
+        print(f"  {r.doc} [{r.carrier}] 条款{r.clauses} I0={len(r.i0_bad)} I1={len(r.i1_bad)} I2={len(r.i2_bad)} "
               f"I3={len(r.i3_bad)} I4={len(r.i4_bad)}")
         for item in (r.i1_bad[:2] or r.i2_bad[:2] or r.i3_bad[:2]):
             print(f"      · {item}")
@@ -199,7 +205,8 @@ def main() -> None:
     stick = sum(r.i7_bad for r in reports)
     dup = sum(r.dup_path for r in reports)
     dup_docs = sum(1 for r in reports if r.dup_path)
-    print(f"\n碎片段 {frag} 条｜粘连段 {stick} 条｜path 重复 {dup} 条（{dup_docs} 份文档）")
+    off = sum(len(r.i0_bad) for r in reports)
+    print(f"\n偏移不一致 {off} 条｜碎片段 {frag} 条｜粘连段 {stick} 条｜path 重复 {dup} 条（{dup_docs} 份文档）")
 
 
 if __name__ == "__main__":

@@ -242,6 +242,24 @@ def rebuild(rec: dict) -> dict:
     # 偏移必须以**合并后的全文**为准：主载体按块数累加、补充分支再加 base 都会差几行，
     # 结果 start 不再单调（2026-11 实测 18 份文档），父子区间检查随之失真。
     relocate(blocks, clauses)
+    # 补充载体的文字与主副本的块布局未必一致，relocate 按块锚点算出的区间
+    # 可能落在别的段落上（2026-11 体检 I0 抓到 59 条）。这里用文本回找兜底：
+    # 找得到就按真实位置改正，找不到保持原样（由体检 I0 继续报）。
+    for c in clauses:
+        if text[c.start:c.end] != c.text:
+            pos = text.find(c.text)
+            if pos >= 0:
+                c.start, c.end = pos, pos + len(c.text)
+    # 还剩一种情况：补充载体的文字在主副本里**根本不存在**（去重/清洗后块内容变了）。
+    # 直接丢掉会丢内容，所以把这条文本作为新块追加到末尾，坐标随之确定，
+    # 保证"条款文本 == 全文[start:end]"这条不变量恒成立（体检 I0）。
+    orphans = [c for c in clauses if text[c.start:c.end] != c.text]
+    for c in orphans:
+        start = len(text) + (1 if text else 0)
+        blocks.append(Block(len(blocks), "para", c.text, c.page))
+        text = (text + "\n" + c.text) if text else c.text
+        c.block_index = blocks[-1].index
+        c.start, c.end = start, start + len(c.text)
     clauses.sort(key=lambda c: (c.start, c.end))
     out = dict(rec)
     out.update({
