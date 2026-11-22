@@ -4,7 +4,8 @@
 喂给模型的是"这份文件最像问题的那一条"，而它未必是能回答问题的条款——实测
 在 collapse 之后重排会把 hit@1 从 58.7% 打到 41.3%。
 
-开关（默认开启，缺模型时自动降级、不报错）：
+开关（**默认关闭**：2026-11-23 两步实验显示，在我们自己的混合召回池上
+开启重排 P@1 51.0%→40.6%（6 好 16 坏）——它对弱基线有效，对已经融合过的池子有害）：
   CLAUSELEDGER_RERANK=0              关闭
   CLAUSELEDGER_RERANK_MODEL=...      默认 BAAI/bge-reranker-base
   CLAUSELEDGER_RERANK_TOP=40         重排前 N 条条款
@@ -19,7 +20,7 @@ _model_name: str | None = None
 
 
 def enabled() -> bool:
-    return os.environ.get("CLAUSELEDGER_RERANK", "1") not in ("", "0", "false", "no")
+    return os.environ.get("CLAUSELEDGER_RERANK", "0") not in ("", "0", "false", "no")
 
 
 def top_n() -> int:

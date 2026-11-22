@@ -69,3 +69,4 @@ data/runs/
 data/world/
 
 data/reports/generate-eval.json
+eval/pools/
