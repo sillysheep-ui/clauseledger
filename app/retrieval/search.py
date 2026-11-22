@@ -26,8 +26,13 @@ from app.retrieval.index import INDEX, tokenize
 from app.retrieval.records import Clause
 
 MIN_SCORE = 3.0      # BM25 绝对分；低于它基本是"只共享了两个字"
-MIN_COVERAGE = 0.5   # 首条条款至少覆盖一半提问词，才算"有把握"
-MIN_ANSWER = 0.30    # 词重叠地板：低于它连"沾边"都算不上（一个字都对不上）
+MIN_COVERAGE = 0.5   # 只用于展示分档，不再参与拒答（见 MIN_ANSWER）
+# 词重叠地板：**已证伪，默认关闭**。实测（dev 105 题）top-1 正确/错误的覆盖率中位
+# 0.71 / 0.60，错答里 22/31 也 ≥0.5，AUC 0.483（不如随机）；在"域内但无政策"的题上
+# 方向还是反的。关掉它只丢 2 条正确拒答，换来不再误伤长题干。详见 docs/ABSTENTION.md §10。
+MIN_ANSWER = 0.0
+# 候选覆盖率过滤：**已证伪，默认关闭**。保留参数只为了能复现当时的实验。
+MIN_CAND_COV = 0.0
 MIN_SCORE_STRONG = 5.3   # 分数地板：低于它**且**领先第二名不多，才不敢下结论
 MIN_MARGIN_STRONG = 1.25  # 与第二名的分差；领先明显时，绝对分低也敢答
 # 为什么改成"两个条件同时成立"才怯：绝对分会随问句变长、随改写扩展词而整体抬高或压低，
@@ -264,7 +269,7 @@ def _load() -> tuple[bm25s.BM25, list[Clause], list[dict]]:
 
 def search(query: str, k: int = 8, *, status: tuple[str, ...] | None = None,
            min_score: float = MIN_SCORE, min_coverage: float = MIN_COVERAGE,
-           min_cand_cov: float = 0.25, min_answer: float = MIN_ANSWER,
+           min_cand_cov: float = MIN_CAND_COV, min_answer: float = MIN_ANSWER,
            min_score_strong: float = MIN_SCORE_STRONG,
            min_margin_strong: float = MIN_MARGIN_STRONG) -> list[Hit]:
     return search_result(query, k=k, status=status, min_score=min_score,
@@ -453,7 +458,7 @@ def pool(query: str, k: int = 8, *, pool_size: int | None = None) -> Pool:
 
 def filter_candidates(cands: list[Cand], *, status: tuple[str, ...] | None = None,
                       min_score: float = MIN_SCORE,
-                      min_cand_cov: float = 0.25) -> list[Cand]:
+                      min_cand_cov: float = MIN_CAND_COV) -> list[Cand]:
     """候选过滤：确定性筛子，只删不加权。"""
     out: list[Cand] = []
     for cd in cands:
@@ -536,7 +541,7 @@ def decide(p: Pool, out: list[Hit], *, k: int, as_of: str,
     if not out:
         return Answer([], "没有条款达到相关性下限", "insufficient", n_docs, 0,
                       searched=_searched(n_docs, len(p.qt)), gap=_gap(p.qt), as_of=as_of)
-    if out[0].coverage < min_answer:
+    if min_answer > 0 and out[0].coverage < min_answer:
         return Answer([], f"首条条款只覆盖 {out[0].coverage:.0%} 的提问词", "insufficient",
                       n_docs, len(out), searched=_searched(n_docs, len(p.qt)),
                       gap=_gap(p.qt), as_of=as_of)
@@ -561,7 +566,7 @@ def decide(p: Pool, out: list[Hit], *, k: int, as_of: str,
 
 def search_result(query: str, k: int = 8, *, status: tuple[str, ...] | None = None,
                   min_score: float = MIN_SCORE, min_coverage: float = MIN_COVERAGE,
-                  min_cand_cov: float = 0.25, min_answer: float = MIN_ANSWER,
+                  min_cand_cov: float = MIN_CAND_COV, min_answer: float = MIN_ANSWER,
                   min_score_strong: float = MIN_SCORE_STRONG,
                   min_margin_strong: float = MIN_MARGIN_STRONG) -> Answer:
     from app.domain.validity import year_of as _year_of
