@@ -44,3 +44,22 @@ def test_probe_threshold_one_rejects_everything(monkeypatch):
     monkeypatch.setattr(C, "cosine", lambda q, t: 0.9)
     ans = search_result("失业保险金怎么领", k=5)
     assert ans.kind in ("no_direct_clause", "insufficient")
+
+
+def test_rr_term_moves_score():
+    """重排分是独立一项：rr 高、其他低时，分数应明显高于只按 lex 算的老公式。"""
+    from app.retrieval import confidence as c
+
+    old = c.score(2.0, 0.3, 0.60)
+    new = c.score(2.0, 0.3, 0.60, rr=0.9)
+    assert new > old
+    assert c.score(2.0, 0.3, 0.60, rr=0.0) < new
+
+
+def test_rr_threshold_is_separate(monkeypatch):
+    from app.retrieval import confidence as c
+
+    monkeypatch.setenv("CLAUSELEDGER_CONF_T_RR", "0.66")
+    monkeypatch.setenv("CLAUSELEDGER_CONF_T", "0.33")
+    assert c.threshold(rr=True) == 0.66
+    assert c.threshold() == 0.33

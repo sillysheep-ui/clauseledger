@@ -49,6 +49,8 @@ def rerank(query: str, hits: list, top: int = 40) -> list:
         head, tail = hits[:top], hits[top:]
         texts = [(f"{h.clause.title}｜{h.clause.text}")[:1200] for h in head]
         scores = m.predict([(query, t) for t in texts], batch_size=16, show_progress_bar=False)
+        for i, h in enumerate(head):
+            h._rr = float(scores[i])       # 决策层要用同一把尺子
         order = sorted(range(len(head)), key=lambda i: -float(scores[i]))
         return [head[i] for i in order] + tail
     except Exception:                 # 模型缺失/显存不足都不该让检索挂掉

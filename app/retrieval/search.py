@@ -14,6 +14,7 @@ import os
 import re
 from dataclasses import dataclass, field
 from datetime import date
+from math import exp as _pow_e
 from pathlib import Path
 
 import bm25s
@@ -121,6 +122,8 @@ class Answer:
     as_of: str = ""           # 效力判定的基准日（可能来自提问里的年份）
     # high / low：low 表示"没有把握说这条就是答案"。no_direct_clause 时恒为 low。
     confidence: str = "high"
+    # 置信度原值（0–1）。只用于评测与调参，不对外展示。
+    conf_score: float | None = None
 
     @property
     def refused(self) -> bool:
@@ -548,9 +551,12 @@ def decide(p: Pool, out: list[Hit], *, k: int, as_of: str,
     # 覆盖率的残余职责只有两个：拒答地板和展示；"敢不敢下结论"看检索分 + 分差 + 语义。
     margin = out[0].score - (out[1].score if len(out) > 1 else 0.0)
     _cos = _conf.cosine(p.query, out[0].child or out[0].clause.text)
-    _ff = _conf.score(out[0].score, margin, _cos) if _cos is not None else None
+    _rr = getattr(out[0], "_rr", None)
+    _rr_p = 1.0 / (1.0 + _pow_e(-_rr)) if _rr is not None else None
+    _ff = (_conf.score(out[0].score, margin, _cos, rr=_rr_p)
+           if _cos is not None else None)
     if _ff is not None:
-        weak = _ff < _conf.threshold()
+        weak = _ff < _conf.threshold(rr=_rr_p is not None)
     else:
         weak = (out[0].score < min_score_strong and margin < min_margin_strong) or \
                (_AGREE is False and out[0].score < 5.0)
@@ -559,9 +565,11 @@ def decide(p: Pool, out: list[Hit], *, k: int, as_of: str,
         return Answer(hits,
                       "没有找到直接对应的条款；以下文件与问题共享部分关键词，但可能不是你要的规定",
                       "no_direct_clause", n_docs, len(out),
-                      searched=_searched(n_docs, len(p.qt)), as_of=as_of, confidence="low")
+                      searched=_searched(n_docs, len(p.qt)), as_of=as_of,
+                      confidence="low", conf_score=_ff)
     return Answer(hits, "", "ok", n_docs, len(out),
-                  searched=_searched(n_docs, len(p.qt)), as_of=as_of, confidence="high")
+                  searched=_searched(n_docs, len(p.qt)), as_of=as_of,
+                  confidence="high", conf_score=_ff)
 
 
 def search_result(query: str, k: int = 8, *, status: tuple[str, ...] | None = None,
