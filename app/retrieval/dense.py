@@ -49,6 +49,9 @@ def available() -> bool:
         import sentence_transformers  # noqa: F401
     except Exception:
         return False
+    from app.retrieval.hf import ensure
+
+    ensure()
     try:
         from sentence_transformers import SentenceTransformer  # noqa: F401
         return True
@@ -59,6 +62,9 @@ def available() -> bool:
 def _model():
     global _MODEL
     if _MODEL is None:
+        from app.retrieval.hf import ensure
+
+        ensure()
         from sentence_transformers import SentenceTransformer
         device = "mps" if os.environ.get("CLAUSELEDGER_DEVICE", "mps") == "mps" else "cpu"
         _MODEL = SentenceTransformer(MODEL, device=device)

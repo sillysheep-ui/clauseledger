@@ -43,14 +43,17 @@ def load(path: Path, cats: tuple[str, ...], splits: tuple[str, ...]) -> list[dic
     rows = json.loads(path.read_text("utf-8"))
     out = []
     for q in rows:
-        if CTX and q.get("q_ctx"):
+        # 口径统一（docs/EVAL-SPEC.md）：
+        #   ① 问法一律用 q_ctx（补回原页面主语），没有则用 q
+        #   ② 既排除 ambiguous，也排除 stale——金标本身失效的题不该进分母
+        if q.get("q_ctx"):
             q = dict(q)
             q["q"] = q["q_ctx"]
         if cats and q.get("category") not in cats:
             continue
         if q.get("split") and q["split"] not in splits:
             continue
-        if q.get("ambiguous"):
+        if q.get("ambiguous") or q.get("stale"):
             continue
         out.append(q)
     return out
@@ -127,7 +130,7 @@ def main() -> None:
     global CTX
     ap = argparse.ArgumentParser()
     ap.add_argument("--split", default="dev", choices=("dev", "dev+test", "all"))
-    ap.add_argument("--ctx", action="store_true", help="用补了主语的问法（q_ctx）")
+    ap.add_argument("--ctx", action="store_true", help="（已废弃，q_ctx 恒为默认，保留兼容）")
     a = ap.parse_args()
     CTX = bool(a.ctx)
     splits = ("dev",) if a.split == "dev" else (("dev", "test") if a.split == "dev+test" else ("dev", "test", "holdout"))

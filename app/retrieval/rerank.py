@@ -34,6 +34,9 @@ def _load():
     name = os.environ.get("CLAUSELEDGER_RERANK_MODEL", _DEFAULT_MODEL)
     if _model is not None and _model_name == name:
         return _model
+    from app.retrieval.hf import ensure
+
+    ensure()
     from sentence_transformers import CrossEncoder
     _model = CrossEncoder(name, device="mps", max_length=512)
     _model_name = name
