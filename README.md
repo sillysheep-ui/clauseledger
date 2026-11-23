@@ -29,7 +29,9 @@
 
 > L1–L5 来自 `tools/eval_layers.py`，装配来自 `tools/eval_context.py`，生成来自 `tools/eval_generate.py`，
 > 引用来自 `tools/eval_citation.py`。
-> 全部只跑 dev；test/holdout 冻结在 `eval/FROZEN-v3.json`，改动一次只跑一次。
+> 上表全部跑在 dev 上——**dev 是调参用的，天然偏乐观**。
+> 定稿时再跑 test/holdout（`python -m tools.eval_final`，见 `docs/EVAL-FINAL.md`）：
+> R@10 掉到 **75% / 83%**，作答精度掉到 **56% / 65%**。这个落差就是过拟合的量，我不藏。
 > **能支撑 20% 比可定位 100% 更值得写在这**——它说明"引文没编"和"引文有用"是两件事。
 
 ---
