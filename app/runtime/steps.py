@@ -134,10 +134,67 @@ def compose(state, decision):
     每句话要么是条款的逐字片段，要么被标成"需要你确认"。
     """
     from app.answer import cards
+
     card = cards.build(state)
+    card = _attach_draft(state, card)
     state.answer = {**(state.answer or {}), "card": card,
                     "text": card.get("headline", ""),
                     "citations": [e["citation"] for e in card.get("evidence", [])]}
+
+
+def _attach_draft(state, card: dict) -> dict:
+    """给卡挂一段"模型解读"，但**绝不改判定**。
+
+    生成在这里的定位是解释器：判定、分数、缺口都是程序算的，模型只负责把
+    证据串成人话。所以：
+
+    * 拒答卡不生成——没有证据时让模型说话，它一定会编；
+    * 每句必须带 [E#]，数字必须能在证据里找到，否则**逐句丢弃**（verify）；
+    * 生成失败一律静默退回截取式卡片，卡本身永远可用。
+    """
+    import os
+
+    if os.environ.get("CLAUSELEDGER_GENERATE", "1") == "0":
+        return card
+    if card.get("kind") == "refusal" or not state.hits:
+        return card
+
+    from app.answer import generate as G
+    from app.answer.context import assemble
+    from app.answer.verify import check
+    from app.retrieval.search import search_result
+
+    if not G.available():
+        return card
+    try:
+        # 重新取一次召回结果：state.hits 是给卡片用的扁平 dict，没有条款对象；
+        # 复用同一个 search_result 保证"卡片看到的"和"模型看到的"是同一批候选。
+        again = search_result(state.question, k=5)
+        ev = assemble(state.question, again.hits)
+        rules = None
+        if card.get("kind") == "verdict":
+            basis = [(b.get("label", ""), b.get("points"))
+                     for b in (card.get("basis") or []) if isinstance(b, dict)]
+            rules = f"{card.get('headline', '')}\n" + "\n".join(
+                f"- {lab}{'' if pts is None else f' +{pts}'}" for lab, pts in basis)
+        draft = G.generate(state.question, ev, rules=rules)
+        if draft is None:
+            return card
+        chk = check(draft, ev)
+        if not chk.kept:
+            return card
+        card = {**card, "draft": {
+            "sentences": chk.kept,
+            "dropped": len(chk.dropped),
+            "issues": chk.issues[:3],
+            "not_covered": draft.not_covered,
+            "confidence": draft.confidence,
+            "model": draft.model,
+            "cached": draft.cached,
+        }}
+    except Exception as e:  # noqa: BLE001
+        card = {**card, "draft_error": f"{type(e).__name__}: {e}"}
+    return card
 
 
 def verify(state, decision):

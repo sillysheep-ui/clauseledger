@@ -99,3 +99,13 @@ blockquote.clamp.open{display:block;-webkit-line-clamp:unset;cursor:zoom-out}
 .qline{padding:10px 18px;border-bottom:1px solid var(--line);color:#3a3c40;font-size:14px;background:#fcfcfa}
 
 .tag.q{background:#f6f5f1;color:#4a4c50;margin:2px 2px 2px 0;display:inline-block}
+
+.draft { margin-top: 14px; border-top: 1px dashed #d8d5cf; padding-top: 12px; }
+.draft-h { font-size: 13px; font-weight: 600; margin-bottom: 6px; }
+.draft-h .muted { font-weight: 400; }
+.draft ul { margin: 0; }
+.draft li { padding: 4px 0 4px 14px; position: relative; line-height: 1.75; }
+.draft li::before { content: "·"; position: absolute; left: 2px; color: #b9b3a8; }
+.tag.cite { background: #eef3ee; color: #2f6b4f; font-variant-numeric: tabular-nums; }
+.draft-f { font-size: 12px; margin-top: 8px; }
+.warn { color: #a4522c; }

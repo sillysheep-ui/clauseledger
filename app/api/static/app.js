@@ -88,6 +88,7 @@ function renderVerdict(c) {
       <div class="row"><div class="k">未覆盖</div>
         <div class="v muted">${(c.not_claimed || []).map(esc).join("、") || "—"}</div></div>
       <div class="row"><div class="k">原文</div><div class="v">${renderEvidence(c.evidence)}</div></div>
+      ${renderDraft(c)}
     </div>
   </div>`;
 }
@@ -103,6 +104,7 @@ function renderStandard(c) {
       <div class="row"><div class="k">原文</div><div class="v">${renderEvidence(c.items && c.items.length ? c.items : c.evidence)}</div></div>
       <div class="row"><div class="k">未覆盖</div>
         <div class="v muted">${(c.not_claimed || []).map(esc).join("、") || "—"}</div></div>
+      ${renderDraft(c)}
     </div>
   </div>`;
 }
@@ -120,6 +122,24 @@ function renderRefusal(c) {
       <div class="row"><div class="k">候选</div><div class="v">${renderEvidence(c.evidence)}</div></div>
     </div>
   </div>`;
+}
+
+function renderDraft(c) {
+  const d = c.draft;
+  if (!d) return "";
+  const rows = (d.sentences || []).map((s) => `<li>${esc(s.text)}
+      ${(s.cites || []).map((e) => `<span class="tag cite">${esc(e)}</span>`).join("")}</li>`).join("");
+  const drop = d.dropped
+    ? `<span class="warn">丢弃 ${d.dropped} 句（引用或数字对不上证据）</span>` : "";
+  const miss = (d.not_covered || []).length
+    ? `<div class="muted">未覆盖：${esc((d.not_covered || []).join("；"))}</div>` : "";
+  return `<div class="draft">
+      <div class="draft-h">模型解读 <span class="muted">只解释证据，不改变上面的判定</span></div>
+      <ul class="plain">${rows}</ul>
+      ${miss}
+      <div class="draft-f muted">${esc(d.model)} · ${d.cached ? "缓存" : "本次调用"} ·
+        置信度 ${esc(d.confidence || "?")} ${drop}</div>
+    </div>`;
 }
 
 function renderCard(c) {

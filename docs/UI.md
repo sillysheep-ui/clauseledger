@@ -11,6 +11,8 @@ python -m uvicorn app.api.server:app --port 8010
 
 ![拒答卡](shots/ui-refusal.png)
 
+![模型解读](shots/ui-draft.png)
+
 ![审批面板](shots/ui-action-gate.png)
 
 ## 四个区域
@@ -32,6 +34,16 @@ python -m uvicorn app.api.server:app --port 8010
 4. **覆盖率横幅常驻**。用户要先知道"这个城市接入没有"，再决定要不要信下面的卡。
 5. **不引前端框架**。一个 HTML + 300 行 JS，`fetch` 四个端点；换框架不会让审计更可信，
    只会多一层构建。
+
+## 模型解读挂在卡下，不改判定
+
+`compose` 出卡之后才调生成层（`app/answer/generate.py`），把结果放在 `card.draft`：
+
+- **拒答卡不生成**——没有证据时让模型说话，它一定会编；
+- 每句必须带 `[E#]`，句中的数字必须能在被引证据里找到，否则**逐句丢掉**，
+  卡上显示"丢弃 N 句（引用或数字对不上证据）"；
+- 生成失败（没 key / 超时 / JSON 坏了）静默退回截取式卡片，卡永远可用；
+- 判定、分数、缺口全部来自程序，模型只负责把证据串成人话。
 
 ## 明确没做
 
