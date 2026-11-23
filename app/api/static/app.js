@@ -149,7 +149,21 @@ function renderCard(c) {
   return renderRefusal(c);
 }
 
-function renderGate(g, runId) {
+function renderGate(g, runId, state) {
+  if (!g && state && state.status === "running") {
+    // 进程被 kill 掉后重新打开：库里留着 status=running / step=中断点
+    $("#gate").innerHTML = `
+      <div class="gate recover">
+        <h2>上次进程中断</h2>
+        <div class="q">这个 run 停在 <b>${esc(state.step)}</b> 步。状态在库里，
+          会从这一步重入；已完成的步骤不会重跑，写过的待办按条幂等。</div>
+        <div class="acts">
+          <button class="ok" data-act="recover">继续这个 run</button>
+        </div>
+      </div>`;
+    bindGate($("#gate"), runId);
+    return;
+  }
   if (!g) { $("#gate").innerHTML = ""; return; }
   const isAction = g.kind === "action";
   const q = isAction ? "这次操作会产生外部副作用（写待办）。批准后才执行。" : "判定为不确定，需要人确认。";
@@ -168,7 +182,11 @@ function renderGate(g, runId) {
         <button class="no" data-act="${isAction ? "deny" : "reject"}">拒绝</button>
       </div>
     </div>`;
-  $("#gate").querySelectorAll("button").forEach((b) => {
+  bindGate($("#gate"), runId);
+}
+
+function bindGate(box, runId) {
+  box.querySelectorAll("button").forEach((b) => {
     b.onclick = async () => {
       b.disabled = true;
       const s = await api(`/api/runs/${runId}/resume`, { action: b.dataset.act, by: "ui" });
@@ -196,7 +214,7 @@ function render(state) {
     : "";
   $("#result").innerHTML = `<div class="cardwrap">${qline}${renderCard(state.answer && state.answer.card)}</div>`;
   wireMore($("#result"));
-  renderGate(state.gate, state.run_id);
+  renderGate(state.gate, state.run_id, state);
   $("#coverage").textContent = coverageLine(state);
   if (state.run_id) {
     $("#runmeta").textContent = `run ${state.run_id.slice(0, 8)} · ${state.status} · ${state.step}`;

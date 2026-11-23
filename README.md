@@ -34,6 +34,21 @@
 
 ---
 
+## 崩一次给你看
+
+```bash
+bash ops/demo_recovery.sh          # 约 40 秒，两个中断点
+```
+
+- A：停在"等人批准"时 `kill -9`，重启后原 run 继续，`applied=3 reused=0`，再批一次 409；
+- B：待办**已经写进库**、`step_finished` 还没落盘时硬退出，恢复后 `applied=0 reused=3` ——
+  重跑了一遍，一条没多。
+
+语义写在 `docs/RECOVERY.md`：at-least-once 重入 × 按条幂等 = **可观察的恰好一次**；
+物理恰好一次不承诺（外部系统要靠对方的幂等键）。原始输出在 `docs/RECOVERY-DEMO.md`。
+
+---
+
 ## 看一眼
 
 ![判定卡与审批](docs/shots/ui-verdict.png)

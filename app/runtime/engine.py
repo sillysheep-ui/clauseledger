@@ -69,6 +69,15 @@ class Engine:
         if state.status == "done":
             # 已经跑完的 run 不允许再推一次：重复执行 = 重复副作用，宁可直接拒绝。
             raise ValueError(f"{run_id} 已完成，不能重复执行（需要重跑请新建 run）")
+        if state.status == "running":
+            # 崩溃恢复：进程在最外面被 kill 掉时，库里留着 status=running、step=X。
+            # 这里**不加决定**，直接重入 X——被中断的 step 重跑一遍，
+            # 之前的 step 不会重跑（state.step 已经指向中断点）。
+            self.store.event(state, state.step, "run_recovered",
+                             {"step": state.step, "done_steps": list(state.done_steps)})
+            return self.advance(state)
+        if state.status == "failed":
+            raise ValueError(f"{run_id} 已失败（{state.error}），需要重跑请新建 run")
         if not state.gate:
             raise ValueError(f"{run_id} 没有待处理的审批（status={state.status}）")
         self.store.event(state, state.step, "gate_resolved", {"decision": decision or {}})
