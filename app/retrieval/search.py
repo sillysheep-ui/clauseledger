@@ -26,15 +26,19 @@ from app.retrieval import rerank as _rerank
 from app.retrieval.index import INDEX, tokenize
 from app.retrieval.records import Clause
 
-MIN_SCORE = 3.0      # BM25 绝对分；低于它基本是"只共享了两个字"
-MIN_COVERAGE = 0.5   # 只用于展示分档，不再参与拒答（见 MIN_ANSWER）
+# ── 生产判据只有一个 ────────────────────────────────────────────────
+# `confidence.score(lex, margin, cos) >= 0.38`。下面这些是检索/诊断开关，
+# 不参与"答不答"的判断；每个常数的消融与出处见 docs/THRESHOLDS.md。
+MIN_SCORE = 3.0      # 候选下限，纯性能参数：取 0 与 3.0，决策结果完全相同（实测）
+MIN_COVERAGE = 0.5   # 只用于展示分档
 # 词重叠地板：**已证伪，默认关闭**。实测（dev 105 题）top-1 正确/错误的覆盖率中位
 # 0.71 / 0.60，错答里 22/31 也 ≥0.5，AUC 0.483（不如随机）；在"域内但无政策"的题上
 # 方向还是反的。关掉它只丢 2 条正确拒答，换来不再误伤长题干。详见 docs/ABSTENTION.md §10。
 MIN_ANSWER = 0.0
 # 候选覆盖率过滤：**已证伪，默认关闭**。保留参数只为了能复现当时的实验。
 MIN_CAND_COV = 0.0
-MIN_SCORE_STRONG = 5.3   # 分数地板：低于它**且**领先第二名不多，才不敢下结论
+# 降级模式专用：语义模型不可用（CI 无模型缓存）时才退回分数判据。
+MIN_SCORE_STRONG = 5.3    # 分数地板：低于它**且**领先第二名不多，才不敢下结论
 MIN_MARGIN_STRONG = 1.25  # 与第二名的分差；领先明显时，绝对分低也敢答
 # 为什么改成"两个条件同时成立"才怯：绝对分会随问句变长、随改写扩展词而整体抬高或压低，
 # 单独用它当判据，等于把"问句怎么写"当成"答案有多可靠"。分差对这类整体平移不敏感。
@@ -548,12 +552,8 @@ def decide(p: Pool, out: list[Hit], *, k: int, as_of: str,
         return Answer([], f"首条条款只覆盖 {out[0].coverage:.0%} 的提问词", "insufficient",
                       n_docs, len(out), searched=_searched(n_docs, len(p.qt)),
                       gap=_gap(p.qt), as_of=as_of)
-    # 覆盖率的残余职责只有两个：拒答地板和展示；"敢不敢下结论"看检索分 + 分差 + 语义。
-    #
-    # 判据看**前三条里有没有一条够格**，而不是只看第一条：装配是按"前 3 份文件"展开的，
-    # 第三条足够好时它同样会进上下文、同样能回答问题。只看第一名会把已经能答的题拒掉。
-    # 注意：**不重排** out——展示顺序仍按综合排序，判据只是"能不能答"。
-    _strong = [h for h in out[:3] if h.score >= min_score_strong]
+    # 生产判据只有一条：三项加权 >= 阈值（见 confidence.py）。覆盖率只用于展示。
+    # 模型不可用时才退回"分数 + 分差"的降级判据。
     margin = out[0].score - (out[1].score if len(out) > 1 else 0.0)
     _cos = _conf.cosine(p.query, out[0].child or out[0].clause.text)
     _rr = getattr(out[0], "_rr", None)
@@ -565,20 +565,7 @@ def decide(p: Pool, out: list[Hit], *, k: int, as_of: str,
     else:
         weak = (out[0].score < min_score_strong and margin < min_margin_strong) or \
                (_AGREE is False and out[0].score < 5.0)
-    # 前三条里已有一条过强分线：即便第一条的置信度不够，也不该拒。
-    # 默认关闭：dev 实测（2026-11-23）这条规则没多答对一题，却让"域内无政策"的误答
-    # 从 3 条变 4 条（集体合同备案）。它要解决的场景（金标在第 2/3 名、第一名不过线）
-    # 在 105 题里一次都没出现，所以先留开关，不作为默认行为。
-    if os.environ.get("CLAUSELEDGER_STRONG3", "0") == "1" and weak and _strong \
-            and not (_AGREE is False and out[0].score < 5.0):
-        weak = False
     hits = _attach_related(p.query, _prefer_effective(_collapse(out))[:k], p.clauses)
-    from app.retrieval import gate as _gate
-
-    if _gate.enabled():
-        ok = _gate.semantic_ok(p.query, hits)
-        if ok is not None:                    # 模型不可用就退回旧判据，不假装成功
-            weak = not ok
     if weak:
         return Answer(hits,
                       "没有找到直接对应的条款；以下文件与问题共享部分关键词，但可能不是你要的规定",
