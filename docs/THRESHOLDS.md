@@ -17,6 +17,8 @@ score  = 0.40·lex + 0.25·margin + 0.35·cos
 这是唯一参与"答不答"的规则，代码在 `app/retrieval/confidence.py`。
 0.38 不是概率，是 dev 上选出的工作点；换语料或换模型要重选。
 
+![判据边界](shots/gate-boundary.png)
+
 ## 二、消融：每一项拿掉会怎样
 
 dev official n=103（另有 2 题在判据前就被拦掉）＋ 域内无政策 9 ＋ 域外 1：
