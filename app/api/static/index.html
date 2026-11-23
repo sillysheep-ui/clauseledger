@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ClauseLedger · 条款账本</title>
+<link rel="stylesheet" href="/static/app.css">
+</head>
+<body>
+<header class="bar">
+  <div class="brand">
+    <span class="logo">§</span>
+    <span class="name">ClauseLedger</span>
+    <span class="sub">条款账本</span>
+  </div>
+  <div id="coverage" class="coverage">覆盖范围加载中…</div>
+</header>
+
+<main class="grid">
+  <section class="col-left">
+    <form id="ask" class="ask" autocomplete="off">
+      <label for="q">你要办什么事</label>
+      <textarea id="q" rows="2" placeholder="例：硕士毕业，去五个新城工作，落户能加多少分？"></textarea>
+      <div class="chips">
+        <button type="button" class="chip" data-q="硕士毕业落户能加多少分"
+          data-p='{"degree":"master","school_tier":1,"gpa_rank":"a","foreign":"cet6_or_tem8","computer":"grad"}'>落户评分</button>
+        <button type="button" class="chip" data-q="博士毕业落户能加多少分"
+          data-p='{"degree":"phd"}'>博士直落（会写待办）</button>
+        <button type="button" class="chip" data-q="失业保险金怎么领">失业金</button>
+        <button type="button" class="chip" data-q="北京落户需要几年社保">未接入（北京）</button>
+      </div>
+      <details class="profile">
+        <summary>补充你的情况（可选，用于判定）</summary>
+        <textarea id="profile" rows="6" spellcheck="false">{
+  "degree": "master",
+  "school_tier": 1,
+  "gpa_rank": "a",
+  "foreign": "cet6_or_tem8",
+  "computer": "grad"
+}</textarea>
+        <div class="muted" style="margin-top:6px">只有"落户"有判定器；其余事项会出标准卡。</div>
+      </details>
+      <button class="go" type="submit">查询</button>
+    </form>
+    <div id="result" class="result"></div>
+  </section>
+
+  <aside class="col-right">
+    <div id="gate"></div>
+    <section class="panel">
+      <h2>审计时间线 <span class="hint">每一步都落库，可回放</span></h2>
+      <ol id="timeline" class="timeline"><li class="muted">还没有运行</li></ol>
+    </section>
+    <section class="panel">
+      <h2>最近的运行</h2>
+      <ul id="runs" class="runs"><li class="muted">—</li></ul>
+    </section>
+  </aside>
+</main>
+
+<footer class="foot">
+  <span id="runmeta">—</span>
+  <span class="rule">卡里每一句都要么是条款逐字片段（带页码），要么标注为推断/待确认。</span>
+</footer>
+<script src="/static/app.js"></script>
+</body>
+</html>

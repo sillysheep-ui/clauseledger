@@ -11,13 +11,19 @@
 """
 from __future__ import annotations
 
+from pathlib import Path
+
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import HTMLResponse
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
 from app.runtime import Engine, Store
 
+STATIC = Path(__file__).parent / "static"
+
 app = FastAPI(title="ClauseLedger")
+app.mount("/static", StaticFiles(directory=STATIC), name="static")
 store = Store()
 engine = Engine(store)
 
@@ -67,12 +73,5 @@ def resume(run_id: str, body: Decision) -> dict:
 
 @app.get("/", response_class=HTMLResponse)
 def index() -> str:
-    return """<!doctype html><meta charset=utf-8><title>ClauseLedger</title>
-<style>body{font:15px/1.7 -apple-system,sans-serif;max-width:760px;margin:48px auto;padding:0 16px}
-code{background:#f4f4f5;padding:2px 6px;border-radius:4px}</style>
-<h1>ClauseLedger · 条例账本</h1>
-<p>服务已起。界面（S8-C）还没做，现在只有接口：</p>
-<pre><code>POST /api/runs                {"question": "…", "profile": {}}
-GET  /api/runs/{id}?events=1
-POST /api/runs/{id}/resume    {"action": "approve|deny|confirm_unknown|reject"}</code></pre>
-<p>交互式文档：<a href="/docs">/docs</a></p>"""
+    """单页界面：提问 → 卡片 → 审批 → 审计时间线。"""
+    return (STATIC / "index.html").read_text("utf-8")

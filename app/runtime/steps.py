@@ -67,8 +67,21 @@ def retrieve(state, decision):
 
 
 def judge(state, decision):
-    """四态判定。目前只有落户有判定器，其余是 STUB（返回 unknown）。"""
+    """四态判定。目前只有落户有判定器，其余是 STUB（返回 unknown）。
+
+    覆盖不到的城市**不进入判定**：判定器是上海落户的规则，拿它去判"北京落户"
+    会得出"已知 0 分、差 72 分"这种看起来煞有介事、实际毫无意义的结论。
+    """
     q = state.question
+    if state.coverage and not state.coverage.get("allows_retrieval"):
+        state.judgement = {"verdict": "unknown", "source": "none", "blocked": True,
+                           "reason": state.coverage.get("message") or "未接入"}
+        return
+    # 判定器是上海落户规则，别的城市不能拿它算分
+    if (state.city or "上海") != "上海":
+        state.judgement = {"verdict": "unknown", "source": "none", "blocked": True,
+                           "reason": f"{state.city}尚未接入判定器"}
+        return
     if any(k in q for k in LUOHU_KW) and state.profile:
         from app.judgement.luohu import evaluate
         v = evaluate(state.profile)
@@ -103,8 +116,14 @@ def gate_judgement(state, decision):
                         "kind": "human_reject"}
         state.judgement = {**j, "verdict": "unknown", "confirmed": True, "rejected": True}
         return
+    # 停住之前先把"草稿卡"放进 state：人要在**看到卡**的情况下决定批不批，
+    # 否则界面只有一个"待确认"按钮，等于让人盲批。
+    from app.answer import cards
+    state.answer = {**(state.answer or {}), "card": cards.build(state),
+                    "text": "（待人工确认）"}
     raise PendingGate("judgement",
-                      {"judgement": j, "hits": state.hits[:3]},
+                      {"judgement": j, "hits": state.hits[:3],
+                       "card": state.answer["card"]},
                       "判定结果是「未知」，需要人确认是补材料还是按未知返回")
 
 
