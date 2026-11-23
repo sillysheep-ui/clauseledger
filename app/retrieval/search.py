@@ -549,6 +549,11 @@ def decide(p: Pool, out: list[Hit], *, k: int, as_of: str,
                       n_docs, len(out), searched=_searched(n_docs, len(p.qt)),
                       gap=_gap(p.qt), as_of=as_of)
     # 覆盖率的残余职责只有两个：拒答地板和展示；"敢不敢下结论"看检索分 + 分差 + 语义。
+    #
+    # 判据看**前三条里有没有一条够格**，而不是只看第一条：装配是按"前 3 份文件"展开的，
+    # 第三条足够好时它同样会进上下文、同样能回答问题。只看第一名会把已经能答的题拒掉。
+    # 注意：**不重排** out——展示顺序仍按综合排序，判据只是"能不能答"。
+    _strong = [h for h in out[:3] if h.score >= min_score_strong]
     margin = out[0].score - (out[1].score if len(out) > 1 else 0.0)
     _cos = _conf.cosine(p.query, out[0].child or out[0].clause.text)
     _rr = getattr(out[0], "_rr", None)
@@ -560,7 +565,20 @@ def decide(p: Pool, out: list[Hit], *, k: int, as_of: str,
     else:
         weak = (out[0].score < min_score_strong and margin < min_margin_strong) or \
                (_AGREE is False and out[0].score < 5.0)
+    # 前三条里已有一条过强分线：即便第一条的置信度不够，也不该拒。
+    # 默认关闭：dev 实测（2026-11-23）这条规则没多答对一题，却让"域内无政策"的误答
+    # 从 3 条变 4 条（集体合同备案）。它要解决的场景（金标在第 2/3 名、第一名不过线）
+    # 在 105 题里一次都没出现，所以先留开关，不作为默认行为。
+    if os.environ.get("CLAUSELEDGER_STRONG3", "0") == "1" and weak and _strong \
+            and not (_AGREE is False and out[0].score < 5.0):
+        weak = False
     hits = _attach_related(p.query, _prefer_effective(_collapse(out))[:k], p.clauses)
+    from app.retrieval import gate as _gate
+
+    if _gate.enabled():
+        ok = _gate.semantic_ok(p.query, hits)
+        if ok is not None:                    # 模型不可用就退回旧判据，不假装成功
+            weak = not ok
     if weak:
         return Answer(hits,
                       "没有找到直接对应的条款；以下文件与问题共享部分关键词，但可能不是你要的规定",
