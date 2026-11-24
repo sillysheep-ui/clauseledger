@@ -132,8 +132,11 @@ def status_for(doc_no: str, as_of: str | None = None,
                             f"断档：上一段有效期至 {prev.get('end')}，"
                             f"这一段从 {start} 起", since=prev.get("end"))
         if not end or day <= end:
-            by = seg.get("by") or []
-            why = f"经《{by[-1]}》延期" if by else ""
+            # 只提"这一天之前已经发生"的延期：问 2019 年的事，不该拿 2020 年的通知当理由。
+            pairs = list(zip(seg.get("by") or [],
+                             seg.get("by_on") or [""] * len(seg.get("by") or [])))
+            relevant = [b for b, on in pairs if not on or on <= day]
+            why = f"经《{relevant[-1]}》延期" if relevant else ""
             tail = f"有效期至 {end}" if end else "未记载有效期"
             return Validity("effective", day, f"{why}{tail}".strip(), )
 

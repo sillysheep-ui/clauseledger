@@ -83,3 +83,19 @@ def test_card_shows_validity_note_for_expired_doc(tmp_path, monkeypatch):
     notes = cards._validity_notes([{"doc_no": "沪人社规〔2018〕46号"}], "2023-01-18")
     assert len(notes) == 1 and notes[0]["status"] == "expired"
     assert "2022-12-31" in notes[0]["reason"]
+
+
+def test_reason_does_not_mention_future_notice(tmp_path, monkeypatch):
+    """问 2019 年的事，理由里不能出现 2020 年才发的延期通知。"""
+    segs = {"沪人社规〔2018〕46号": [
+        {"start": "2018-12-29", "end": "2022-12-31",
+         "by": ["沪人社规〔2020〕9号"], "by_on": ["2020-11-01"], "gap": False}]}
+    p = tmp_path / "validity.json"
+    p.write_text(json.dumps({"periods": segs}, ensure_ascii=False), "utf-8")
+    monkeypatch.setattr(D, "DERIVED", p)
+    monkeypatch.setattr(D, "_PERIODS", None)
+
+    early = D.status_for("沪人社规〔2018〕46号", "2019-06-01")
+    assert early.status == "effective" and "2020" not in early.reason
+    late = D.status_for("沪人社规〔2018〕46号", "2021-06-01")
+    assert "沪人社规〔2020〕9号" in late.reason

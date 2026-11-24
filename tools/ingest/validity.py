@@ -364,6 +364,7 @@ class Period:
     start: str
     end: str            # "" = 未记载到期
     by: list[str] = field(default_factory=list)
+    by_on: list[str] = field(default_factory=list)   # 对应通知的生效日
     gap: bool = False   # 这一段与上一段之间不连续
 
 
@@ -395,8 +396,10 @@ def periods(res: Resolution, docs: dict[str, dict]) -> dict[str, list[Period]]:
                     cur.end = e.until
                 if e.by not in cur.by:
                     cur.by.append(e.by)
+                    cur.by_on.append(nd)
             else:
-                segs.append(Period(start=nd or cur.end, end=e.until, by=[e.by], gap=True))
+                segs.append(Period(start=nd or cur.end, end=e.until, by=[e.by],
+                                   by_on=[nd], gap=True))
         out[no] = segs
     return out
 
@@ -408,7 +411,8 @@ def write_derived(res: Resolution, docs: dict[str, dict],
     payload = {
         "generated_at": __import__("datetime").datetime.now().isoformat(timespec="seconds"),
         "periods": {
-            no: [{"start": p.start, "end": p.end, "by": p.by, "gap": p.gap} for p in ps]
+            no: [{"start": p.start, "end": p.end, "by": p.by, "by_on": p.by_on,
+                  "gap": p.gap} for p in ps]
             for no, ps in segs.items()
         },
         "edges": [{"by": e.by, "to": e.to, "until": e.until} for e in res.edges],
