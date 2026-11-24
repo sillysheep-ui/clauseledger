@@ -18,6 +18,23 @@ from datetime import date
 from pathlib import Path
 
 RELATIONS = Path("data/registry/relations.jsonl")
+DERIVED = Path("data/derived/validity.json")
+
+# 派生文件按 mtime 缓存：定时任务重算之后，常驻进程不用重启就能看到新时间段。
+_PERIODS: tuple[float, dict[str, list[dict]]] | None = None
+
+
+def periods_of(doc_no: str) -> list[dict]:
+    """这份文件的有效期区间（按时间排序）。没有派生数据就返回空。"""
+    global _PERIODS
+    try:
+        mtime = DERIVED.stat().st_mtime
+    except OSError:
+        return []
+    if _PERIODS is None or _PERIODS[0] != mtime:
+        data = json.loads(DERIVED.read_text("utf-8"))
+        _PERIODS = (mtime, data.get("periods") or {})
+    return (_PERIODS[1] or {}).get(doc_no) or []
 
 
 @dataclass(frozen=True)
@@ -77,6 +94,54 @@ def status_at(doc: dict, *, as_of: str | None = None,
     return Validity("effective", day, f"有效期至 {end}")
 
 
+def status_for(doc_no: str, as_of: str | None = None,
+               rels: dict[str, list[dict]] | None = None,
+               doc: dict | None = None) -> Validity:
+    """按**时间段**判效力：同一天走一个区间，断档就是断档。
+
+    和 `status_at` 的区别：这里不读 `effective_to` 单值，而是读派生出来的
+    「有效期区间」——文件 2020 年到期、2026 年才被延到 2031 年时，2021 年
+    落在断档里，必须判失效，而不是拿 2031 当年底。
+    """
+    day = as_of or date.today().isoformat()
+    rels = rels if rels is not None else load()
+    no = doc_no or (doc or {}).get("doc_no") or ""
+
+    for e in rels.get(no, []):
+        since = e.get("effective_date")
+        if since and since <= day:
+            kind = "partially_repealed" if e["type"] == "partial_repeal" else "repealed"
+            return Validity(kind, day, f"被《{e['source']}》"
+                            f"{'部分条款停止执行' if kind == 'partially_repealed' else '废止'}"
+                            f"（{since} 起）", repealed_by=e["source"], since=since)
+
+    segs = periods_of(no)
+    if not segs:
+        return status_at(doc or {"doc_no": no}, as_of=day, rels=rels)
+
+    first = segs[0]
+    if first.get("start") and day < first["start"]:
+        return Validity("not_yet", day, f"尚未施行（{first['start']} 起）")
+
+    for i, seg in enumerate(segs):
+        start, end = seg.get("start") or "", seg.get("end") or ""
+        if start and day < start:
+            # 落在上一段结束到这一段开始之间：断档
+            prev = segs[i - 1]
+            return Validity("expired", day,
+                            f"断档：上一段有效期至 {prev.get('end')}，"
+                            f"这一段从 {start} 起", since=prev.get("end"))
+        if not end or day <= end:
+            by = seg.get("by") or []
+            why = f"经《{by[-1]}》延期" if by else ""
+            tail = f"有效期至 {end}" if end else "未记载有效期"
+            return Validity("effective", day, f"{why}{tail}".strip(), )
+
+    last = segs[-1]
+    return Validity("expired", day, f"有效期至 {last.get('end')}，已过期",
+                    since=last.get("end"))
+
+
 def repealed_map(*, as_of: str | None = None,
                  rels: dict[str, list[dict]] | None = None) -> dict[str, str]:
     """今天是废止状态的 doc_no -> 理由。检索时用来降权。"""
@@ -129,6 +194,14 @@ def window(doc: dict, rels: dict[str, list[dict]] | None = None) -> tuple[str | 
 
 def in_force(doc: dict, year: int, rels: dict[str, list[dict]] | None = None) -> bool:
     """这一年里有没有效（区间与年份有交集即算）。"""
+    segs = periods_of(doc.get("doc_no") or "")
+    if segs:
+        lo, hi = f"{year}-01-01", f"{year}-12-31"
+        for seg in segs:
+            start, end = seg.get("start") or "0000", seg.get("end") or "9999"
+            if start <= hi and end >= lo:
+                return True
+        return False
     start, end = window(doc, rels)
     lo, hi = f"{year}-01-01", f"{year}-12-31"
     if start and start > hi:

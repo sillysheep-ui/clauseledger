@@ -76,6 +76,7 @@ function renderVerdict(c) {
     <div class="card-head"><span class="badge verdict">判定</span>
       <div class="headline">${esc(c.headline)}</div></div>
     <div class="card-body">
+      ${renderValidity(c)}
       ${direct ? `<div class="muted" style="margin:10px 0">直落条件，不适用评分办法。</div>` : bar(c.score)}
       ${direct ? "" : `<div class="row"><div class="k">依据</div><div class="v">
         <ul class="plain">${(c.basis || []).map((b) =>
@@ -93,12 +94,22 @@ function renderVerdict(c) {
   </div>`;
 }
 
+function renderValidity(c) {
+  const vs = c.validity || [];
+  if (!vs.length) return "";
+  return `<div class="validity"><b>时效提醒</b>（基准日 ${esc(vs[0].as_of)}）` +
+    vs.map((v) => `<div>《${esc(v.doc_no)}》${v.status === "expired" ? "已失效" :
+      v.status === "not_yet" ? "尚未施行" : "状态未知"}：${esc(v.reason)}</div>`).join("") +
+    `</div>`;
+}
+
 function renderStandard(c) {
   return `
   <div class="card">
     <div class="card-head"><span class="badge standard">标准</span>
       <div class="headline">${esc(c.headline)}</div></div>
     <div class="card-body">
+      ${renderValidity(c)}
       <div class="row"><div class="k">取决于</div>
         <div class="v muted">${(c.depends_on || []).map(esc).join("、")}</div></div>
       <div class="row"><div class="k">原文</div><div class="v">${renderEvidence(c.items && c.items.length ? c.items : c.evidence)}</div></div>

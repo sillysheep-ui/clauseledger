@@ -109,3 +109,8 @@ blockquote.clamp.open{display:block;-webkit-line-clamp:unset;cursor:zoom-out}
 .tag.cite { background: #eef3ee; color: #2f6b4f; font-variant-numeric: tabular-nums; }
 .draft-f { font-size: 12px; margin-top: 8px; }
 .warn { color: #a4522c; }
+
+.validity { margin: 10px 0 4px; padding: 10px 12px; border-left: 3px solid #d9a441;
+  background: #fdf8ee; font-size: 13px; color: #6b5320; }
+.validity b { font-weight: 600; }
+.validity div { margin-top: 4px; }

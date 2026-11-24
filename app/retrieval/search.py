@@ -628,17 +628,20 @@ def search_result(query: str, k: int = 8, *, status: tuple[str, ...] | None = No
 
 
 def _rank_at(doc_no: str, as_of: str) -> int:
-    """这份文件在 as_of 那天的效力档：3 有效 / 1 日期未知 / 0 已失效或未生效。"""
+    """这份文件在 as_of 那天的效力档：3 有效 / 1 日期未知 / 0 已失效或未生效。
+
+    走 `status_for` 的**时间段**判定：文件 2020 年到期、2026 年才被延期时，
+    2021 年落在断档里，必须判 0，而不是拿延期后的 2031 年当年底。
+    """
+    from app.domain.validity import status_for
+
     m = _DOCS_BY_NO.get(doc_no) or {}
-    start = str(m.get("effective_from") or m.get("issued_at") or "")[:10]
-    end = str(m.get("effective_to") or "")[:10]
-    if not start and not end:
+    st = status_for(doc_no, as_of, doc=m or None).status
+    if st == "effective":
+        return 3
+    if st == "unknown":
         return 1
-    if start and start > as_of:
-        return 0
-    if end and end < as_of:
-        return 0
-    return 3
+    return 0
 
 
 def _status_rank(status: str) -> int:

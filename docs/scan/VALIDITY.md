@@ -128,12 +128,46 @@ A 口径是「以解读文章发布日为 `as_of`，判 RAG 当时能不能找�
 - 只处理「延长有效期」这一类通知。废止、部分条款修改、重新发布都还没有接入
   （`app/retrieval/search.py` 里另有一份手写的废止表，覆盖 19 对）。
 - 目标文件不在语料里的通知会被记成「没认出被延长的文件」，不是解析失败。
-- 列优先的 8 份需要人工录入一次；录完应重跑 `--report` 看边数是否从 52 增加。
+- 列优先的扫描件已经用 Vision 坐标重建过一轮（见第四节），剩下 3 份是**目标文件不在语料**，
+  不是解析失败，不再硬啃。
 
 ## 七、验证
 
 ```bash
-python -m pytest tests/test_validity.py -q     # 4 条：单日期、按行配对、列优先拒绝、取较晚者
+python -m pytest tests/test_validity.py tests/test_validity_intervals.py -q   # 8 条
 python -m tools.ingest.validity --report       # 统计 + 未解析清单
 python -c "import json;d=json.load(open('data/processed/沪人社规-2018-46号.json'));print(d['valid_until'], d['extended_by'], d['validity_source'])"
 ```
+
+
+## 八、状态是投影：时间段，不是到期日
+
+到 2026-11-24 之前，系统里存的是**一个** `valid_until`。它回答不了「2021 年 5 月那天它有效吗」：
+文件可能 2020 年到期、2026 年才被一份新通知延到 2031 年，中间那几年是**断的**。
+把有效期压成单值，等于默认"断档不存在"。
+
+现在的分层：
+
+| 层 | 位置 | 内容 | 谁写 |
+|---|---|---|---|
+| 文件自述 | `data/processed/*.json` | `effective_from` / `effective_to`（正文原话） | 解析器 |
+| 延期关系 | `data/registry` 派生 → `data/derived/validity.json` | `edges`：谁把谁延到哪一天 | `tools.ingest.validity` |
+| 有效期区间 | 同上 `periods` | `[{start, end, by, gap}]`，断档标 `gap: true` | 同上 `periods()` |
+| 某天的状态 | 运行时算 | `effective / expired / not_yet / repealed / unknown` | `app/domain/validity.py::status_for` |
+
+当前派生结果：**493 份文件有区间、90 条延期边、1 处断档**。
+
+规则：
+- 通知的生效日 ≤ 当前段的到期日 → 往后**延长当前段**；
+- 晚于 → **新开一段**并标 `gap=true`，那段空档就是失效；
+- 自身到期日永远只读 `effective_to`，不读派生值（否则上一轮的结果会被当证据）。
+
+接线三处：
+1. `app/retrieval/search.py::_rank_at`：按 `status_for(doc_no, as_of)` 分 3/1/0，断档年的文件不进候选；
+2. `app/answer/cards.py::_validity_notes`：卡上「时效提醒」，只对 expired/repealed/not_yet
+   （以及历史时点的 unknown）提示，未知不等于失效；
+3. `tools/jobs/collect.py::derive`：每日采集后重算延期链并重建索引，`--no-derive` 可跳过。
+   失败只打印一行、不阻断采集——检索继续用上一版索引。
+
+为什么不做成字段：状态是**时间的函数**。同一份 `沪人社规〔2018〕46号`，
+2021 年有效（被〔2020〕9号延到 2022-12-31），2023 年起过期。存成字段就只能在"写入那一刻"是对的。

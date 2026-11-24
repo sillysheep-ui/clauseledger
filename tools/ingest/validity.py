@@ -341,6 +341,7 @@ def main() -> None:
         print(f"  {e.to} ← {e.by}（延至 {e.until}）")
 
     if args.apply:
+        print("派生：", write_derived(res, docs))
         for f in sorted(PROCESSED.glob("*.json")):
             d = json.loads(f.read_text("utf-8"))
             no = d.get("doc_no")
@@ -348,6 +349,75 @@ def main() -> None:
                 d.update({k: docs[no][k] for k in ("valid_until", "extended_by", "validity_source")})
                 f.write_text(json.dumps(d, ensure_ascii=False), "utf-8")
         print("已写回 processed")
+
+
+
+# ---------------------------------------------------------------- 时间段
+#
+# 一个 `valid_until` 字段回答不了「2021 年 5 月那天它有效吗」：
+# 文件可能 2020 年到期、2026 年才被一份新的通知延到 2031 年，
+# 中间那六年是**断的**。把有效期存成单值，等于默认"断档不存在"。
+
+
+@dataclass
+class Period:
+    start: str
+    end: str            # "" = 未记载到期
+    by: list[str] = field(default_factory=list)
+    gap: bool = False   # 这一段与上一段之间不连续
+
+
+def _notice_date(no: str, docs: dict[str, dict]) -> str:
+    d = docs.get(no) or {}
+    return str(d.get("effective_from") or d.get("issued_at") or "")[:10]
+
+
+def periods(res: Resolution, docs: dict[str, dict]) -> dict[str, list[Period]]:
+    """按时间顺序拼出每份文件的有效期区间。
+
+    连续延长（通知生效日 ≤ 当前到期日）就把当前段往后推；
+    否则新开一段并标 `gap=True`——断档是事实，不该被抹平。
+    """
+    out: dict[str, list[Period]] = {}
+    for no, doc in docs.items():
+        start = str(doc.get("effective_from") or doc.get("issued_at") or "")[:10]
+        own = own_end(doc)
+        if not start and not own and no not in res.valid_until:
+            continue
+        segs = [Period(start=start, end=own)]
+        mine = sorted((e for e in res.edges if e.to == no),
+                      key=lambda e: (_notice_date(e.by, docs), e.until))
+        for e in mine:
+            nd = _notice_date(e.by, docs)
+            cur = segs[-1]
+            if not cur.end or (nd and nd <= cur.end):
+                if e.until > (cur.end or ""):
+                    cur.end = e.until
+                if e.by not in cur.by:
+                    cur.by.append(e.by)
+            else:
+                segs.append(Period(start=nd or cur.end, end=e.until, by=[e.by], gap=True))
+        out[no] = segs
+    return out
+
+
+def write_derived(res: Resolution, docs: dict[str, dict],
+                  path: Path = Path("data/derived/validity.json")) -> dict:
+    """把时间段写成派生文件。processed/ 里留的是"文件自己说的"，这里是"算出来的"。"""
+    segs = periods(res, docs)
+    payload = {
+        "generated_at": __import__("datetime").datetime.now().isoformat(timespec="seconds"),
+        "periods": {
+            no: [{"start": p.start, "end": p.end, "by": p.by, "gap": p.gap} for p in ps]
+            for no, ps in segs.items()
+        },
+        "edges": [{"by": e.by, "to": e.to, "until": e.until} for e in res.edges],
+        "unresolved": res.unresolved,
+    }
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(payload, ensure_ascii=False, indent=1), "utf-8")
+    return {"periods": len(payload["periods"]), "edges": len(payload["edges"]),
+            "gaps": sum(1 for ps in payload["periods"].values() for p in ps if p["gap"])}
 
 
 if __name__ == "__main__":

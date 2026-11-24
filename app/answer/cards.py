@@ -99,6 +99,35 @@ def _evidence(hits: Iterable[dict], limit: int = 8) -> list[dict]:
     return out
 
 
+def _validity_notes(hits: Iterable[dict], as_of: str | None) -> list[dict]:
+    """基准日下**不是「有效」**的依据文件，逐条列出来。
+
+    有效期是时间的函数：同一份文件在 2021 年有效、在 2024 年已过期，
+    而我们的检索默认按今天排序。带年份提问时必须让用户看到"我引的是哪天的状态"。
+    """
+    from datetime import date
+
+    from app.domain.validity import status_for
+
+    day = as_of or date.today().isoformat()
+    out, seen = [], set()
+    for h in hits:
+        no = h.get("doc_no")
+        if not no or no in seen:
+            continue
+        seen.add(no)
+        v = status_for(no, day)
+        # `unknown` 不是警告：203 份文件本来就没写到哪年。只有"确实已失效/未生效"
+        # 或者"问的是过去某天"时才值得顶到卡面上。
+        if v.status in ("expired", "repealed", "partially_repealed", "not_yet") \
+                or (v.status == "unknown" and as_of and day < str(date.today())):
+            out.append({"doc_no": no, "status": v.status, "reason": v.reason,
+                        "as_of": day})
+        if len(out) >= 3:
+            break
+    return out
+
+
 def _fmt(x: Any) -> str:
     return "" if x is None else str(x)
 
@@ -176,6 +205,7 @@ def standard_card(answer: dict, hits: list[dict], as_of: str | None = None) -> d
         "confidence": a.get("confidence") or "high",
         "evidence": ev,
         "as_of": as_of,
+        "validity": _validity_notes(hits, as_of),
         "not_claimed": ["没有替你判断是否符合条件"],
     }
 

@@ -189,6 +189,23 @@ def write_report(results: list[dict], alerts: list[str], dry: bool) -> Path:
     return p
 
 
+def derive() -> str:
+    """重算有效期链 + 重建索引。失败不阻断采集：报告里留一行，人能看到。"""
+    try:
+        from app.retrieval import index as I
+        from tools.ingest import validity as V
+
+        docs = V.load()
+        res = V.build(docs)
+        stats = V.apply(res, docs)
+        V.write_derived(res, docs)
+        built = I.build()
+        return (f"派生完成：延期边 {len(res.edges)} 条，"
+                f"被延长 {stats['extended']} 份，索引 {built['docs']} 份 / {built['clauses']} 条")
+    except Exception as e:  # pragma: no cover
+        return f"派生失败（{type(e).__name__}: {e}）——检索仍用上一版索引"
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--dry-run", action="store_true", help="只扫列表与 diff，不抓正文")
@@ -196,6 +213,8 @@ def main() -> int:
     ap.add_argument("--max-pages", type=int, default=None, help="每栏目最多翻几页")
     ap.add_argument("--limit", type=int, default=50, help="每栏目最多抓多少份新文档")
     ap.add_argument("--backfill", action="store_true", help="首次扫描也抓历史全量（慎用）")
+    ap.add_argument("--no-derive", action="store_true",
+                    help="只采集，不重算有效期/索引（调试用）")
     args = ap.parse_args()
 
     cols = [c for c in COLUMNS if not args.only or c["name"] == args.only]
@@ -217,6 +236,12 @@ def main() -> int:
                                         for r in results]}, ensure_ascii=False) + "\n")
 
     total_new = sum(r["ingested"] for r in results)
+
+    # 派生层：有效期链与索引都依赖新抓到的文件。
+    # 放在**采集之后**跑，是为了让"新到一份延期通知"当天就反映到检索结果里——
+    # 状态不是存下来的字段，是每次从证据重新算出来的结论。
+    if not args.dry_run and not args.no_derive:
+        print(derive())
     print(f"扫描 {len(results)} 个栏目，抓取 {total_new} 份新文档 → {report}")
     for a in alerts:
         print(f"[告警] {a}", file=sys.stderr)
