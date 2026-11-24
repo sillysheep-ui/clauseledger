@@ -198,6 +198,31 @@ class Resolution:
 
 
 RAW = Path("data/raw")
+RELATIONS = Path("data/registry/relations.jsonl")
+
+
+def load_repeals(path: Path = RELATIONS) -> dict[str, list[dict]]:
+    """废止关系（由 tools/ingest/relations.py 从条款正文抽出来）。
+
+    它和延期链是同一件事的两面：都是"别的文件改变了这份文件的有效期"。
+    所以最后都要落进同一张时间表，而不是一个查关系表、一个查单值字段。
+    """
+    out: dict[str, list[dict]] = {}
+    if not Path(path).exists():
+        return out
+    for line in Path(path).read_text("utf-8").splitlines():
+        line = line.strip()
+        if not line:
+            continue
+        r = json.loads(line)
+        if r.get("type") not in ("repeal", "partial_repeal"):
+            continue
+        target, date = r.get("target"), r.get("effective_date")
+        if not target or not date:
+            continue
+        out.setdefault(target, []).append(
+            {"by": r["source"], "date": str(date)[:10], "kind": r["type"]})
+    return out
 
 
 def _pdf_path(doc: dict) -> str | None:
@@ -373,7 +398,8 @@ def _notice_date(no: str, docs: dict[str, dict]) -> str:
     return str(d.get("effective_from") or d.get("issued_at") or "")[:10]
 
 
-def periods(res: Resolution, docs: dict[str, dict]) -> dict[str, list[Period]]:
+def periods(res: Resolution, docs: dict[str, dict],
+            repeals: dict[str, list[dict]] | None = None) -> dict[str, list[Period]]:
     """按时间顺序拼出每份文件的有效期区间。
 
     连续延长（通知生效日 ≤ 当前到期日）就把当前段往后推；
@@ -400,14 +426,24 @@ def periods(res: Resolution, docs: dict[str, dict]) -> dict[str, list[Period]]:
             else:
                 segs.append(Period(start=nd or cur.end, end=e.until, by=[e.by],
                                    by_on=[nd], gap=True))
+        # 废止也是时间表的一部分：在被废止那天画一条终点线，
+        # 这样"某年有效吗""按 as_of 检索"和卡片上的时效提醒用的是同一套数据。
+        rep = sorted((repeals or {}).get(no, []), key=lambda r: r["date"])
+        if rep:
+            cut = rep[0]["date"]
+            cur = segs[-1]
+            if cut >= (cur.start or cut) and (not cur.end or cut < cur.end):
+                cur.end = cut
         out[no] = segs
     return out
 
 
 def write_derived(res: Resolution, docs: dict[str, dict],
-                  path: Path = Path("data/derived/validity.json")) -> dict:
+                  path: Path = Path("data/derived/validity.json"),
+                  repeals: dict[str, list[dict]] | None = None) -> dict:
     """把时间段写成派生文件。processed/ 里留的是"文件自己说的"，这里是"算出来的"。"""
-    segs = periods(res, docs)
+    repeals = repeals if repeals is not None else load_repeals()
+    segs = periods(res, docs, repeals)
     payload = {
         "generated_at": __import__("datetime").datetime.now().isoformat(timespec="seconds"),
         "periods": {
@@ -416,6 +452,7 @@ def write_derived(res: Resolution, docs: dict[str, dict],
             for no, ps in segs.items()
         },
         "edges": [{"by": e.by, "to": e.to, "until": e.until} for e in res.edges],
+        "repeals": repeals,
         "unresolved": res.unresolved,
     }
     path.parent.mkdir(parents=True, exist_ok=True)

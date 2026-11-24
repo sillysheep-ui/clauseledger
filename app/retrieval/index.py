@@ -104,6 +104,14 @@ def collect(min_chars: int = 10) -> list[Clause]:
         # valid_until = 自身到期日与所有延期通知日期的最大值（tools/ingest/validity.py）
         end = d.get("valid_until") or d.get("effective_to")
         st = status_of(end, d.get("effective_from"))
+        # 时间表是唯一口径：废止/断档在 build 时就已经体现在 status 上，
+        # 不再让"单值到期日"和"关系表"各算一遍。
+        try:
+            from app.domain.validity import status_for
+
+            st = status_for(d.get("doc_no") or "", doc=d).status
+        except Exception:
+            pass
         # 附件里的《办法》有自己的一套编号，引用时必须写明"附件N ›"，否则和正文的第十八条分不开
         labels = [re.sub(r"\s+", "", (b.get("text") or "").strip())
                   for b in d.get("blocks", [])

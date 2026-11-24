@@ -162,11 +162,19 @@ python -c "import json;d=json.load(open('data/processed/沪人社规-2018-46号.
 - 晚于 → **新开一段**并标 `gap=true`，那段空档就是失效；
 - 自身到期日永远只读 `effective_to`，不读派生值（否则上一轮的结果会被当证据）。
 
+废止也并进同一张表（2026-11-24）：`tools/ingest/validity.py::load_repeals()` 读
+`data/registry/relations.jsonl`（137 条废止 + 3 条部分废止），在**被废止那天**给区间画终点线，
+同时写进派生文件的 `repeals`。`status_for` 先查废止、再查区间——两套数据、一个口径。
+「没写到期日」永远是 `unknown`，不是"长期有效"。
+
+条款级状态分布（重建索引后）：effective 2141 / expired 1720 / unknown 1189 /
+repealed 911 / partially_repealed 26 / not_yet 18（共 6,005 条叶子条款）。
+
 接线三处：
 1. `app/retrieval/search.py::_rank_at`：按 `status_for(doc_no, as_of)` 分 3/1/0，断档年的文件不进候选；
 2. `app/answer/cards.py::_validity_notes`：卡上「时效提醒」，只对 expired/repealed/not_yet
    （以及历史时点的 unknown）提示，未知不等于失效；
-3. `tools/jobs/collect.py::derive`：每日采集后重算延期链并重建索引，`--no-derive` 可跳过。
+3. `tools/jobs/collect.py::derive`：每日采集后重算延期链（含废止）并重建索引，`--no-derive` 可跳过。
    失败只打印一行、不阻断采集——检索继续用上一版索引。
 
 为什么不做成字段：状态是**时间的函数**。同一份 `沪人社规〔2018〕46号`，

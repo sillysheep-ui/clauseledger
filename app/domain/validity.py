@@ -21,20 +21,28 @@ RELATIONS = Path("data/registry/relations.jsonl")
 DERIVED = Path("data/derived/validity.json")
 
 # 派生文件按 mtime 缓存：定时任务重算之后，常驻进程不用重启就能看到新时间段。
-_PERIODS: tuple[float, dict[str, list[dict]]] | None = None
+_PERIODS: tuple[float, dict] | None = None
 
 
-def periods_of(doc_no: str) -> list[dict]:
-    """这份文件的有效期区间（按时间排序）。没有派生数据就返回空。"""
+def _derived() -> dict:
     global _PERIODS
     try:
         mtime = DERIVED.stat().st_mtime
     except OSError:
-        return []
+        return {}
     if _PERIODS is None or _PERIODS[0] != mtime:
-        data = json.loads(DERIVED.read_text("utf-8"))
-        _PERIODS = (mtime, data.get("periods") or {})
-    return (_PERIODS[1] or {}).get(doc_no) or []
+        _PERIODS = (mtime, json.loads(DERIVED.read_text("utf-8")))
+    return _PERIODS[1]
+
+
+def repeals_of(doc_no: str) -> list[dict]:
+    """这张时间表里记着的废止关系（和延期边来自同一个派生文件）。"""
+    return (_derived().get("repeals") or {}).get(doc_no) or []
+
+
+def periods_of(doc_no: str) -> list[dict]:
+    """这份文件的有效期区间（按时间排序）。没有派生数据就返回空。"""
+    return (_derived().get("periods") or {}).get(doc_no) or []
 
 
 @dataclass(frozen=True)
@@ -107,6 +115,14 @@ def status_for(doc_no: str, as_of: str | None = None,
     rels = rels if rels is not None else load()
     no = doc_no or (doc or {}).get("doc_no") or ""
 
+    for r in sorted(repeals_of(no), key=lambda x: x["date"]):
+        if r["date"] <= day:
+            kind = "partially_repealed" if r["kind"] == "partial_repeal" else "repealed"
+            return Validity(kind, day, f"被《{r['by']}》"
+                            f"{'部分条款停止执行' if kind == 'partially_repealed' else '废止'}"
+                            f"（{r['date']} 起）", repealed_by=r["by"], since=r["date"])
+
+    # 派生文件缺这份文件时，退回关系表（同一批数据的另一份副本，不是第二套规则）。
     for e in rels.get(no, []):
         since = e.get("effective_date")
         if since and since <= day:
@@ -135,10 +151,14 @@ def status_for(doc_no: str, as_of: str | None = None,
             # 只提"这一天之前已经发生"的延期：问 2019 年的事，不该拿 2020 年的通知当理由。
             pairs = list(zip(seg.get("by") or [],
                              seg.get("by_on") or [""] * len(seg.get("by") or [])))
-            relevant = [b for b, on in pairs if not on or on <= day]
+            end = seg.get("end") or ""
+            relevant = [b for b, on in pairs
+                        if (not on or on <= day) and (not end or not on or on <= end)]
+            if not end:
+                # 没写到期日 ≠ 永久有效：标 unknown，检索保留、但不给"现行"加权。
+                return Validity("unknown", day, "未记载有效期")
             why = f"经《{relevant[-1]}》延期" if relevant else ""
-            tail = f"有效期至 {end}" if end else "未记载有效期"
-            return Validity("effective", day, f"{why}{tail}".strip(), )
+            return Validity("effective", day, f"{why}有效期至 {end}".strip())
 
     last = segs[-1]
     return Validity("expired", day, f"有效期至 {last.get('end')}，已过期",

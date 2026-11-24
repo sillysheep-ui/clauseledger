@@ -99,3 +99,34 @@ def test_reason_does_not_mention_future_notice(tmp_path, monkeypatch):
     assert early.status == "effective" and "2020" not in early.reason
     late = D.status_for("沪人社规〔2018〕46号", "2021-06-01")
     assert "沪人社规〔2020〕9号" in late.reason
+
+
+def test_repeal_cuts_the_interval(tmp_path, monkeypatch):
+    """被废止那天就是时间表的终点：前一天有效，当天起算废止。"""
+    segs = {"沪人社福发〔2015〕34号": [
+        {"start": "2015-01-01", "end": "2020-12-01", "by": [], "by_on": [], "gap": False}]}
+    reps = {"沪人社福发〔2015〕34号": [
+        {"by": "沪人社规〔2020〕26号", "date": "2020-12-01", "kind": "repeal"}]}
+    p = tmp_path / "validity.json"
+    p.write_text(json.dumps({"periods": segs, "repeals": reps}, ensure_ascii=False), "utf-8")
+    monkeypatch.setattr(D, "DERIVED", p)
+    monkeypatch.setattr(D, "_PERIODS", None)
+
+    assert D.repeals_of("沪人社福发〔2015〕34号")[0]["by"] == "沪人社规〔2020〕26号"
+    before = D.status_for("沪人社福发〔2015〕34号", "2020-11-30")
+    assert before.status == "effective"
+    after = D.status_for("沪人社福发〔2015〕34号", "2020-12-01")
+    assert after.status == "repealed" and "2020-12-01" in after.reason
+
+
+def test_extension_reason_never_postdates_the_segment(tmp_path, monkeypatch):
+    """2022 年的通知不能给 2017 年就到期的段落当延期理由。"""
+    segs = {"沪人社养发(2012)20号": [
+        {"start": "", "end": "2017-03-27", "by": ["沪人社规〔2022〕12号"],
+         "by_on": ["2022-03-25"], "gap": False}]}
+    p = tmp_path / "validity.json"
+    p.write_text(json.dumps({"periods": segs}, ensure_ascii=False), "utf-8")
+    monkeypatch.setattr(D, "DERIVED", p)
+    monkeypatch.setattr(D, "_PERIODS", None)
+    v = D.status_for("沪人社养发(2012)20号", "2017-01-01")
+    assert v.status == "effective" and "2022" not in v.reason
