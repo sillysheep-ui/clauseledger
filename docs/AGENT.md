@@ -16,18 +16,22 @@
   pipeline 和 agent 看到的是同一份证据，对照才成立。
 - 模型只能选工具，不能改判定：`judge_luohu` 的结论原样转述，写操作不在工具面里。
 
-## 工具面（四个，全只读）
+## 工具面（三个，全只读）
 
-| 工具 | 作用 |
-|---|---|
-| `search_policy` | 检索 + 装配，返回带引用的证据；覆盖不到时直接返回拒答原因 |
-| `check_coverage` | 城市/事项的覆盖状态（covered / partial / blocked / out_of_scope） |
-| `get_clause` | 按文号 + 路径取一条条款原文，核对细节用 |
-| `judge_luohu` | 落户四态判定，返回结论/已知分/上限/待确认项 |
+只放"需要模型临场决定"的能力；必须发生的阶段不做成工具。
 
-写操作（`draft_plan`）**故意不在工具面里**——审批与幂等要等门控接到 agent 路径之后再开，
-否则等于绕过了 `gate_action`。`tests/test_agent_runtime.py::test_tool_surface_has_no_write_tools`
-把这条红线钉住了。
+| 工具 | 作用 | 对应原来的 |
+|---|---|---|
+| `search_policy` | 检索 + 装配，返回**少而整**的证据（默认 ≤8 条、≤2,600 字，每条完整条款） | `retrieve` + `assemble` |
+| `check_coverage` | 城市/事项覆盖状态（covered / partial / blocked / out_of_scope） | `coverage` |
+| `read_clause` | 只有证据标了 `truncated` 时才用，把某一条读全 | 无（新增，按需） |
+
+**不在工具面里的**：判定（`judge`）、逐句核验（`verify`）、门控（`gate_*`）、写操作（`draft_plan`）。
+它们是 run 的固定阶段——模型无权决定这些事发不发生。调用方给了 profile，运行时就在
+循环**之前**用代码算好判定，作为【系统判定】段落交给模型解释，模型只转述不重算。
+
+证据规则：**按条数与总字数控制，不按每条截断**。极少数超过 1,200 字的条款会标
+`truncated=true` 并给出原文长度，模型再用 `read_clause` 补读——绝不静默截半句。
 
 ## 现状
 

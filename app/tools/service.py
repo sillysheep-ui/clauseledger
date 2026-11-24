@@ -84,6 +84,34 @@ def evidence(question: str, k: int = 5, as_of: str | None = None) -> dict:
     }
 
 
+def evidence_compact(question: str, *, max_items: int = 8, budget: int = 2600,
+                     per_item_cap: int = 1200, as_of: str | None = None) -> dict:
+    """少而整：按"条数 + 总字数"控制证据量，不按"每条截多少字"。
+
+    每条要么是完整条款，要么显式标 `truncated=true`（原文超 per_item_cap，只给前段，
+    并带上 doc_no/path 供 read_clause 补读）。**绝不静默截断**——条款切一半会改语义。
+    """
+    full = evidence(question, k=5, as_of=as_of)
+    if full["refused"]:
+        return {**full, "evidence": [], "n": 0, "n_available": 0,
+                "budget_used": 0, "truncated_any": False}
+    items: list[dict] = []
+    used = 0
+    for e in full["evidence"]:
+        if len(items) >= max_items or used >= budget:
+            break
+        raw = e["text"]
+        cut = len(raw) > per_item_cap
+        text = raw[:per_item_cap] if cut else raw
+        if items and used + len(text) > budget:
+            break
+        items.append({**e, "text": text, "chars": len(raw), "truncated": cut})
+        used += len(text)
+    return {**{k: v for k, v in full.items() if k != "evidence"},
+            "evidence": items, "n": len(items), "n_available": len(full["evidence"]),
+            "budget_used": used, "truncated_any": any(x["truncated"] for x in items)}
+
+
 def search(question: str, k: int = 5, as_of: str | None = None) -> dict:
     """只检索不装配（调试用）：按分数返回原始命中条款。"""
     a = _search(question, k, as_of)
