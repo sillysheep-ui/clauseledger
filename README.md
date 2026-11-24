@@ -192,7 +192,8 @@ python -m uvicorn app.api.server:app --port 8010   # http://127.0.0.1:8010/
 4. [`docs/FUNNEL.md`](docs/FUNNEL.md) — 端到端漏斗：每一步掉多少、掉在哪
 5. [`docs/RECALL-COMPARE.md`](docs/RECALL-COMPARE.md) — 四种召回器的对照与"一个都没上线"
 6. [`docs/ABSTENTION.md`](docs/ABSTENTION.md) — 什么时候闭嘴，以及为什么阈值是 5.3 / 1.25
-7. [`docs/research/`](docs/research/) — 立项时的实测：岗位面经、开源盘点、六场景 curl 结果
+7. [`docs/CONSTRAINTS.md`](docs/CONSTRAINTS.md) — 约束清单：哪些事"必须永远成立"、在哪一行代码里强制、有没有测
+8. [`docs/research/`](docs/research/) — 立项时的实测：岗位面经、开源盘点、六场景 curl 结果
 
 想直接看"这人怎么想问题"的，读 [`docs/AUDIT.md`](docs/AUDIT.md)：五轮自审，包括我自己推翻的三条结论。
 
