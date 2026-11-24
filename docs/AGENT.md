@@ -64,4 +64,5 @@ PYTHONPATH="$PWD/spikes/agentscope/.venv/lib/python3.13/site-packages:$PWD/.venv
 `CLAUSELEDGER_ASM_BUDGET`（默认 6,000 字）。超 1,200 字的单条才截断并标 `truncated`。
 
 实测（70 道可核对题，L3 判据，rerank 默认开）：2,000 字 50.0%、4,000 字 60.0%、
-6,000 字 62.9%、全部装配 65.7%（详见 `docs/EVAL-SPEC.md` §6.8）。
+6,000 字 62.9%、全部装配 65.7%；6,000 字比全给少约 14 条，覆盖只差 2.8pp
+（详见 `docs/EVAL-SPEC.md` §6.8）。
