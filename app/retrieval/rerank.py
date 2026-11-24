@@ -20,7 +20,13 @@ _model_name: str | None = None
 
 
 def enabled() -> bool:
-    return os.environ.get("CLAUSELEDGER_RERANK", "0") not in ("", "0", "false", "no")
+    """默认开启：重排是标准 RAG 流程的一环，不再按单次评测结果决定开关。
+
+    在我们自己的 hybrid 候选池上它没有正收益（P@1 51.0% → 40.6%，+1.84s/题），
+    这条实测记在 docs/EVAL-SPEC.md §5.1；要复现旧口径的数字用
+    `CLAUSELEDGER_RERANK=0` 关掉，而不是改默认值。
+    """
+    return os.environ.get("CLAUSELEDGER_RERANK", "1") not in ("", "0", "false", "no")
 
 
 def top_n() -> int:
