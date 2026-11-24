@@ -42,7 +42,7 @@ def test_rules_numbers_are_allowed():
     assert r.kept, r.issues
 
 
-def test_assemble_expands_within_anchor_docs():
+def test_assemble_expands_within_anchor_docs(monkeypatch):
     """新装配：锚点文件内多条都进上下文，而不是只给命中那一条的邻居。"""
     pytest.importorskip("bm25s")
     from pathlib import Path as _P
@@ -50,6 +50,9 @@ def test_assemble_expands_within_anchor_docs():
     if not _P("data/index/clauses.jsonl").exists():
         pytest.skip("语料不入库")
     from app.answer import context
+
+    # 锚点策略现在是显式开关（默认是纯条款装配）
+    monkeypatch.setenv("CLAUSELEDGER_ASSEMBLE", "anchors")
     from app.retrieval.search import search_result
 
     a = search_result("失业保险金怎么领", k=3, min_answer=0, min_score_strong=0,

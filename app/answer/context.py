@@ -220,9 +220,9 @@ def _rel(c: Clause, qt: set[str], *, numeric: bool) -> float:
     return score
 
 
-def assemble(question: str, hits, *, max_chars: int = 12000,
-             anchors: int | None = None, per_doc: int | None = None) -> list[Evidence]:
-    """锚点 -> 同文件展开 -> 预算内贪心。
+def _assemble_anchors(question: str, hits, *, max_chars: int = 12000,
+                      anchors: int | None = None, per_doc: int | None = None) -> list[Evidence]:
+    """锚点 -> 同文件展开 -> 预算内贪心（旧策略，保留作对照）。
 
     和旧版（hit → parent → neighbor）的区别：旧版只沿"位置"扩一条，这一版
     沿"文件"扩——同一份文件里跟问题最相关的几条都给它，因为答案句经常
@@ -313,3 +313,70 @@ def assemble(question: str, hits, *, max_chars: int = 12000,
             add(cand, "same_doc")
 
     return out
+
+
+def assemble_flat(hits, *, max_items: int | None = None, per_doc: int | None = None,
+                  max_chars: int | None = None) -> list[Evidence]:
+    """纯条款装配：按排序取条款，不扩父条/邻居/同文件。
+
+    只做两件约束：每份文件最多 N 条（多样性）、总字数不超预算。
+    用来验证"3 个锚点文件 × 每份 20 条"是不是必要——如果它不比现在差，
+    说明文件级锚点是我们自己加的限制，不是语料要求。
+    """
+    import os
+
+    max_items = int(os.environ.get("CLAUSELEDGER_FLAT_ITEMS") or max_items or 30)
+    per_doc = int(os.environ.get("CLAUSELEDGER_FLAT_PER_DOC") or per_doc or 8)
+    max_chars = int(os.environ.get("CLAUSELEDGER_FLAT_CHARS") or max_chars or 6000)
+
+    out: list[Evidence] = []
+    seen: set[str] = set()
+    per: dict[str, int] = {}
+    used = 0
+    for h in hits:
+        c = h.clause
+        if c.id in seen or per.get(c.doc_no, 0) >= per_doc:
+            continue
+        t = _trim(h.child or c.text)
+        if out and used + len(t) > max_chars:
+            continue
+        seen.add(c.id)
+        per[c.doc_no] = per.get(c.doc_no, 0) + 1
+        out.append(Evidence(f"E{len(out) + 1}", c.id, c.doc_no, c.title,
+                            list(c.path), c.page, t, "hit", c.citation,
+                            heading_for(c.doc_no, list(c.path))))
+        used += len(t)
+        if len(out) >= max_items:
+            break
+    return out
+
+
+def assemble(question: str, hits, *, max_chars: int = 12000,
+             anchors: int | None = None, per_doc: int | None = None) -> list[Evidence]:
+    """默认装配：纯条款 top-N（每份文件有上限）。
+
+    2026-11-24 的对照（70 题，同一检索器、同一判据）显示锚点策略更差：
+    金标在证据 74.3% → 88.6%，答案句覆盖 72.9% → 77.1%，条数 39 → 25。
+    锚点不再是默认；要复现用 `CLAUSELEDGER_ASSEMBLE=anchors`，最老的
+    hit→parent→neighbor 用 `=legacy`。
+    """
+    import os
+
+    mode = os.environ.get("CLAUSELEDGER_ASSEMBLE", "flat")
+    if mode == "legacy":
+        return _legacy_assemble(question, hits, max_chars=max_chars)
+    if mode == "anchors":
+        return _assemble_anchors(question, hits, max_chars=max_chars,
+                                 anchors=anchors, per_doc=per_doc)
+    return assemble_flat(hits)
+
+
+def evidence_for(question: str, *, k: int = 30, as_of: str | None = None) -> list[Evidence]:
+    """取证据的唯一入口：条款级排序（不按文件去重）+ 装配。
+
+    之前调用方拿的是 `search_result(k=5).hits`——那是**按文件去过重**的 5 条，
+    再交给装配就只剩 5 条。纯条款装配必须从 `ranked_clauses` 拿完整排序。
+    """
+    from app.retrieval import search as S
+
+    return assemble(question, S.ranked_clauses(question, k=k, as_of=as_of))

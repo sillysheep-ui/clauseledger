@@ -73,9 +73,9 @@ def evidence(question: str, k: int = 5, as_of: str | None = None) -> dict:
             "as_of": a.as_of,
             "evidence": [],
         }
-    from app.answer.context import assemble
+    from app.answer.context import evidence_for
 
-    ev = assemble(question, a.hits)
+    ev = evidence_for(question)
     return {
         "refused": False,
         "kind": a.kind,

@@ -5,13 +5,12 @@ from app.tools import service as T
 
 
 def test_evidence_matches_pipeline_assembly():
-    from app.answer.context import assemble
-    from app.retrieval.search import search_result
+    from app.answer.context import evidence_for
 
     q = "失业保险金怎么领"
     d = T.evidence(q)
     assert d["refused"] is False
-    ev = assemble(q, search_result(q, k=5).hits)
+    ev = evidence_for(q)
     got = d["evidence"]
     assert [e["eid"] for e in got] == [e.eid for e in ev]
     assert [e["text"] for e in got] == [e.text for e in ev]

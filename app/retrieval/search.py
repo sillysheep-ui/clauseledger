@@ -234,7 +234,6 @@ def content_terms(qs: set[str]) -> set[str]:
 
 _MODE = "none"
 _AGREE: bool | None = None
-_DOC_ALPHA = float(os.environ.get("CLAUSELEDGER_DOCAGG", "0") or 0)
 _TITLE_W = float(os.environ.get("CLAUSELEDGER_TITLE_W", "0.6") or 0)
 _COV_W = float(os.environ.get("CLAUSELEDGER_COV_W", "0") or 0)   # 本次实际用的召回方式；"没检索"就是 none，不许写成 bm25
 _RW = None       # 本次命中过的口语改写（写进 searched，供答案展示）
@@ -284,37 +283,6 @@ def search(query: str, k: int = 8, *, status: tuple[str, ...] | None = None,
                          min_coverage=min_coverage, min_cand_cov=min_cand_cov,
                          min_score_strong=min_score_strong,
                          min_margin_strong=min_margin_strong).hits
-
-
-def _doc_aggregate(out: list, alpha: float) -> list:
-    """按"文件"聚合分数后再排：max + alpha × 其余前三条之和。
-
-    为什么要：同一个问题的答案常常散在一份文件的几条里，每条都只沾一点，
-    单条分数打不过别家"恰好全中"的一条。但我们给用户的本来就是一份文件
-    （卡片按文件组织），所以应该按文件比，而不是按单条比。
-    alpha=0 等于原来的单条排序。
-    """
-    if alpha <= 0 or len(out) < 2:
-        return out
-    groups: dict[str, list] = {}
-    order: list[str] = []
-    for h in out:
-        d = h.clause.doc_no
-        if d not in groups:
-            groups[d] = []
-            order.append(d)
-        groups[d].append(h)
-    scored = []
-    for d in order:
-        hs = groups[d]
-        rs = sorted((h._rank for h in hs), reverse=True)
-        s = rs[0] + alpha * sum(rs[1:4])
-        scored.append((s, order.index(d), d, hs))
-    scored.sort(key=lambda x: (x[0], -x[1]), reverse=True)
-    flat = []
-    for _, __, ___, hs in scored:
-        flat.extend(hs)
-    return flat
 
 
 def _answer_type_boost(query: str, out: list[Hit], top_docs: int = 5) -> list[Hit]:
@@ -533,9 +501,6 @@ def rank_candidates(cands: list[Cand], p: Pool, *, year: int | None,
         out.sort(key=lambda h: (h._in_year, h._rank), reverse=True)
     else:
         out.sort(key=lambda h: h._rank, reverse=True)
-    # 文档级聚合必须在最后一次排序之后做，否则会被下一次 sort 覆盖。
-    if _DOC_ALPHA > 0:
-        out = _doc_aggregate(out, _DOC_ALPHA)
     return out
 
 
@@ -577,17 +542,16 @@ def decide(p: Pool, out: list[Hit], *, k: int, as_of: str,
                   confidence="high", conf_score=_ff)
 
 
-def search_result(query: str, k: int = 8, *, status: tuple[str, ...] | None = None,
-                  as_of: str | None = None,
-                  min_score: float = MIN_SCORE, min_coverage: float = MIN_COVERAGE,
-                  min_cand_cov: float = MIN_CAND_COV, min_answer: float = MIN_ANSWER,
-                  min_score_strong: float = MIN_SCORE_STRONG,
-                  min_margin_strong: float = MIN_MARGIN_STRONG) -> Answer:
+def _prepare(query: str, k: int, *, as_of: str | None = None,
+             min_score: float = MIN_SCORE, min_cand_cov: float = MIN_CAND_COV):
+    """检索前的全部确定性步骤：覆盖/域内检查 -> 召回 -> 过滤 -> 排序。
+
+    提前拒绝时直接返回 `Answer`（调用方 isinstance 判断）；否则返回 (Pool, out, as_of)。
+    """
     from app.domain.validity import year_of as _year_of
 
-    # 每次调用先清空"上次的召回痕迹"：提前返回（未覆盖/不在域内）时必须写 none，
-    # 不能把上一次的 hybrid 留在 searched 里——那等于伪造"查过"。
-    global _MODE, _RW, _AGREE
+    global _MODE, _RW, _AGREE, _REPEALED, _REPEAL_SRC
+
     _MODE = "none"
     _RW = None
     _AGREE = None
@@ -595,17 +559,13 @@ def search_result(query: str, k: int = 8, *, status: tuple[str, ...] | None = No
     _y = _year_of(query)
     _as_of = as_of or (f"{_y}-12-31" if _y else date.today().isoformat())
     if as_of:
-        # 显式给了历史日期：窗口按那天算，问句里的年份不再覆盖它
         _y = int(as_of[:4])
     if reason:
         kind = "not_covered" if reason.startswith(("未覆盖", "未接入")) else "out_of_domain"
-        # 连索引都没进：n_queries=0。这种结局绝不能是 no_policy（那是"查过没有"）。
         return Answer([], reason, kind, n_docs=0, searched=_searched(0, 0), as_of=_as_of)
     from app.domain.validity import load as _load_rels
 
     _rels = _load_rels()
-    year = _y
-    global _REPEALED, _REPEAL_SRC
     if _as_of not in _BY_DAY:
         _BY_DAY[_as_of] = _repealed_as_of(_as_of, _rels)
     _REPEALED = _BY_DAY[_as_of]
@@ -616,12 +576,39 @@ def search_result(query: str, k: int = 8, *, status: tuple[str, ...] | None = No
     if not p.qt:
         return Answer([], "问题里没有可用于检索的词", "insufficient",
                       searched=_searched(0, 0), as_of=_as_of)
-    cands = filter_candidates(p.cands, status=status, min_score=min_score,
+    cands = filter_candidates(p.cands, status=None, min_score=min_score,
                               min_cand_cov=min_cand_cov)
     if as_of:
-        # 那天不在有效期的文件，连候选都不算——A 口径要判的是"当时能不能找到"
         cands = [c for c in cands if _rank_at(c.clause.doc_no, as_of) > 0]
-    out = rank_candidates(cands, p, year=year, rels=_rels)
+    out = rank_candidates(cands, p, year=_y, rels=_rels)
+    return p, out, _as_of
+
+
+def ranked_clauses(query: str, k: int = 30, *, as_of: str | None = None,
+                   min_score: float = MIN_SCORE,
+                   min_cand_cov: float = MIN_CAND_COV) -> list[Hit]:
+    """条款级排序结果，**不按文件去重**——给"纯条款装配"用。
+
+    与 `search_result` 走同一条 `_prepare`，唯一差别是最后不做 _collapse/slice，
+    所以两者的第 1 条永远一致，可以逐题对照。
+    """
+    prep = _prepare(query, k, as_of=as_of, min_score=min_score, min_cand_cov=min_cand_cov)
+    if isinstance(prep, Answer):
+        return []
+    _p, out, _as_of = prep
+    return out[:k]
+
+
+def search_result(query: str, k: int = 8, *, status: tuple[str, ...] | None = None,
+                  as_of: str | None = None,
+                  min_score: float = MIN_SCORE, min_coverage: float = MIN_COVERAGE,
+                  min_cand_cov: float = MIN_CAND_COV, min_answer: float = MIN_ANSWER,
+                  min_score_strong: float = MIN_SCORE_STRONG,
+                  min_margin_strong: float = MIN_MARGIN_STRONG) -> Answer:
+    prep = _prepare(query, k, as_of=as_of, min_score=min_score, min_cand_cov=min_cand_cov)
+    if isinstance(prep, Answer):
+        return prep
+    p, out, _as_of = prep
     return decide(p, out, k=k, as_of=_as_of, min_answer=min_answer,
                   min_score_strong=min_score_strong,
                   min_margin_strong=min_margin_strong)

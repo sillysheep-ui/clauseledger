@@ -10,7 +10,7 @@ import argparse
 import sys
 
 from app.answer import generate as G
-from app.answer.context import assemble, estimate_tokens
+from app.answer.context import estimate_tokens, evidence_for
 from app.answer.verify import check
 from app.retrieval.search import search_result
 
@@ -30,7 +30,7 @@ def main() -> int:
         print("[证据] 无")
         return 0
 
-    ev = assemble(a.question, ans.hits, max_chars=a.budget)
+    ev = evidence_for(a.question)
     print(f"[证据] {len(ev)} 条 / {sum(len(e.text) for e in ev)} 字 / ≈{estimate_tokens(ev)} token")
     for e in ev:
         print(f"  {e.eid} {e.role:8s} {e.citation} ({len(e.text)}字)")

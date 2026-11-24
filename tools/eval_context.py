@@ -51,7 +51,7 @@ def run(k: int, with_parent: bool, limit: int | None) -> dict:
         official = answers.get(q["id"], "")
         traceable = covered_sentences(official, ALL)[0] > 0 if official else False
         a = S.search_result(text, k=k)
-        ev = ctx.assemble(text, a.hits) if a.hits else []
+        ev = ctx.evidence_for(text) if a.hits else []
         if not with_parent:
             ev = [e for e in ev if e.role == "hit"]
         blob = "".join(e.text for e in ev)

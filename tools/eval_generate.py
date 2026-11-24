@@ -51,7 +51,7 @@ def run(k: int, limit: int | None, use_llm: bool) -> dict:
         text = q.get("q_ctx") or q["q"]
         official = answers.get(q["id"], "")
         a = S.search_result(text, k=k)
-        ev = ctx.assemble(text, a.hits) if a.hits else []
+        ev = ctx.evidence_for(text) if a.hits else []
         blob = "".join(e.text for e in ev)
         ctx_any = covered_sentences(official, blob)[0] > 0 if official else False
         row = {"id": q["id"], "kind": a.kind, "ctx_any": ctx_any,

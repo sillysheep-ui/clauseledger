@@ -160,17 +160,15 @@ def _attach_draft(state, card: dict) -> dict:
         return card
 
     from app.answer import generate as G
-    from app.answer.context import assemble
+    from app.answer.context import evidence_for
     from app.answer.verify import check
-    from app.retrieval.search import search_result
 
     if not G.available():
         return card
     try:
         # 重新取一次召回结果：state.hits 是给卡片用的扁平 dict，没有条款对象；
         # 复用同一个 search_result 保证"卡片看到的"和"模型看到的"是同一批候选。
-        again = search_result(state.question, k=5)
-        ev = assemble(state.question, again.hits)
+        ev = evidence_for(state.question)
         rules = None
         if card.get("kind") == "verdict":
             basis = [(b.get("label", ""), b.get("points"))
