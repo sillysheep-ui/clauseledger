@@ -19,6 +19,7 @@
 from __future__ import annotations
 
 import argparse
+import glob
 import json
 import re
 from dataclasses import dataclass, field
@@ -27,8 +28,10 @@ from pathlib import Path
 PROCESSED = Path("data/processed")
 REPORT = Path("docs/scan/VALIDITY.md")
 
+# 空格必须容忍：HTML 表格是「沪人社福发 〔 2014 〕 36 号」，
+# OCR 是「沪人社规〔2020〕9 号」。早期版本不允许空格，14 行的表格因此整份配不出来。
 RE_DOCNO = re.compile(
-    r"沪[\u4e00-\u9fa5]{1,8}[〔（(]\s*\d{2,4}\s*[〕）)]\s*第?\s*\d+\s*号"
+    r"沪\s*[\u4e00-\u9fa5]{1,8}\s*[〔（(]\s*\d{2,4}\s*[〕）)]\s*第?\s*\d+\s*号"
 )
 RE_EXT_DATE = re.compile(
     r"(?:有效期\s*(?:延长|延至|续期)?\s*至|延长至|延至|续期至)"
@@ -64,6 +67,30 @@ def dates_in(doc: dict) -> list[str]:
     out = {f"{int(y):04d}-{int(m):02d}-{int(d):02d}"
            for y, m, d in RE_EXT_DATE.findall(body_text(doc))}
     return sorted(out)
+
+
+def date_list(doc: dict) -> list[str]:
+    """按出现顺序列日期，**保留重复**——列优先表格靠"第几个日期"对齐。"""
+    return [f"{int(y):04d}-{int(m):02d}-{int(d):02d}"
+            for y, m, d in RE_EXT_DATE.findall(body_text(doc))]
+
+
+def align_by_count(doc: dict, docs: dict[str, dict], own: str | None = None) -> list[tuple[str, str]]:
+    """列优先排版：文号一列、日期一列，两者按出现顺序一一对应。
+
+    只在**数量完全相等**且文号互不重复时配对。数量不等就说明有单元格丢了
+    （OCR 常把长文号截断），此时按顺序硬配会让第 3 个文件拿到第 4 个日期——
+    比不知道更糟，所以直接返回空。
+    """
+    text = body_text(doc)
+    # 通知自己的文号也出现在版头，先剔掉；否则数量永远差一个，永远对不齐。
+    nos = [m.group(0) for m in RE_DOCNO.finditer(text) if key(m.group(0)) != key(own or "")]
+    ds = date_list(doc)
+    if len(nos) < 2 or len(nos) != len(ds):
+        return []
+    if len({key(n) for n in nos}) != len(nos):
+        return []
+    return list(zip(nos, ds))
 
 
 def end_date(doc: dict) -> str:
@@ -121,7 +148,38 @@ def targets(notice: dict, docs: dict[str, dict]) -> list[str]:
         t = norm(doc.get("title") or "")
         if len(t) >= 12 and t in flat:
             found.append(no)
+
+    if not found:
+        found.extend(_by_quoted_title(text, own, docs))
     return sorted(set(found))
+
+
+def _by_quoted_title(text: str, own: str | None, docs: dict[str, dict]) -> list[str]:
+    """单文件延期：正文只写《…》标题、不写文号时，按标题相似度找目标。
+
+    通知标题本身也含目标标题，所以只取**书名号里的**片段，并要求最佳匹配
+    明显高于次佳（差值 ≥ 0.05），否则宁可不认。
+    """
+    import difflib
+    quoted = {norm(q) for q in re.findall(r"《([^》]{6,90})》", text)}
+    if not quoted:
+        return []
+    scored: list[tuple[float, str]] = []
+    for no, doc in docs.items():
+        if no == own:
+            continue
+        t = norm(doc.get("title") or "")
+        if len(t) < 12:
+            continue
+        best = max((difflib.SequenceMatcher(None, q, t).ratio() for q in quoted), default=0.0)
+        if best >= 0.86:
+            scored.append((best, no))
+    if not scored:
+        return []
+    scored.sort(reverse=True)
+    if len(scored) > 1 and scored[0][0] - scored[1][0] < 0.05:
+        return []
+    return [scored[0][1]]
 
 
 @dataclass
@@ -139,6 +197,29 @@ class Resolution:
     unresolved: list[str] = field(default_factory=list)
 
 
+RAW = Path("data/raw")
+
+
+def _pdf_path(doc: dict) -> str | None:
+    for a in doc.get("attachments") or []:
+        if a.get("kind") != "pdf" or not a.get("sha256"):
+            continue
+        hits = sorted(glob.glob(str(RAW / a["sha256"][:12] / "*")))
+        if hits:
+            return hits[0]
+    return None
+
+
+def _vision_pairs(doc: dict) -> list[tuple[str, str]]:
+    """扫描件兜底：用 Vision 的坐标按列重建单元格，再按行配对。"""
+    try:
+        from tools.ingest import vision
+    except Exception:  # pragma: no cover
+        return []
+    path = _pdf_path(doc)
+    return vision.row_pairs(path) if path else []
+
+
 def build(docs: dict[str, dict]) -> Resolution:
     res = Resolution()
     bykey = {key(n): n for n in docs}
@@ -149,7 +230,10 @@ def build(docs: dict[str, dict]) -> Resolution:
         if until:
             tg = [bykey[key(t)] for t in targets(doc, docs) if key(t) in bykey]
             if not tg:
-                res.unresolved.append(f"{no}（延期通知里没认出被延长的文件）")
+                reason = ("被延长的文件不在语料里"
+                          if re.search(r"《[^》]{6,90}》", body_text(doc))
+                          else "延期通知里没认出被延长的文件")
+                res.unresolved.append(f"{no}（{reason}）")
                 continue
             for t in tg:
                 res.edges.append(Edge(by=no, to=t, until=until))
@@ -166,12 +250,33 @@ def build(docs: dict[str, dict]) -> Resolution:
                 res.extended_by.setdefault(t, []).append(no)
                 res.valid_until[t] = max(res.valid_until.get(t, ""), u)
             continue
+        aligned = [(bykey[key(t)], u) for t, u in align_by_count(doc, docs, no)
+                   if key(t) in bykey and bykey[key(t)] != no]
+        if aligned:
+            for t, u in aligned:
+                res.edges.append(Edge(by=no, to=t, until=u))
+                res.extended_by.setdefault(t, []).append(no)
+                res.valid_until[t] = max(res.valid_until.get(t, ""), u)
+            continue
+        vis = [(bykey[key(t)], u) for t, u in _vision_pairs(doc)
+               if key(t) in bykey and bykey[key(t)] != no]
+        if vis:
+            for t, u in vis:
+                res.edges.append(Edge(by=no, to=t, until=u))
+                res.extended_by.setdefault(t, []).append(no)
+                res.valid_until[t] = max(res.valid_until.get(t, ""), u)
+            continue
         if not dates_in(doc):
             res.unresolved.append(f"{no}（没找到日期）")
         elif not targets(doc, docs):
-            res.unresolved.append(f"{no}（延期通知里没认出被延长的文件）")
+            if re.search(r"《[^》]{6,90}》", body_text(doc)):
+                # 正文只写了被延长文件的标题，标题在语料里找不到——不是解析失败，
+                # 是**被延长的那个文件本身不在语料**（多半是早年已废止、未抓取）。
+                res.unresolved.append(f"{no}（被延长的文件不在语料里）")
+            else:
+                res.unresolved.append(f"{no}（延期通知里没认出被延长的文件）")
         else:
-            res.unresolved.append(f"{no}（多日期表格，列优先，无法按行配对）")
+            res.unresolved.append(f"{no}（列优先：文号与日期数量不齐，拒绝硬配）")
     return res
 
 
