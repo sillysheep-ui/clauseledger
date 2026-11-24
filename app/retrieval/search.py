@@ -565,7 +565,7 @@ def decide(p: Pool, out: list[Hit], *, k: int, as_of: str,
     else:
         weak = (out[0].score < min_score_strong and margin < min_margin_strong) or \
                (_AGREE is False and out[0].score < 5.0)
-    hits = _attach_related(p.query, _prefer_effective(_collapse(out))[:k], p.clauses)
+    hits = _attach_related(p.query, _prefer_effective(_collapse(out), as_of)[:k], p.clauses)
     if weak:
         return Answer(hits,
                       "没有找到直接对应的条款；以下文件与问题共享部分关键词，但可能不是你要的规定",
@@ -578,6 +578,7 @@ def decide(p: Pool, out: list[Hit], *, k: int, as_of: str,
 
 
 def search_result(query: str, k: int = 8, *, status: tuple[str, ...] | None = None,
+                  as_of: str | None = None,
                   min_score: float = MIN_SCORE, min_coverage: float = MIN_COVERAGE,
                   min_cand_cov: float = MIN_CAND_COV, min_answer: float = MIN_ANSWER,
                   min_score_strong: float = MIN_SCORE_STRONG,
@@ -592,7 +593,10 @@ def search_result(query: str, k: int = 8, *, status: tuple[str, ...] | None = No
     _AGREE = None
     reason = refuse_reason(query)
     _y = _year_of(query)
-    _as_of = f"{_y}-12-31" if _y else date.today().isoformat()
+    _as_of = as_of or (f"{_y}-12-31" if _y else date.today().isoformat())
+    if as_of:
+        # 显式给了历史日期：窗口按那天算，问句里的年份不再覆盖它
+        _y = int(as_of[:4])
     if reason:
         kind = "not_covered" if reason.startswith(("未覆盖", "未接入")) else "out_of_domain"
         # 连索引都没进：n_queries=0。这种结局绝不能是 no_policy（那是"查过没有"）。
@@ -614,10 +618,27 @@ def search_result(query: str, k: int = 8, *, status: tuple[str, ...] | None = No
                       searched=_searched(0, 0), as_of=_as_of)
     cands = filter_candidates(p.cands, status=status, min_score=min_score,
                               min_cand_cov=min_cand_cov)
+    if as_of:
+        # 那天不在有效期的文件，连候选都不算——A 口径要判的是"当时能不能找到"
+        cands = [c for c in cands if _rank_at(c.clause.doc_no, as_of) > 0]
     out = rank_candidates(cands, p, year=year, rels=_rels)
     return decide(p, out, k=k, as_of=_as_of, min_answer=min_answer,
                   min_score_strong=min_score_strong,
                   min_margin_strong=min_margin_strong)
+
+
+def _rank_at(doc_no: str, as_of: str) -> int:
+    """这份文件在 as_of 那天的效力档：3 有效 / 1 日期未知 / 0 已失效或未生效。"""
+    m = _DOCS_BY_NO.get(doc_no) or {}
+    start = str(m.get("effective_from") or m.get("issued_at") or "")[:10]
+    end = str(m.get("effective_to") or "")[:10]
+    if not start and not end:
+        return 1
+    if start and start > as_of:
+        return 0
+    if end and end < as_of:
+        return 0
+    return 3
 
 
 def _status_rank(status: str) -> int:
@@ -697,21 +718,28 @@ def _family_norm(t: str) -> str:
     return t
 
 
-def _prefer_effective(hits: list[Hit]) -> list[Hit]:
-    """同一族里既有失效又有现行时，把现行的提到前面——但不删除任何条目，
-    否则会把原本排在第 2、第 3 的正确条款一起弄丢（实测掉 13pp）。"""
+def _prefer_effective(hits: list[Hit], as_of: str | None = None) -> list[Hit]:
+    """同一族里既有失效又有现行时，把"有效"的提到前面——但不删除任何条目，
+    否则会把原本排在第 2、第 3 的正确条款一起弄丢（实测掉 13pp）。
+
+    `as_of` 给了过去某天时，"有效"指**那天有效**：2023 年问政策，该给 2023 年
+    在施行的版本，而不是今天这一版。评测的 A 口径靠这个参数。
+    """
     import difflib
     fam = [_family_norm(h.clause.title) for h in hits]
     out = list(hits)
+    rank = [(_rank_at(h.clause.doc_no, as_of) if as_of else _status_rank(h.clause.status))
+            for h in out]
     for i in range(len(out)):
-        if _status_rank(out[i].clause.status) >= 3:
+        if rank[i] >= 3:
             continue
         for j in range(len(out)):
-            if i == j or _status_rank(out[j].clause.status) < 3:
+            if i == j or rank[j] < 3:
                 continue
             if difflib.SequenceMatcher(None, fam[i], fam[j]).ratio() >= 0.75:
                 out.insert(i, out.pop(j))
                 fam.insert(i, fam.pop(j))
+                rank.insert(i, rank.pop(j))
                 break
     return out
 
