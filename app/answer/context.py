@@ -34,9 +34,23 @@ class Evidence:
     text: str = ""
     role: str = "hit"           # hit | parent | neighbor
     citation: str = ""
+    heading: str = ""           # 最近一层祖先条款的第一行：交付时告诉人"这条在讲哪一节"
+
+    @property
+    def context(self) -> str:
+        """交付时给人/给模型看的一行：这份文件叫什么、这条在哪一节。"""
+        bits = [self.title] if self.title else []
+        if self.heading:
+            bits.append(self.heading)
+        elif self.path and str(self.path[0]).startswith("附件"):
+            bits.append(str(self.path[0]))
+        return " · ".join(bits)
 
     def block(self) -> str:
         head = f"[{self.eid}] {self.citation}  （{self.role}）"
+        ctx = self.context
+        if ctx:
+            head += f"\n上下文：{ctx}"
         return f"{head}\n{self.text}"
 
     def to_dict(self) -> dict:
@@ -49,6 +63,42 @@ def _trim(text: str, limit: int = MAX_ONE) -> str:
     cut = text[:limit]
     ends = list(SENT.finditer(cut))
     return (cut[: ends[-1].end()] if ends else cut) + "…"
+
+
+@lru_cache(maxsize=1)
+def _by_doc_path() -> dict[tuple[str, tuple], Clause]:
+    return {(c.doc_no, tuple(c.path)): c for c in _clauses()}
+
+
+def heading_for(doc_no: str, path: list[str]) -> str:
+    """交付时的上下文：最近一层祖先条款的第一行。
+
+    先按 path 找祖先；找不到就退回**区间包含**——附件里的「一、」常常没有独立成条
+    （只有「附件4/一、/（一）/1.」这样的叶子），按路径找会全空。
+    只取第一行：条款第一行就是它自己的标题，取整段等于把父条重复一遍。
+    """
+    if not doc_no or not path:
+        return ""
+    idx = _by_doc_path()
+    for cut in range(len(path) - 1, 0, -1):
+        anc = idx.get((doc_no, tuple(path[:cut])))
+        if anc and anc.text:
+            first = anc.text.split("\n", 1)[0].strip()
+            if first:
+                return first[:40]
+    me = idx.get((doc_no, tuple(path)))
+    if me is None:
+        return ""
+    best = None
+    for other in _clauses():
+        if other.doc_no != doc_no or other.id == me.id:
+            continue
+        if other.start <= me.start and other.end >= me.end:
+            if best is None or (other.end - other.start) < (best.end - best.start):
+                best = other
+    if best and best.text:
+        return best.text.split("\n", 1)[0].strip()[:40]
+    return ""
 
 
 def _title_index() -> dict[str, str]:
@@ -114,7 +164,8 @@ def _legacy_assemble(question: str, hits, *, max_chars: int = 12000) -> list[Evi
             return False
         seen.add(c.id)
         out.append(Evidence(f"E{len(out) + 1}", c.id, c.doc_no, c.title,
-                            list(c.path), c.page, t, role, c.citation))
+                            list(c.path), c.page, t, role, c.citation,
+                            heading_for(c.doc_no, list(c.path))))
         used += len(t)
         return True
 
@@ -214,7 +265,8 @@ def assemble(question: str, hits, *, max_chars: int = 12000,
             return False
         seen.add(c.id)
         out.append(Evidence(f"E{len(out) + 1}", c.id, c.doc_no, c.title,
-                            list(c.path), c.page, t, role, c.citation))
+                            list(c.path), c.page, t, role, c.citation,
+                            heading_for(c.doc_no, list(c.path))))
         used += len(t)
         return True
 

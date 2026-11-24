@@ -28,6 +28,7 @@ function renderEvidence(list, limit = 3) {
   const one = (e) => `
     <div class="ev">
       <div class="cite">${esc(e.citation)}</div>
+      ${e.context ? `<div class="ctx">${esc(e.context)}</div>` : ""}
       <blockquote class="clamp">${esc(e.quote)}</blockquote>
       <div class="meta">
         ${e.page ? `<span class="tag">第 ${e.page} 页</span>` : `<span class="tag">网页原文</span>`}

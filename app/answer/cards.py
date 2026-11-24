@@ -68,6 +68,25 @@ def _related_citation(h: dict, r: dict) -> str:
     return f"《{h.get('doc_no')}》{path}{tail}"
 
 
+def _heading(doc_no: str | None, path: list[str]) -> str:
+    from app.answer.context import heading_for
+
+    return heading_for(doc_no or "", list(path or []))
+
+
+def _context(title: str | None, doc_no: str | None, path: list[str]) -> str:
+    """卡片上给用户看的定位行：文件标题 · 所在节。"""
+    from app.answer.context import heading_for
+
+    bits = [title] if title else []
+    head = heading_for(doc_no or "", list(path or []))
+    if head:
+        bits.append(head)
+    elif path and str(path[0]).startswith("附件"):
+        bits.append(str(path[0]))
+    return " · ".join(bits)
+
+
 def _evidence(hits: Iterable[dict], limit: int = 8) -> list[dict]:
     out = []
     for h in list(hits):
@@ -79,6 +98,8 @@ def _evidence(hits: Iterable[dict], limit: int = 8) -> list[dict]:
             out.append({"doc_no": h.get("doc_no"), "title": h.get("title"),
                         "citation": _related_citation(h, r), "page": r.get("page"),
                         "path": list(r.get("path") or []),
+                        "heading": _heading(h.get("doc_no"), r.get("path") or []),
+                        "context": _context(h.get("title"), h.get("doc_no"), r.get("path") or []),
                         "quote": quote(r.get("text") or ""), "score": h.get("score"),
                         "stale": h.get("stale") or "", "verified": None, "role": "support"})
         if len(out) >= limit:
@@ -90,6 +111,8 @@ def _evidence(hits: Iterable[dict], limit: int = 8) -> list[dict]:
             "citation": h.get("citation"),
             "page": h.get("page"),
             "path": h.get("path") or [],
+            "heading": _heading(h.get("doc_no"), h.get("path") or []),
+            "context": _context(h.get("title"), h.get("doc_no"), h.get("path") or []),
             "quote": quote(text),
             "score": h.get("score"),
             "stale": h.get("stale") or "",
@@ -198,7 +221,9 @@ def standard_card(answer: dict, hits: list[dict], as_of: str | None = None) -> d
         "kind": "standard",
         "headline": "找到了相关规定，但结论取决于你的具体情况",
         "items": [{"citation": e["citation"], "quote": e["quote"],
-                   "page": e["page"], "doc_no": e["doc_no"]} for e in ev],
+                   "page": e["page"], "doc_no": e["doc_no"],
+                   "context": e.get("context") or "",
+                   "heading": e.get("heading") or ""} for e in ev],
         "depends_on": ["你的具体身份/单位类型", "发生时间（政策有版本）",
                        "是否已享受过同类待遇"],
         "reason": a.get("reason") or "",
