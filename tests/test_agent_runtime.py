@@ -30,3 +30,18 @@ def test_tool_surface_has_no_write_tools():
     assert names == {"search_policy", "check_coverage", "read_clause"}
     # 必须发生的阶段不做成工具：判定、写操作都不在工具面里
     assert "judge_luohu" not in names and "draft_plan" not in names
+
+
+def test_compact_respects_budget_and_env(monkeypatch):
+    """少而整：按条数与字数额度裁，不按每条截断。"""
+    from app.tools import service as T
+
+    items = [{"eid": f"E{i}", "text": "字" * 100} for i in range(10)]
+    picked, used = T.compact(items, max_items=5, budget=10000)
+    assert len(picked) == 5 and used == 500
+    picked, used = T.compact(items, max_items=10, budget=250)  # 只装得下两条
+    assert len(picked) == 2 and used == 200
+
+    monkeypatch.setenv("CLAUSELEDGER_ASM_ITEMS", "2")
+    monkeypatch.setenv("CLAUSELEDGER_ASM_BUDGET", "10000")
+    assert len(T.compact(items, max_items=2, budget=10000)[0]) == 2  # 显式参数仍优先

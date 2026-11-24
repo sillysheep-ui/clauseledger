@@ -12,6 +12,7 @@
 from __future__ import annotations
 
 import json
+import os
 from typing import Any
 
 _CACHE: dict[str, Any] = {}
@@ -84,32 +85,43 @@ def evidence(question: str, k: int = 5, as_of: str | None = None) -> dict:
     }
 
 
-def evidence_compact(question: str, *, max_items: int = 8, budget: int = 2600,
-                     per_item_cap: int = 1200, as_of: str | None = None) -> dict:
-    """少而整：按"条数 + 总字数"控制证据量，不按"每条截多少字"。
+def compact(items: list[dict], *, max_items: int = 30, budget: int = 6000,
+            per_item_cap: int = 1200) -> tuple[list[dict], int]:
+    """把证据裁到预算内：少而整，按条数与总字数控制，不按每条截断。
 
-    每条要么是完整条款，要么显式标 `truncated=true`（原文超 per_item_cap，只给前段，
-    并带上 doc_no/path 供 read_clause 补读）。**绝不静默截断**——条款切一半会改语义。
+    返回 (items, budget_used)。超 per_item_cap 的极少数条款标 truncated=true 并给原文长度。
     """
-    full = evidence(question, k=5, as_of=as_of)
-    if full["refused"]:
-        return {**full, "evidence": [], "n": 0, "n_available": 0,
-                "budget_used": 0, "truncated_any": False}
-    items: list[dict] = []
+    out: list[dict] = []
     used = 0
-    for e in full["evidence"]:
-        if len(items) >= max_items or used >= budget:
+    for e in items:
+        if len(out) >= max_items or used >= budget:
             break
         raw = e["text"]
         cut = len(raw) > per_item_cap
         text = raw[:per_item_cap] if cut else raw
-        if items and used + len(text) > budget:
+        if out and used + len(text) > budget:
             break
-        items.append({**e, "text": text, "chars": len(raw), "truncated": cut})
+        out.append({**e, "text": text, "chars": len(raw), "truncated": cut})
         used += len(text)
+    return out, used
+
+
+def evidence_compact(question: str, *, max_items: int | None = None,
+                     budget: int | None = None, per_item_cap: int = 1200,
+                     as_of: str | None = None) -> dict:
+    """检索 + 装配 + 按预算裁剪。默认预算取自环境，便于做消融。"""
+    max_items = max_items or int(os.environ.get("CLAUSELEDGER_ASM_ITEMS", "30"))
+    budget = budget or int(os.environ.get("CLAUSELEDGER_ASM_BUDGET", "6000"))
+    full = evidence(question, k=5, as_of=as_of)
+    if full["refused"]:
+        return {**full, "evidence": [], "n": 0, "n_available": 0,
+                "budget_used": 0, "truncated_any": False}
+    items, used = compact(full["evidence"], max_items=max_items, budget=budget,
+                          per_item_cap=per_item_cap)
     return {**{k: v for k, v in full.items() if k != "evidence"},
             "evidence": items, "n": len(items), "n_available": len(full["evidence"]),
-            "budget_used": used, "truncated_any": any(x["truncated"] for x in items)}
+            "budget_used": used, "budget": budget,
+            "truncated_any": any(x["truncated"] for x in items)}
 
 
 def search(question: str, k: int = 5, as_of: str | None = None) -> dict:

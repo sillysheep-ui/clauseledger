@@ -22,7 +22,7 @@
 
 | 工具 | 作用 | 对应原来的 |
 |---|---|---|
-| `search_policy` | 检索 + 装配，返回**少而整**的证据（默认 ≤8 条、≤2,600 字，每条完整条款） | `retrieve` + `assemble` |
+| `search_policy` | 检索 + 装配，返回**少而整**的证据（默认 ≤30 条、≤6,000 字，每条完整条款） | `retrieve` + `assemble` |
 | `check_coverage` | 城市/事项覆盖状态（covered / partial / blocked / out_of_scope） | `coverage` |
 | `read_clause` | 只有证据标了 `truncated` 时才用，把某一条读全 | 无（新增，按需） |
 
@@ -49,3 +49,19 @@
 PYTHONPATH="$PWD/spikes/agentscope/.venv/lib/python3.13/site-packages:$PWD/.venv/lib/python3.13/site-packages:$PWD" \
   .venv/bin/python -c "from app.agent import runtime; print(runtime.run('失业保险金能领多久')['answer'])"
 ```
+
+
+## 证据给多少：按预算，不按条数
+
+工业界的数字都按 **chunk**（几百 token）算：
+
+- Anthropic Contextual Retrieval：检索 top-150 → rerank → **top-20** 进 prompt；5/10/20 三个量里 20 最好（[原文](https://www.anthropic.com/news/contextual-retrieval)）。
+- Azure AI Search：hybrid top-50~100 → semantic 50→**10** → cross-encoder 20→**5** → LLM 10→**3**（[原文](https://learn.microsoft.com/en-us/azure/search/semantic-ranking)）。
+- Lost in the Middle（[arXiv 2307.03172](https://arxiv.org/abs/2307.03172)）：信息落在 prompt 中间会掉点，所以"多给"必须配排序。
+
+我们的单位是**条款**，中位 75 字，不是几百 token 的 chunk。8 条约等于 3 个 chunk，偏少；
+按 6,000 字给约等于 20–30 条，才对得上工业界的量级。参数：`CLAUSELEDGER_ASM_ITEMS`（默认 30）、
+`CLAUSELEDGER_ASM_BUDGET`（默认 6,000 字）。超 1,200 字的单条才截断并标 `truncated`。
+
+实测（70 道可核对题，L3 判据，rerank 默认开）：2,000 字 50.0%、4,000 字 60.0%、
+6,000 字 62.9%、全部装配 65.7%（详见 `docs/EVAL-SPEC.md` §6.8）。
