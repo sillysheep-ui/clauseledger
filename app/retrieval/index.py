@@ -101,7 +101,9 @@ def collect(min_chars: int = 10) -> list[Clause]:
     out: list[Clause] = []
     for f in sorted(PROCESSED.glob("*.json")):
         d = json.loads(f.read_text("utf-8"))
-        st = status_of(d.get("effective_to"), d.get("effective_from"))
+        # valid_until = 自身到期日与所有延期通知日期的最大值（tools/ingest/validity.py）
+        end = d.get("valid_until") or d.get("effective_to")
+        st = status_of(end, d.get("effective_from"))
         # 附件里的《办法》有自己的一套编号，引用时必须写明"附件N ›"，否则和正文的第十八条分不开
         labels = [re.sub(r"\s+", "", (b.get("text") or "").strip())
                   for b in d.get("blocks", [])
@@ -123,7 +125,7 @@ def collect(min_chars: int = 10) -> list[Clause]:
                 char_offset=c.get("char_offset") or 0,
                 start=c.get("start") or 0, end=c.get("end") or 0,
                 status=st, effective_from=d.get("effective_from"),
-                effective_to=d.get("effective_to"),
+                effective_to=end,
                 url=d.get("url", ""), parser_version=d.get("parser_version", ""),
                 carrier=c.get("carrier") or "page", extract=d.get("extract") or "native",
                 part=c.get("part") or 0,
@@ -139,7 +141,7 @@ def collect(min_chars: int = 10) -> list[Clause]:
                     path=["正文"], level=0, label="", text=text,
                     page=b.get("page") or 0, block_index=j, char_offset=0,
                     start=0, end=0, status=st, effective_from=d.get("effective_from"),
-                    effective_to=d.get("effective_to"), url=d.get("url", ""),
+                    effective_to=end, url=d.get("url", ""),
                     parser_version=d.get("parser_version", ""),
                     carrier=d.get("carrier") or "page", extract=d.get("extract") or "native"))
 
@@ -266,7 +268,9 @@ def build() -> dict:
         if d.get("doc_no"):
             _meta[d["doc_no"]] = {"doc_no": d["doc_no"],
                                   "effective_from": d.get("effective_from"),
-                                  "effective_to": d.get("effective_to"),
+                                  "effective_to": d.get("valid_until") or d.get("effective_to"),
+                                  "own_effective_to": d.get("effective_to"),
+                                  "extended_by": d.get("extended_by") or [],
                                   # 成文日期：条文不可能在成文之前生效，所以它可以当**下界**用
                                   "issued_at": d.get("issued_at")}
     (INDEX / "docs_meta.json").write_text(json.dumps(_meta, ensure_ascii=False), "utf-8")

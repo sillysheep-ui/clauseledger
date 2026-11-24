@@ -1,107 +1,60 @@
-"""效力判定的测试：重点不是"能算出来"，而是"能算对那一条让 9 道题判错的记录"。"""
+"""有效期链的解析规则。重点是「宁可不知道，也不要安错日期」。"""
 from __future__ import annotations
 
-import json
-from pathlib import Path
-
-import pytest
-
-from app.domain import validity
-
-REL = Path("data/registry/relations.jsonl")
-DOCS = Path("data/processed")
+from tools.ingest import validity as V
 
 
-def _doc(doc_no: str) -> dict:
-    for p in DOCS.glob("*.json"):
-        d = json.loads(p.read_text("utf-8"))
-        if d.get("doc_no") == doc_no:
-            return d
-    pytest.skip(f"语料里没有 {doc_no}")
+def doc(no, title, text, end=None):
+    return {"doc_no": no, "title": title, "effective_to": end,
+            "blocks": [{"text": text}]}
 
 
-needs_corpus = pytest.mark.skipif(
-    not REL.exists(), reason="先跑 python -m tools.ingest.relations")
+def test_single_date_extension_applies_to_all_listed_docs():
+    a = doc("沪人社规〔2018〕46号", "关于印发《上海市工伤预防费使用管理试行办法》的通知", "正文", "2020-12-28")
+    n = doc("沪人社规〔2020〕9号", "关于延长部分行政规范性文件有效期的通知",
+            "经评估，下列文件需继续实施，有效期延长至2022年12月31日。"
+            "上海市人力资源和社会保障局、上海市财政局关于印发《上海市工伤预防费使用管理试行办法》的通知")
+    docs = {a["doc_no"]: a, n["doc_no"]: n}
+    res = V.build(docs)
+    assert res.valid_until[a["doc_no"]] == "2022-12-31"
+    assert res.extended_by[a["doc_no"]] == [n["doc_no"]]
 
 
-@needs_corpus
-def test_key_repeal_is_caught():
-    """沪人社福发〔2015〕34号 自身没写失效日期，但被 2020〕26号 明文废止。"""
-    v = validity.status_at(_doc("沪人社福发〔2015〕34号"), as_of="2026-11-16")
-    assert v.status == "repealed"
-    assert v.repealed_by == "沪人社规〔2020〕26号"
-    assert v.since == "2020-12-01"
+def test_multi_date_rows_pair_per_row():
+    a = doc("沪人社规〔2018〕46号", "关于印发《上海市工伤预防费使用管理试行办法》的通知", "x", "2020-12-28")
+    b = doc("沪人社规〔2018〕20号", "关于实施失业保险援企稳岗护航行动的通知", "x", "2021-12-31")
+    n = doc("沪人社规〔2020〕9号", "关于延长部分行政规范性文件有效期的通知",
+            "沪人社规〔2018〕20号 | 有效期至2025年12月31日"
+            "沪人社规〔2018〕46号 | 有效期至2022年12月31日")
+    docs = {a["doc_no"]: a, b["doc_no"]: b, n["doc_no"]: n}
+    res = V.build(docs)
+    assert res.valid_until[a["doc_no"]] == "2022-12-31"
+    assert res.valid_until[b["doc_no"]] == "2025-12-31"
 
 
-@needs_corpus
-def test_repeal_is_time_dependent():
-    """废止生效前的那一天，它还是有效的——效力是时间的函数。"""
-    v = validity.status_at(_doc("沪人社福发〔2015〕34号"), as_of="2020-06-01")
-    assert v.status != "repealed"
+def test_column_major_multi_date_is_left_unresolved():
+    """列优先的扫描件（先标题、再文号、再日期）配不出来——不许硬配。"""
+    a = doc("沪人社规〔2018〕46号", "关于印发《上海市工伤预防费使用管理试行办法》的通知", "x", "2020-12-28")
+    b = doc("沪人社规〔2018〕20号", "关于实施失业保险援企稳岗护航行动的通知", "x", "2021-12-31")
+    n = doc("沪人社规〔2021〕8号", "关于延长部分社会保险类行政规范性文件有效期的通知",
+            "文件名称关于实施失业保险援企稳岗护航行动的通知关于印发《上海市工伤预防费使用管理试行办法》的通知"
+            "文号沪人社规〔2018〕20号沪人社规〔2018〕46号"
+            "延长有效期有效期至2025年12月31日有效期至2022年12月31日")
+    docs = {a["doc_no"]: a, b["doc_no"]: b, n["doc_no"]: n}
+    res = V.build(docs)
+    assert res.valid_until == {}
+    assert any("列优先" in u for u in res.unresolved)
 
 
-def test_expired_by_own_date():
-    d = {"doc_no": "X〔2020〕1号", "effective_from": "2020-01-01", "effective_to": "2020-12-31"}
-    v = validity.status_at(d, as_of="2021-01-01", rels={})
-    assert v.status == "expired"
-    assert "2020-12-31" in v.reason
-
-
-def test_no_end_date_is_unknown_not_effective():
-    """没写有效期 ≠ 长期有效。检索保留、结论要标不确定。"""
-    d = {"doc_no": "X〔2020〕2号", "effective_from": "2020-01-01", "effective_to": None}
-    v = validity.status_at(d, as_of="2026-01-01", rels={})
-    assert v.status == "unknown"
-
-
-def test_partial_repeal_is_its_own_status():
-    rels = {"X〔2019〕9号": [{"type": "partial_repeal", "source": "Y〔2021〕1号",
-                            "effective_date": "2021-05-01"}]}
-    d = {"doc_no": "X〔2019〕9号", "effective_from": "2019-01-01", "effective_to": "2029-01-01"}
-    v = validity.status_at(d, as_of="2026-01-01", rels=rels)
-    assert v.status == "partially_repealed"
-
-
-def test_not_yet_effective_repeal_does_not_count():
-    rels = {"X〔2019〕9号": [{"type": "repeal", "source": "Y〔2021〕1号",
-                            "effective_date": "2027-01-01"}]}
-    d = {"doc_no": "X〔2019〕9号", "effective_from": "2019-01-01", "effective_to": "2029-01-01"}
-    v = validity.status_at(d, as_of="2026-01-01", rels=rels)
-    assert v.status == "effective"
-
-
-def test_repealed_map_keys_are_targets():
-    m = validity.repealed_map(rels={"A": [{"type": "repeal", "source": "B",
-                                          "effective_date": "2020-01-01"}]},
-                              as_of="2026-01-01")
-    assert "A" in m and "B" not in m
-
-
-def test_year_of_ignores_numbers_inside_doc_no():
-    from app.domain.validity import year_of
-    assert year_of("2020年建筑业工伤保险怎么参加") == 2020
-    assert year_of("沪人社规〔2020〕26号讲了什么") == 2020  # 文号里的年份也算时间线索
-    assert year_of("比例是 2.5 的时候") is None
-    assert year_of("赔偿 5000 元") is None
-
-
-def test_in_force_respects_repeal_date():
-    """2015〕34号 自身没写日期，但 2020-12-01 被废止：2019 有效、2021 无效。"""
-    rels = {"X〔2015〕34号": [{"type": "repeal", "source": "Y〔2020〕26号",
-                              "effective_date": "2020-12-01"}]}
-    d = {"doc_no": "X〔2015〕34号", "effective_from": None, "effective_to": None}
-    from app.domain.validity import in_force
-    assert in_force(d, 2019, rels) is True
-    assert in_force(d, 2020, rels) is True     # 那一年里前 11 个月有效
-    assert in_force(d, 2021, rels) is False
-
-
-def test_year_scope_changes_which_document_is_current():
-    """同一个问题，加不加年份应当改变"哪份文件算数"的判断依据（不依赖检索结果）。"""
-    rels = {"X〔2015〕34号": [{"type": "repeal", "source": "Y〔2020〕26号",
-                              "effective_date": "2020-12-01"}]}
-    old = {"doc_no": "X〔2015〕34号"}
-    new = {"doc_no": "Y〔2020〕26号", "effective_from": "2020-12-01", "effective_to": "2025-11-30"}
-    from app.domain.validity import in_force
-    assert in_force(old, 2019, rels) and not in_force(new, 2019, rels)
-    assert in_force(old, 2021, rels) is False and in_force(new, 2021, rels)
+def test_apply_keeps_the_later_end_and_marks_source():
+    a = doc("A", "t", "x", "2031-08-15")
+    b = doc("B", "t", "x", None)
+    n = doc("沪人社规〔2022〕24号", "关于延长部分行政规范性文件有效期的通知",
+            "沪A〔2020〕1号 | 延长至2027年12月31日")
+    docs = {"A": a, "B": b, n["doc_no"]: n}
+    # A 自身到期（2031）晚于延期日（2027），不能被改小
+    res = V.build(docs)
+    V.apply(res, docs)
+    assert a["valid_until"] == "2031-08-15"
+    assert a["validity_source"] == "document"
+    assert b["validity_source"] == "unknown"
