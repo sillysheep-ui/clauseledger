@@ -20,6 +20,7 @@ build/
 # 抓取产物：语料与原文副本不入库（体积大、可再生、可能含变动内容）
 data/raw/
 data/cache/
+data/models/
 data/manifests/
 *.sqlite3
 *.db

@@ -7,7 +7,7 @@
 
 ## 为什么要重排，以及它原来为什么没用
 
-我们之前测过重排（`BAAI/bge-reranker-base`，cross-encoder）：
+我们之前测过重排（`BAAI/bge-reranker-base`，cross-encoder；2026-11-24 已换 `bge-reranker-v2-m3`，见 `docs/EVAL-SPEC.md` §5.2）：
 
 - 同一分母（n=134，BM25 top-50 池）下，P@1 **42.5% → 48.5%**（条款）、**50.7%**（条款+父条首句）。
 - 但接进流水线后，端到端反而**变差**：作答 95%→77%，精度 71%→70%。
