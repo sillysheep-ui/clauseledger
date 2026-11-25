@@ -349,6 +349,9 @@ def tables(pdf_path: str | Path, max_pages: int = 12) -> list[Table]:
         grid = anchor or line
         if not grid:
             continue
+        grid = _clean_grid(grid)
+        if not grid:
+            continue
         xs = [o["x"] for o in page_obs]
         ys = [o["y"] for o in page_obs]
         out.append(Table(rows=grid, page=page + 1,
@@ -445,6 +448,34 @@ def _line_grid(image, obs: list[dict]) -> list[list[str]] | None:
     if len(grid) < 2:
         return None
     return grid
+
+
+RE_FOOTER = re.compile(r"[（(]\s*此件主动公开\s*[)）]|[—\-一]\s*\d{1,3}\s*[—\-一]")
+RE_TAIL_MARK = re.compile(r"[—\-一]\s*\d{1,3}\s*$")
+
+
+def _clean_grid(grid: list[list[str]]) -> list[list[str]]:
+    """把页脚从句子里剥掉，再丢掉被页脚撑出来的空行。
+
+    扫描页的「（此件主动公开）」「— 2 —」和落款会被 Vision 认进最后一个单元格；
+    不剥掉的话，最后一行的序号会变成「6（此件主动公开）」，`RE_SEQ` 匹配不上，
+    整行就被当作无序号行丢掉（9 号页因此少一行、10 号少一条边）。
+    """
+    out: list[list[str]] = []
+    for r in grid:
+        cells = []
+        for j, c in enumerate(r):
+            t = RE_FOOTER.sub("", c or "") if j else RE_TAIL_MARK.sub("", RE_FOOTER.sub("", c or ""))
+            # 文号格子尾巴常粘一个页码数字：「沪人社规（2019）40号2」
+            if j and re.search(r"号\s*\d{1,3}$", t):
+                t = re.sub(r"(号)\s*\d{1,3}$", r"\1", t)
+            cells.append(t.strip(" 　"))
+        if not any(cells):
+            continue
+        if not cells[0] and sum(1 for c in cells[1:] if c) < 2:
+            continue
+        out.append(cells)
+    return out
 
 
 def _grid_is_sane(grid: list[list[str]]) -> bool:
