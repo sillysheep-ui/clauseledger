@@ -33,7 +33,17 @@ RE_DOCNO = re.compile(
     r"沪\s*[\u4e00-\u9fa5]{1,8}\s*[〔（(]\s*\d{2,4}\s*[〕）)]\s*第?\s*\d+\s*号"
 )
 RE_DATE = re.compile(r"(20\d{2})\s*年\s*(\d{1,2})\s*月\s*(\d{1,2})\s*日")
-RE_SEQ = re.compile(r"^\d{1,3}$")
+# 序号列：允许 OCR 把 0/1 认成 O/I/l/|（实测「10」「11」常被认成「IO」「I1」），
+# 只在这一列上放宽；仍然要求后面能把它们归一成整数。
+RE_SEQ = re.compile(r"^[0-9IlLOo|]{1,3}$")
+
+
+def _seq_value(text: str) -> int | None:
+    t = (text or "").strip()
+    if not RE_SEQ.match(t):
+        return None
+    t = t.replace("I", "1").replace("l", "1").replace("L", "1").replace("O", "0").replace("o", "0").replace("|", "1")
+    return int(t) if t.isdigit() else None
 # 页码必须带破折号/长横：只用 ^\d+$ 会把表格的序号列整列当页码删掉（2026-11 实测）。
 RE_PAGE_HARD = re.compile(r"^\s*[—\-一]\s*\d+\s*[—\-一]\s*$")
 RE_PAGE = re.compile(r"^[—\-一\s]*\d+[—\-一\s]*$")
@@ -185,8 +195,30 @@ def _page_grid(obs: list[dict]) -> list[list[str]] | None:
         j = min(range(len(starts)), key=lambda i: abs(o["x"] - starts[i]))
         return j if abs(o["x"] - starts[j]) <= X_TOL else None
 
-    anchors = sorted(o["y"] for o in obs
-                     if col_of(o) == 0 and RE_SEQ.match(o["text"].strip()))
+    seqs = [(o["y"], _seq_value(o["text"])) for o in obs if col_of(o) == 0]
+    seqs = [(y, v) for y, v in seqs if v is not None]
+    # 序号必须递增；乱序的丢掉（OCR 噪声），避免把正文里的数字当行锚
+    anchors, last = [], 0
+    for y, v in sorted(seqs):
+        if v > last:
+            anchors.append(y); last = v
+    if len(anchors) < MIN_ROWS - 1:
+        return None
+
+    # Vision 偶尔整行漏认（实测「10」直接没输出，行内容被并进上一行/下一行）。
+    # 用行距的中位数补空心锚：间隔接近整数倍行距就插回缺失的行位。
+    if len(anchors) >= 3:
+        # 行距：多数间隔就是一个行距，漏认的行会让某个间隔变成 2 倍。
+        # 取中位数；只有当"最小/中位"差得远（说明中位被漏行抬高）时才用最小值。
+        diffs = [b - a for a, b in zip(anchors, anchors[1:])]
+        med, mn = statistics.median(diffs), min(diffs)
+        pitch = mn if med / mn > 1.4 else med
+        fixed = list(anchors)
+        for a, b in zip(anchors, anchors[1:]):
+            k = round((b - a) / pitch)
+            if k >= 2 and abs((b - a) / pitch - k) <= 0.35:
+                fixed += [a + (b - a) * j / k for j in range(1, k)]
+        anchors = sorted(fixed)
     if len(anchors) < MIN_ROWS - 1:
         return None
 
@@ -195,13 +227,20 @@ def _page_grid(obs: list[dict]) -> list[list[str]] | None:
         # 用"y >= 序号"会把下一行的第一行折行并进上一行（2026-11 实测）。
         return min(range(len(anchors)), key=lambda i: abs(y - anchors[i]))
 
-    head_y = [o["y"] for o in obs if o["y"] < anchors[0] - gap * 1.2]
+    # 表头只取紧贴第一行上方的那一带：再往上是大标题（「附件…目录」），
+    # 把它并进表头会让整表的第一列永远带一串标题文字。
+    # 表头在第一个行锚上方约 2 个行距处；贴得太近会把首行的折行当表头，
+    # 太远会把大标题并进来（「附件…目录序号」）。
+    head_y = [o["y"] for o in obs
+              if anchors[0] - gap * 3.5 <= o["y"] < anchors[0] - gap * 1.4]
     n_rows = len(anchors) + (1 if head_y else 0)
     grid = [[""] * len(starts) for _ in range(n_rows)]
     offset = 1 if head_y else 0
     for o in obs:
-        first = anchors[0] - gap * 1.2
+        first = anchors[0] - gap * 3.5
         if o["y"] < first:
+            continue
+        if o["y"] < anchors[0] - gap * 1.4:
             # 表头是居中的，用最近列而不是容差判定：表头文字到列起点的距离常常
             # 超过数据列的容差（「文件名称」居中在 x=0.35，列起点 0.18）。
             j = min(range(len(starts)), key=lambda i: abs(o["x"] - starts[i]))
@@ -220,7 +259,63 @@ def _page_grid(obs: list[dict]) -> list[list[str]] | None:
         return None
     if not header_of(grid):
         return None
+    _merge_fragment_rows(grid)
+    _renumber(grid)
     return grid
+
+
+FOOTER = re.compile(r"(印发|此件主动公开|^\s*[—\-一]\s*\d+\s*[—\-一]\s*$|^\s*$)")
+FOOTER_WORDS = re.compile(r"印发|主动公开|上海市.{0,12}办公室")
+
+
+def _merge_fragment_rows(grid: list[list[str]]) -> None:
+    """把"被行锚切开的半行"并回去，并丢掉表尾的落款/页码行。
+
+    高行的格子会折很多行，序号却只在行中居中：最近锚归行时，前几行字可能落到
+    上一行、后几行字落到本行，出现"序号有、文号/日期空"的半行。判据很简单：
+    序号是数字、且文号/日期列有空、下一行有——就把下一行并上来。
+    """
+    i = 1
+    while i < len(grid) - 1:
+        cur, nxt = grid[i], grid[i + 1]
+        if _seq_value(cur[0]) is not None and any(not c for c in cur[1:]):
+            if any(nxt[1:]) and _seq_value(nxt[0]) is None:
+                for j in range(1, len(cur)):
+                    cur[j] = (cur[j] + nxt[j]).strip() if cur[j] else nxt[j]
+                del grid[i + 1]
+                continue
+        i += 1
+    # 表尾：从后往前删落款/页码行（没有序号、也没有文号形态的）
+    while len(grid) > 2:
+        last = grid[-1]
+        text = "".join(last)
+        if _seq_value(last[0]) is None and (FOOTER_WORDS.search(text) or not text.strip()):
+            grid.pop()
+        else:
+            break
+
+
+def _renumber(grid: list[list[str]]) -> None:
+    """把序号列按顺序补齐。
+
+    Vision 会漏认整行（「10」没输出）或把「11」认成「I1」。只要这一列过半是数字，
+    就按顺序填：空白的补上，含 I/O/l/| 的纠正——**只动这一列**，其它列原样。
+    """
+    vals = [_seq_value(r[0]) for r in grid]
+    known = [v for v in vals[1:] if v is not None]
+    if not known or len(known) / max(1, len(grid) - 1) < 0.6:
+        return
+    start = known[0] - (vals[1:].index(known[0]) if known[0] in vals[1:] else 0)
+    for i in range(1, len(grid)):
+        want = start + i - 1
+        got = vals[i]
+        raw = grid[i][0].strip()
+        if got == want:
+            if re.search(r"[IlLOo|]", raw):
+                grid[i][0] = str(want)
+            continue
+        if not raw or re.search(r"[IlLOo|]", raw) or (got is not None and abs(got - want) <= 1):
+            grid[i][0] = str(want)
 
 
 def tables(pdf_path: str | Path, max_pages: int = 12) -> list[Table]:

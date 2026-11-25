@@ -47,3 +47,30 @@ def test_looks_tabular_detects_cellish_lines():
     lines = ["序号", "1", "关于…的通知", "沪人社规〔2021〕6号", "延长至2028年"] * 3
     assert looks_tabular(lines)
     assert not looks_tabular(["这是一段完整的正文，句子很长并且以句号结尾。" * 5])
+
+
+def test_missing_row_is_restored_from_pitch():
+    """Vision 整行漏认（序号 3 没输出）时，按行距插回空锚，内容不并进邻行。"""
+    obs = [_obs("序号", 0.13, 0.10), _obs("编码", 0.55, 0.10), _obs("名称", 0.75, 0.10)]
+    for i, y in enumerate((0.14, 0.18, 0.22, 0.26), start=1):
+        if i == 3:
+            continue                      # 这一行的序号丢了
+        obs.append(_obs(str(i), 0.14, y))
+        obs.append(_obs(f"编码{i}", 0.55, y))
+        obs.append(_obs(f"名称{i}", 0.75, y))
+    obs += [_obs("名称3", 0.75, 0.22)]    # 但内容在
+    grid = _page_grid(obs)
+    assert grid is not None
+    names = [r[2] for r in grid[1:]]
+    assert names == ["名称1", "名称2", "名称3", "名称4"]
+
+
+def test_seq_digits_normalized():
+    """序号被 OCR 认成 I1 / IO 时纠正回数字，内容列不动。"""
+    obs = [_obs("序号", 0.13, 0.10), _obs("编码", 0.55, 0.10)]
+    for i, (seq, y) in enumerate((("1", 0.14), ("2", 0.18), ("I1", 0.22)), start=1):
+        obs.append(_obs(seq, 0.14, y))
+        obs.append(_obs(f"编码{seq}", 0.55, y))
+    grid = _page_grid(obs)
+    assert grid is not None
+    assert [r[0] for r in grid[1:]] == ["1", "2", "3"]   # I1 是 3 的误认，按顺序纠正
