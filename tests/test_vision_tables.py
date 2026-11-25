@@ -74,3 +74,56 @@ def test_seq_digits_normalized():
     grid = _page_grid(obs)
     assert grid is not None
     assert [r[0] for r in grid[1:]] == ["1", "2", "3"]   # I1 是 3 的误认，按顺序纠正
+
+
+def test_max_run_counts_continuous_strokes():
+    from tools.ingest.vision import _max_run
+
+    assert _max_run([True, True, False, True, True, True]) == 3
+    assert _max_run([False, False]) == 0
+
+
+def test_line_grid_rebuilds_cells_from_rules():
+    """画一张 4 行 × 3 列、线宽 3px 的合成表，检查线网格能还原成 4×3。"""
+    import numpy as np
+    from PIL import Image, ImageDraw
+
+    from tools.ingest.vision import _line_grid
+
+    img = Image.new("RGB", (600, 400), "white")
+    d = ImageDraw.Draw(img)
+    for x in (40, 240, 420, 560):
+        d.line([(x, 40), (x, 360)], fill="black", width=3)
+    for y in (40, 120, 200, 280, 360):
+        d.line([(40, y), (560, y)], fill="black", width=3)
+
+    # 每个格子中心放一个观察（Vision 坐标：归一化、y 从上到下）
+    obs = []
+    for i in range(4):
+        for j in range(3):
+            cx = (xs[j] + xs[j + 1]) / 2 if (xs := [40, 240, 420, 560]) else 0
+            cy = (ys[i] + ys[i + 1]) / 2 if (ys := [40, 120, 200, 280, 360]) else 0
+            obs.append({"x": cx / 600, "y": cy / 400, "text": f"{i}-{j}", "h": 0.02})
+
+    grid = _line_grid(np.array(img), obs)
+    assert grid is not None
+    assert len(grid) == 4 and len(grid[0]) == 3
+    assert grid[0][0] == "0-0" and grid[3][2] == "3-2"
+
+
+def test_line_grid_rejects_pages_without_rules():
+    import numpy as np
+    from PIL import Image
+
+    from tools.ingest.vision import _line_grid
+
+    assert _line_grid(np.array(Image.new("RGB", (400, 300), "white")), []) is None
+
+
+def test_grid_is_sane_checks_seq_count():
+    from tools.ingest.vision import _grid_is_sane
+
+    ok = [["序号", "文号"], ["1", "a"], ["2", "b"], ["3", "c"]]
+    bad = [["序号", "文号"], ["1", "a"], ["2", "b"], ["3", "c"], ["", ""], ["", ""], ["", ""]]
+    assert _grid_is_sane(ok) is True
+    assert _grid_is_sane(bad) is False

@@ -234,6 +234,33 @@ def _pdf_path(doc: dict) -> str | None:
     return None
 
 
+def table_pairs(doc: dict) -> list[tuple[str, str]]:
+    """从表格的「文号列 / 有效期列」按顺序配对（只用于补齐行内配对的缺口）。"""
+    for t in doc.get("tables", []):
+        rows = t.get("rows") or []
+        if len(rows) < 2:
+            continue
+        heads = [str(h) for h in (t.get("header") or rows[0])]
+        no_col = next((i for i, h in enumerate(heads) if "文号" in h), None)
+        dt_col = next((i for i, h in enumerate(heads) if "有效期" in h or "期限" in h), None)
+        if no_col is None or dt_col is None or no_col == dt_col:
+            continue
+        nos = [r[no_col].strip() for r in rows[1:] if no_col < len(r) and RE_DOCNO.search(r[no_col])]
+        dts = [r[dt_col].strip() for r in rows[1:] if dt_col < len(r) and RE_EXT_DATE.search(r[dt_col])]
+        if not nos or len(nos) != len(dts) or len(set(nos)) != len(nos):
+            continue
+        out = []
+        for n, dd in zip(nos, dts):
+            m = RE_EXT_DATE.search(dd)
+            if not m:
+                break
+            y, mo, d2 = (int(x) for x in m.groups())
+            out.append((RE_DOCNO.search(n).group(0), f"{y:04d}-{mo:02d}-{d2:02d}"))
+        if len(out) == len(nos):
+            return out
+    return []
+
+
 def _vision_pairs(doc: dict) -> list[tuple[str, str]]:
     """扫描件兜底：用 Vision 的坐标按列重建单元格，再按行配对。"""
     try:
@@ -265,19 +292,18 @@ def build(docs: dict[str, dict]) -> Resolution:
                 res.valid_until[t] = max(res.valid_until.get(t, ""), until)
             continue
 
-        # 多日期：先试按行配对
-        pairs = [(bykey[key(t)], u) for t, u in row_pairs(doc)
+        # 多日期：三种读法取并集（行内相邻 → 列优先按数量 → 表格列按顺序），
+        # 任何一种读法漏掉的条目都还能被另一种补回来；键去重，先到先得。
+        raw = row_pairs(doc)
+        seen = {key(t) for t, _ in raw}
+        for src in (align_by_count(doc, docs, no), table_pairs(doc), _vision_pairs(doc)):
+            for t, u in src:
+                if key(t) not in seen:
+                    raw.append((t, u)); seen.add(key(t))
+        pairs = [(bykey[key(t)], u) for t, u in raw
                  if key(t) in bykey and bykey[key(t)] != no]
         if pairs:
             for t, u in pairs:
-                res.edges.append(Edge(by=no, to=t, until=u))
-                res.extended_by.setdefault(t, []).append(no)
-                res.valid_until[t] = max(res.valid_until.get(t, ""), u)
-            continue
-        aligned = [(bykey[key(t)], u) for t, u in align_by_count(doc, docs, no)
-                   if key(t) in bykey and bykey[key(t)] != no]
-        if aligned:
-            for t, u in aligned:
                 res.edges.append(Edge(by=no, to=t, until=u))
                 res.extended_by.setdefault(t, []).append(no)
                 res.valid_until[t] = max(res.valid_until.get(t, ""), u)

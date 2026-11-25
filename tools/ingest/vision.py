@@ -27,6 +27,13 @@ except Exception:  # pragma: no cover
 import re
 import statistics
 
+try:  # 扫描件的表格线检测：有 cv2 就用，没有就退回序号锚
+    import cv2
+
+    HAVE_CV = True
+except Exception:  # pragma: no cover
+    HAVE_CV = False
+
 from tools.ingest.tables import Table, header_of
 
 RE_DOCNO = re.compile(
@@ -328,7 +335,18 @@ def tables(pdf_path: str | Path, max_pages: int = 12) -> list[Table]:
     out: list[Table] = []
     for page in sorted({o["page"] for o in obs}):
         page_obs = [o for o in obs if o["page"] == page and not RE_PAGE_HARD.match(o["text"].strip())]
-        grid = _page_grid(page_obs)
+        # 两套读法都算，谁读到的行多就用谁：线网格边界客观但会漏掉最后一条边线，
+        # 序号锚靠行数补，正好互补（9 号页：线网格 4 行 vs 序号锚 5 行）。
+        anchor = _page_grid(page_obs)
+        line = None
+        try:
+            cand = _line_grid(_page_image(pdf_path, page), page_obs)
+            line = cand if cand and _grid_is_sane(cand) else None
+        except Exception:
+            line = None
+        # 默认仍用序号锚：实测在真实页面上线网格会把 20 号的最后两行并成一格
+        # （少一条竖线就串列），只在序号锚完全失败时才用它兜底。
+        grid = anchor or line
         if not grid:
             continue
         xs = [o["x"] for o in page_obs]
@@ -336,6 +354,119 @@ def tables(pdf_path: str | Path, max_pages: int = 12) -> list[Table]:
         out.append(Table(rows=grid, page=page + 1,
                          bbox=[min(xs), min(ys), max(xs), max(ys)], source="ocr"))
     return out
+
+
+def _max_run(row) -> int:
+    """一行里最长的连续 True 段——表格线是**连续**的，文字行会被字间空隙打断。"""
+    best = cur = 0
+    for v in row:
+        cur = cur + 1 if v else 0
+        best = max(best, cur)
+    return best
+
+
+def _line_positions(mask, axis: int, ratio: float = 0.3) -> list[float]:
+    """把"很长的横线/竖线"从二值图里找出来，返回它们的位置（像素）。
+
+    判据用**最长连续段**而不是像素总数：文字行里横笔很多、总数也能过线，
+    但连续段很短（2026-11 实测 6 号页把 50 个文字行误判成横线）。
+    """
+    flags = mask.astype(bool)
+    rows = flags if axis == 1 else flags.T
+    total = mask.shape[1 - axis]
+    hot = [_max_run(r) > total * ratio for r in rows]
+    out, run = [], []
+    for i, flag in enumerate(hot):
+        if flag:
+            run.append(i)
+        elif run:
+            out.append(sum(run) / len(run)); run = []
+    if run:
+        out.append(sum(run) / len(run))
+    # 一条 3px 的线在二值图上会出现两条边（x、x+2），不合并就会多出整列。
+    merged: list[float] = []
+    for v in out:
+        if merged and v - merged[-1] <= 6:
+            merged[-1] = (merged[-1] + v) / 2
+        else:
+            merged.append(v)
+    return merged
+
+
+def _line_grid(image, obs: list[dict]) -> list[list[str]] | None:
+    """用**表格线**重建网格：扫描件里有框线时，行边界是客观存在的。
+
+    为什么需要它：序号锚靠"一行一个序号"推边界，遇到很高的行（一格折 5–6 行、
+    序号垂直居中）会把一行切开——文号落到下一行、日期还在本行，配对就散了。
+    有横竖线时直接取交点，行边界不再靠猜。
+    """
+    if not HAVE_CV or not obs:
+        return None
+    import numpy as np
+
+    arr = np.array(image)
+    gray = cv2.cvtColor(arr, cv2.COLOR_RGB2GRAY) if arr.ndim == 3 else arr
+    h, w = gray.shape
+    bw = cv2.adaptiveThreshold(gray, 255, cv2.ADAPTIVE_THRESH_MEAN_C,
+                               cv2.THRESH_BINARY_INV, 15, 2)
+    horiz = cv2.morphologyEx(bw, cv2.MORPH_OPEN,
+                             cv2.getStructuringElement(cv2.MORPH_RECT, (max(30, w // 30), 1)))
+    vert = cv2.morphologyEx(bw, cv2.MORPH_OPEN,
+                            cv2.getStructuringElement(cv2.MORPH_RECT, (1, max(30, h // 30))))
+    ys = _line_positions(horiz, axis=1, ratio=0.3)
+    xs = _line_positions(vert, axis=0, ratio=0.3)
+    # 底边常被漏掉（最后一条横线压在文字上或太淡）：竖线一直延伸到哪，
+    # 就说明表格画到哪，用它把缺失的上下边界补回来。
+    if len(ys) >= 2 and len(xs) >= 2:
+        import numpy as _np
+        rows_with_vert = _np.where(vert.any(axis=1))[0]
+        if rows_with_vert.size:
+            top, bot = int(rows_with_vert[0]), int(rows_with_vert[-1])
+            pitch = statistics.median([b - a for a, b in zip(ys, ys[1:])]) or h / 20
+            if ys[0] - top > pitch * 0.5:
+                ys.insert(0, top)
+            if bot - ys[-1] > pitch * 0.5:
+                ys.append(bot)
+    if len(ys) < 4 or len(xs) < 3:
+        return None
+    n_rows, n_cols = len(ys) - 1, len(xs) - 1
+    if n_rows > 60 or n_cols > 8:
+        return None
+
+    grid = [[""] * n_cols for _ in range(n_rows)]
+    for o in obs:
+        cx, cy = o["x"] * w, o["y"] * h
+        col = next((j for j in range(n_cols) if xs[j] <= cx < xs[j + 1]), None)
+        row = next((i for i in range(n_rows) if ys[i] <= cy < ys[i + 1]), None)
+        if col is None or row is None:
+            continue
+        grid[row][col] = (grid[row][col] + " " + o["text"]).strip() if grid[row][col] else o["text"]
+    grid = [r for r in grid if any(c.strip() for c in r)]
+    if len(grid) < 2:
+        return None
+    return grid
+
+
+def _grid_is_sane(grid: list[list[str]]) -> bool:
+    """线网格的质量闸：行数要和序号列的数量对得上。
+
+    扫描件的线检测会被文字基线骗（6 号页曾把一行字切成一行"表"），闸门是：
+    第一列如果是序号，行数必须≈序号个数（±1）；否则要求多数行有两个以上单元格。
+    """
+    if len(grid) < 2:
+        return False
+    seqs = [v for v in (_seq_value(r[0]) for r in grid[1:]) if v is not None]
+    if len(seqs) >= 3:
+        return abs(len(grid) - 1 - len(seqs)) <= 1
+    filled = sum(1 for r in grid[1:] if sum(1 for c in r if c.strip()) >= 2)
+    return filled >= (len(grid) - 1) * 0.6
+
+
+def _page_image(pdf_path: str | Path, page: int, scale: float = 2):
+    import pypdfium2 as pdfium
+
+    pdf = pdfium.PdfDocument(str(pdf_path))
+    return pdf[page].render(scale=scale).to_pil()
 
 
 def looks_tabular(lines: list[str]) -> bool:
