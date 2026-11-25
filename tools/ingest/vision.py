@@ -25,11 +25,17 @@ except Exception:  # pragma: no cover
     HAVE_VISION = False
 
 import re
+import statistics
+
+from tools.ingest.tables import Table, header_of
 
 RE_DOCNO = re.compile(
     r"沪\s*[\u4e00-\u9fa5]{1,8}\s*[〔（(]\s*\d{2,4}\s*[〕）)]\s*第?\s*\d+\s*号"
 )
 RE_DATE = re.compile(r"(20\d{2})\s*年\s*(\d{1,2})\s*月\s*(\d{1,2})\s*日")
+RE_SEQ = re.compile(r"^\d{1,3}$")
+# 页码必须带破折号/长横：只用 ^\d+$ 会把表格的序号列整列当页码删掉（2026-11 实测）。
+RE_PAGE_HARD = re.compile(r"^\s*[—\-一]\s*\d+\s*[—\-一]\s*$")
 RE_PAGE = re.compile(r"^[—\-一\s]*\d+[—\-一\s]*$")
 # 单元格级的文号：比 RE_DOCNO 宽——像「沪劳(86)资创字第225号」这种带「字第」的
 # 老文号，RE_DOCNO 匹配不上，但它在表格里就是一格。
@@ -142,3 +148,105 @@ def row_pairs(pdf_path: str | Path) -> list[tuple[str, str]]:
             y, mo, dd = (int(x) for x in m.groups())
             out.append((no, f"{y:04d}-{mo:02d}-{dd:02d}"))
     return out
+
+
+# ---------- 通用：把一页的字级坐标还原成表格 ----------
+
+X_CLUSTER = 0.02      # 列聚类的 x 间距（归一化宽度）
+X_TOL = 0.06          # 一个观察结果离列起点多远还算这一列
+MIN_ROWS = 3
+MIN_FILL = 0.6        # 至少六成行有两个以上单元格，才当表格
+
+
+def _page_grid(obs: list[dict]) -> list[list[str]] | None:
+    """一页的观察结果 → 网格。
+
+    行怎么切是难点：单元格折行（同一格占两行）与相邻两行在 y 上只差一个行高，
+    不能靠"固定容差"分开。这里用**序号列**做锚：序号每行一个、短、纯数字，
+    它的 y 就是行首；其余观察按"落到哪个行首区间"归行，折行自然并进同一行。
+    没有序号列就返回 None——宁可少认一张表，也不要把正文切碎。
+    """
+    if len(obs) < 6:
+        return None
+    gap = statistics.median(o["h"] for o in obs) or 0.02
+
+    xs = sorted(o["x"] for o in obs)
+    cols: list[list[float]] = []
+    for x in xs:
+        if not cols or x - cols[-1][-1] > X_CLUSTER:
+            cols.append([x])
+        else:
+            cols[-1].append(x)
+    starts = [c[0] for c in cols if len(c) >= 2]
+    if len(starts) < 2 or len(starts) > 8:
+        return None
+
+    def col_of(o: dict) -> int | None:
+        j = min(range(len(starts)), key=lambda i: abs(o["x"] - starts[i]))
+        return j if abs(o["x"] - starts[j]) <= X_TOL else None
+
+    anchors = sorted(o["y"] for o in obs
+                     if col_of(o) == 0 and RE_SEQ.match(o["text"].strip()))
+    if len(anchors) < MIN_ROWS - 1:
+        return None
+
+    def row_of(y: float) -> int:
+        # 离哪个序号最近就归哪行：序号在格子里垂直居中，行首文字常常**高于**序号，
+        # 用"y >= 序号"会把下一行的第一行折行并进上一行（2026-11 实测）。
+        return min(range(len(anchors)), key=lambda i: abs(y - anchors[i]))
+
+    head_y = [o["y"] for o in obs if o["y"] < anchors[0] - gap * 1.2]
+    n_rows = len(anchors) + (1 if head_y else 0)
+    grid = [[""] * len(starts) for _ in range(n_rows)]
+    offset = 1 if head_y else 0
+    for o in obs:
+        first = anchors[0] - gap * 1.2
+        if o["y"] < first:
+            # 表头是居中的，用最近列而不是容差判定：表头文字到列起点的距离常常
+            # 超过数据列的容差（「文件名称」居中在 x=0.35，列起点 0.18）。
+            j = min(range(len(starts)), key=lambda i: abs(o["x"] - starts[i]))
+            grid[0][j] += o["text"]
+            continue
+        j = col_of(o)
+        if j is None:
+            continue
+        if row_of(o["y"]) < len(anchors):
+            grid[row_of(o["y"]) + offset][j] += o["text"]
+    grid = [[c.strip() for c in row] for row in grid if any(c.strip() for c in row)]
+    if len(grid) < MIN_ROWS:
+        return None
+    multi = sum(1 for r in grid if sum(1 for c in r if c) >= 2)
+    if multi / len(grid) < MIN_FILL:
+        return None
+    if not header_of(grid):
+        return None
+    return grid
+
+
+def tables(pdf_path: str | Path, max_pages: int = 12) -> list[Table]:
+    """扫描件的表格：逐页重建网格，返回带页码的 Table（source="ocr"）。"""
+    if not HAVE_VISION:
+        return []
+    obs = observations(pdf_path, max_pages=max_pages)
+    if not obs:
+        return []
+    out: list[Table] = []
+    for page in sorted({o["page"] for o in obs}):
+        page_obs = [o for o in obs if o["page"] == page and not RE_PAGE_HARD.match(o["text"].strip())]
+        grid = _page_grid(page_obs)
+        if not grid:
+            continue
+        xs = [o["x"] for o in page_obs]
+        ys = [o["y"] for o in page_obs]
+        out.append(Table(rows=grid, page=page + 1,
+                         bbox=[min(xs), min(ys), max(xs), max(ys)], source="ocr"))
+    return out
+
+
+def looks_tabular(lines: list[str]) -> bool:
+    """OCR 出来的行是不是"表格相"：大量短行、少句末标点。"""
+    lines = [ln.strip() for ln in lines if ln.strip()]
+    if len(lines) < 8:
+        return False
+    short = [ln for ln in lines if len(ln) <= 24 and not re.search(r"[。；：，]$", ln)]
+    return len(short) / len(lines) >= 0.35

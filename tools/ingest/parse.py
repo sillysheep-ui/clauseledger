@@ -19,7 +19,7 @@ CRUMB = ("您现在的位置", "当前位置", "相关链接", "首页 >", "首�
 FOOTER = re.compile(r"(打印本页|分享到|相关稿件|相关链接|返回顶部|关闭窗口|字体[:：]|上一篇|下一篇|扫一扫)")
 
 # 解析器版本：偏移量只在同一版本内有效，换版本必须重算引用
-PARSER_VERSION = "0.3.20"
+PARSER_VERSION = "0.3.21"
 
 
 @dataclass
@@ -271,11 +271,30 @@ def parse_pdf(data: bytes, path: str | None = None) -> Parsed:
         except Exception:
             return Parsed(extract="unsupported")
         if sum(len(CN.findall(t)) for t in texts) > total:
+            from tools.ingest import vision
+            scanned_tables = []
+            if vision.looks_tabular([ln for t in texts for ln in t.splitlines()]):
+                try:
+                    scanned_tables = vision.tables(path, max_pages=min(len(texts), 12))
+                except Exception:
+                    scanned_tables = []   # 认不出表格不影响正文
+            by_page: dict[int, list] = {}
+            for tb in scanned_tables:
+                by_page.setdefault(tb.page or 1, []).append(tb)
             blocks: list[Block] = []
             for pg, t in enumerate(texts, 1):
+                page_tables = by_page.get(pg, [])
+                blob = " ".join(c for tb in page_tables for r in tb.rows for c in r)
                 for ln in _merge_wrapped(_merge_fragments(t.splitlines())):
+                    # 同一批字被 OCR 一遍、又被表格还原一遍，留着会进库两次
+                    if blob and covered_by(ln, blob):
+                        continue
                     blocks.append(Block(len(blocks), "para", ln, page=pg))
-            return Parsed(blocks, title, extract="ocr", ocr_conf=round(conf, 3))
+                for tb in page_tables:
+                    for text in tb.render():
+                        blocks.append(Block(len(blocks), "table", text, page=pg))
+            return Parsed(blocks, title, tables=scanned_tables,
+                          extract="ocr", ocr_conf=round(conf, 3))
 
     grids: dict[int, list] = {}
     for pno, rows, bbox in grids_from_pdf(data):
