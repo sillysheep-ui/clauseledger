@@ -81,6 +81,9 @@ def ingest(url: str, *, slug: str | None = None, hint: dict | None = None) -> di
         # 结果 560 份文档的 issued_at 全是空的，等于没有发文日期。
         "issued_at": iso(hint.get("issued_at")),
         "valid_until": iso(hint.get("valid_until")),
+        # 列表页的"有效期至"是**当前**效力（可能已被延期），不是文件自己写的到期日。
+        # 两者混用会让 steps 的第一步就等于延期后的终点（2026-11 实测：历史时点理由穿越）。
+        "list_valid_until": iso(hint.get("valid_until")),
         "url": url,
         "fetched_at": datetime.now(CST).strftime("%Y-%m-%dT%H:%M:%S%z"),
         "page_kind": kind,
@@ -93,7 +96,9 @@ def ingest(url: str, *, slug: str | None = None, hint: dict | None = None) -> di
         "extract": parsed.extract,
         "ocr_conf": parsed.ocr_conf,
         "effective_from": iso(m_from.group(1) if m_from else None),
-        "effective_to": iso(hint.get("valid_until") or (m_to.group(1) if m_to else None)),
+        "effective_to": iso(m_to.group(1) if m_to else None),
+        "own_effective_to": iso(m_to.group(1) if m_to else None),
+        "effective_to_source": "document" if m_to else "unknown",
         "stats": {"blocks": len(blocks), "chars": len(text), "clauses": len(clauses),
                   "tables": len(tables),
                   "by_level": {str(k): sum(1 for c in clauses if c.level == k)
@@ -184,9 +189,22 @@ def reparse(rec: dict) -> dict:
         "tables": [t.as_dict(i) for i, t in enumerate(tables)],
         "blocks": [{"i": b.index, "kind": b.kind, "page": b.page, "text": b.text} for b in blocks],
     })
-    # 只补空，不覆盖：人工补录/回填得来的日期优先级高于正文正则
+    # 正文说的到期日才是"文件自己的"；重解析时以正文为准（旧记录里的列表页日期会让
+    # steps 的第一步就等于延期后的终点，历史时点的理由会穿越）。
+    body_to = iso(m_to.group(1) if m_to else None)
+    if body_to:
+        out["effective_to"] = body_to
+        out["own_effective_to"] = body_to
+        out["effective_to_source"] = "document"
+    else:
+        listed = (rec.get("list_valid_until") or rec.get("valid_until") or "")[:10]
+        out["effective_to"] = listed
+        out["own_effective_to"] = ""
+        out["effective_to_source"] = "list" if listed else "unknown"
     if not out.get("effective_from"):
         out["effective_from"] = iso(m_from.group(1) if m_from else None)
-    if not out.get("effective_to"):
-        out["effective_to"] = iso(m_to.group(1) if m_to else None)
+    # 解析结果明显小于附件声明的字数：报错，不写坏记录
+    declared = max([a.get("chars") or 0 for a in atts] + [0])
+    if declared >= 1000 and len(text) < 0.5 * declared:
+        raise RuntimeError(f"正文疑似缺失：抽出 {len(text)} 字，附件声明 {declared} 字")
     return out

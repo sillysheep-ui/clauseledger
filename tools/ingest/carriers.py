@@ -127,8 +127,8 @@ def choose_main(cands: list[Carrier]) -> tuple[Carrier | None, str]:
     for c in usable:
         if c.role == "page" and c.extract == "native":
             return c, "网页正文可直接读，不需要 OCR" + note
-    c = max(usable, key=lambda x: len(x.clauses))
-    return c, f"其余规则不适用，取条款最多的一份（{len(c.clauses)} 条）" + note
+    c = max(usable, key=lambda x: (len(x.clauses), x.chars))
+    return c, f"其余规则不适用，取条款最多的一份（{len(c.clauses)} 条，{c.chars} 字）" + note
 
 
 @dataclass
@@ -195,6 +195,25 @@ def relocate(blocks: list[Block], clauses: list[Clause]) -> None:
         c.start, c.end = i, i + len(c.text)
 
 
+def _dates(text: str, rec: dict) -> dict:
+    """到期日：正文优先，其次列表页（来源要分清）。
+
+    正文说的是"文件自己写的那天"，列表页的"有效期至"是**当前**效力——可能已经被延期。
+    所以 own_effective_to 只装正文日期；effective_to 在正文缺失时退回列表页日期，
+    并标 source=list，让 steps 知道这一步不是文件自己的声明。
+    """
+    from tools.ingest.pipeline import RE_EFF_TO, iso  # 局部导入，避免循环依赖
+
+    m = RE_EFF_TO.search(text or "")
+    body = iso(m.group(1)) if m else None
+    if body:
+        return {"effective_to": body, "own_effective_to": body,
+                "effective_to_source": "document"}
+    listed = (rec.get("list_valid_until") or rec.get("valid_until") or "")[:10]
+    return {"effective_to": listed, "own_effective_to": "",
+            "effective_to_source": "list" if listed else "unknown"}
+
+
 def rebuild(rec: dict) -> dict:
     """主副本提供正文与坐标；补充内容去重后追加；副本只登记。"""
     cands = load_carriers(rec)
@@ -203,6 +222,12 @@ def rebuild(rec: dict) -> dict:
         return {**rec, "carriers": [c.summary() for c in cands],
                 "carrier_choice": {"role": None, "reason": p.reason}}
 
+    # 主副本"明显小于附件自己声明的字数"= 解析失败被当成成功，宁可报错也不写坏记录。
+    declared = max([a.get("chars") or 0 for a in (rec.get("attachments") or [])] + [0])
+    got = sum(len(b.text) for b in p.main.blocks)
+    if declared >= 1000 and got < 0.5 * declared:
+        raise RuntimeError(
+            f"主副本疑似解析失败：{p.main.human} 只有 {got} 字，附件声明 {declared} 字")
     blocks = [Block(i, b.kind, b.text, b.page) for i, b in enumerate(p.main.blocks)]
     base = sum(len(b.text) for b in blocks) + 1
     seen = {(c.path, _norm(c.text)) for c in p.main.clauses}
@@ -291,6 +316,9 @@ def rebuild(rec: dict) -> dict:
         "tables": [t.as_dict(i) for i, t in enumerate(tables)],
         "blocks": [{"i": b.index, "kind": b.kind, "page": b.page, "text": b.text}
                    for b in blocks],
+        # 到期日只认正文（列表页的"有效期至"是当前效力，可能已被延期，混用会让
+        # steps 的第一步等于延期后的终点）。旧记录里 hint 派生的值在这里被覆盖。
+        **_dates(text, rec),
         "carriers": [c.summary() for c in cands],
         "carrier_choice": {
             "role": p.main.role, "idx": p.main.idx, "kind": p.main.kind,

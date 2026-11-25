@@ -43,8 +43,17 @@ class Table:
 
 
 def cell_text(s: str | None) -> str:
-    s = (s or "").replace("\u00a0", " ").replace("\n", " ")
-    return re.sub(r"\s{2,}", " ", s).strip()
+    """单元格文本：合并 PDF 折行留下的空格。
+
+    `社会保 险关系` 在 PDF 里是同一格被折成两行，空格是排版产物；
+    只合并"中文 + 空格 + 中文"，不动 `有效期至 2028 年` 这类中英/数字边界。
+    """
+    t = (s or "").replace("\u00a0", " ").replace("\n", " ")
+    t = re.sub(r"\s{2,}", " ", t).strip()
+    # 中文两侧的空格都是排版产物（折行/对齐），`有效期至 2028 年` 也应当连起来。
+    t = re.sub(r"\s+(?=[\u4e00-\u9fa5])|(?<=[\u4e00-\u9fa5])\s+", "", t)
+    t = re.sub(r"\s*(?=[〔（(\[])|(?<=[〕）)\]])", "", t)
+    return t
 
 
 def grid_from_html(tbl) -> list[list[str]]:

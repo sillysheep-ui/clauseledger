@@ -17,6 +17,8 @@ from dataclasses import dataclass
 from datetime import date
 from pathlib import Path
 
+from app.domain.docno import key
+
 RELATIONS = Path("data/registry/relations.jsonl")
 DERIVED = Path("data/derived/validity.json")
 
@@ -35,14 +37,28 @@ def _derived() -> dict:
     return _PERIODS[1]
 
 
+def _pick(table: dict, doc_no: str) -> list[dict]:
+    """派生文件里的键是匹配键，调用方给的是原文，所以三级查找。"""
+    if not doc_no:
+        return []
+    if doc_no in table:
+        return table[doc_no] or []
+    k = key(doc_no)
+    if k in table:
+        return table[k] or []
+    alias = _derived().get("alias") or {}
+    k2 = alias.get(doc_no)
+    return (table.get(k2) if k2 else None) or []
+
+
 def repeals_of(doc_no: str) -> list[dict]:
     """这张时间表里记着的废止关系（和延期边来自同一个派生文件）。"""
-    return (_derived().get("repeals") or {}).get(doc_no) or []
+    return _pick(_derived().get("repeals") or {}, doc_no)
 
 
 def periods_of(doc_no: str) -> list[dict]:
     """这份文件的有效期区间（按时间排序）。没有派生数据就返回空。"""
-    return (_derived().get("periods") or {}).get(doc_no) or []
+    return _pick(_derived().get("periods") or {}, doc_no)
 
 
 @dataclass(frozen=True)
@@ -148,17 +164,26 @@ def status_for(doc_no: str, as_of: str | None = None,
                             f"断档：上一段有效期至 {prev.get('end')}，"
                             f"这一段从 {start} 起", since=prev.get("end"))
         if not end or day <= end:
-            # 只提"这一天之前已经发生"的延期：问 2019 年的事，不该拿 2020 年的通知当理由。
-            pairs = list(zip(seg.get("by") or [],
-                             seg.get("by_on") or [""] * len(seg.get("by") or [])))
-            end = seg.get("end") or ""
-            relevant = [b for b, on in pairs
-                        if (not on or on <= day) and (not end or not on or on <= end)]
-            if not end:
+            # 按"当天走到第几步"取到期日：2022 年问 2019〕30号，答案是 2023-12-31；
+            # 2024 年再问，才是 2028-12-31。没有 steps 的老数据退回段终点。
+            steps = [x for x in (seg.get("steps") or []) if x.get("end")]
+            if steps:
+                applied = [x for x in steps if (x.get("on") or "") <= day]
+                cur_end = (applied[-1]["end"] if applied else steps[0]["end"])
+                by = applied[-1].get("by") if applied else ""
+            else:
+                # 旧派生文件没有 steps：退回按 by_on 过滤的写法（同一个语义的降级路径）。
+                raw_end = seg.get("end") or ""
+                pairs = list(zip(seg.get("by") or [],
+                                 seg.get("by_on") or [""] * len(seg.get("by") or [])))
+                ok = [b for b, on in pairs
+                      if (not on or on <= day) and (not raw_end or not on or on <= raw_end)]
+                cur_end, by = raw_end, (ok[-1] if ok else "")
+            if not cur_end:
                 # 没写到期日 ≠ 永久有效：标 unknown，检索保留、但不给"现行"加权。
                 return Validity("unknown", day, "未记载有效期")
-            why = f"经《{relevant[-1]}》延期" if relevant else ""
-            return Validity("effective", day, f"{why}有效期至 {end}".strip())
+            why = f"经《{by}》延期" if by else ""
+            return Validity("effective", day, f"{why}有效期至 {cur_end}".strip())
 
     last = segs[-1]
     return Validity("expired", day, f"有效期至 {last.get('end')}，已过期",

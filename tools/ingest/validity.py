@@ -48,10 +48,7 @@ def is_extension(doc: dict) -> bool:
     return "延长" in title and "有效期" in title
 
 
-def key(no: str) -> str:
-    """文号归一：去空格、统一括号。OCR/网页里 `〔2018〕 20号` 与 `〔2018〕20号` 是同一个。"""
-    t = re.sub(r"\s+", "", no or "")
-    return t.replace("（", "〔").replace("）", "〕").replace("(", "〔").replace(")", "〕")
+from app.domain.docno import key  # noqa: E402  文号归一只有一份实现
 
 
 def norm(s: str) -> str:
@@ -391,6 +388,9 @@ class Period:
     by: list[str] = field(default_factory=list)
     by_on: list[str] = field(default_factory=list)   # 对应通知的生效日
     gap: bool = False   # 这一段与上一段之间不连续
+    # 段内的"步"：文件自身一个终点，每次延期再一步。
+    # 有了它，才能回答"2022 年问它，到期日是多少"——而不是拿合并后的最后终点。
+    steps: list[dict] = field(default_factory=list)
 
 
 def _notice_date(no: str, docs: dict[str, dict]) -> str:
@@ -411,7 +411,7 @@ def periods(res: Resolution, docs: dict[str, dict],
         own = own_end(doc)
         if not start and not own and no not in res.valid_until:
             continue
-        segs = [Period(start=start, end=own)]
+        segs = [Period(start=start, end=own, steps=[{"end": own, "on": start}])]
         mine = sorted((e for e in res.edges if e.to == no),
                       key=lambda e: (_notice_date(e.by, docs), e.until))
         for e in mine:
@@ -423,9 +423,11 @@ def periods(res: Resolution, docs: dict[str, dict],
                 if e.by not in cur.by:
                     cur.by.append(e.by)
                     cur.by_on.append(nd)
+                    cur.steps.append({"end": e.until, "on": nd, "by": e.by})
             else:
                 segs.append(Period(start=nd or cur.end, end=e.until, by=[e.by],
-                                   by_on=[nd], gap=True))
+                                   by_on=[nd], gap=True,
+                                   steps=[{"end": e.until, "on": nd, "by": e.by}]))
         # 废止也是时间表的一部分：在被废止那天画一条终点线，
         # 这样"某年有效吗""按 as_of 检索"和卡片上的时效提醒用的是同一套数据。
         rep = sorted((repeals or {}).get(no, []), key=lambda r: r["date"])
@@ -444,13 +446,21 @@ def write_derived(res: Resolution, docs: dict[str, dict],
     """把时间段写成派生文件。processed/ 里留的是"文件自己说的"，这里是"算出来的"。"""
     repeals = repeals if repeals is not None else load_repeals()
     segs = periods(res, docs, repeals)
+    periods_out: dict[str, list[dict]] = {}
+    alias: dict[str, str] = {}
+    for no, ps in segs.items():
+        k = key(no)
+        periods_out[k] = [{"start": p.start, "end": p.end, "by": p.by,
+                           "by_on": p.by_on, "gap": p.gap, "steps": p.steps,
+                           "doc_no": no} for p in ps]
+        if k != no:
+            alias[no] = k
     payload = {
         "generated_at": __import__("datetime").datetime.now().isoformat(timespec="seconds"),
-        "periods": {
-            no: [{"start": p.start, "end": p.end, "by": p.by, "by_on": p.by_on,
-                  "gap": p.gap} for p in ps]
-            for no, ps in segs.items()
-        },
+        "schema": 2,
+        # 键是匹配键（两位年份已补成四位、括号已统一），展示用 entry 里的 doc_no
+        "periods": periods_out,
+        "alias": alias,
         "edges": [{"by": e.by, "to": e.to, "until": e.until} for e in res.edges],
         "repeals": repeals,
         "unresolved": res.unresolved,

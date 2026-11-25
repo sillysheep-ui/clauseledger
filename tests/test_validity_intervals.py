@@ -130,3 +130,26 @@ def test_extension_reason_never_postdates_the_segment(tmp_path, monkeypatch):
     monkeypatch.setattr(D, "_PERIODS", None)
     v = D.status_for("沪人社养发(2012)20号", "2017-01-01")
     assert v.status == "effective" and "2022" not in v.reason
+
+
+def test_steps_travel_back_to_the_end_at_that_day(tmp_path, monkeypatch) -> None:
+    """2022 年问 2019〕30号，答案必须是 2023-12-31；2024 年才是延后的 2028-12-31。
+
+    延期在派生数据里是一段区间 + 若干步；没有 steps 时，理由会拿合并后的终点穿越到未来。
+    """
+    seg = {"doc_no": "沪人社规〔2019〕30号", "start": "2019-08-01",
+           "end": "2028-12-31", "by": ["沪人社规〔2023〕4号"],
+           "by_on": ["2023-03-27"], "gap": False,
+           "steps": [{"end": "2023-12-31", "on": "2019-08-01"},
+                     {"end": "2028-12-31", "on": "2023-03-27", "by": "沪人社规〔2023〕4号"}]}
+    p = tmp_path / "validity.json"
+    p.write_text(json.dumps({"periods": {"沪人社规〔2019〕30号": [seg]}}, ensure_ascii=False), "utf-8")
+    monkeypatch.setattr(D, "DERIVED", p)
+    monkeypatch.setattr(D, "_PERIODS", None)
+
+    early = D.status_for("沪人社规〔2019〕30号", "2022-06-01")
+    assert early.status == "effective"
+    assert "2023-12-31" in early.reason and "2028" not in early.reason
+
+    late = D.status_for("沪人社规〔2019〕30号", "2024-03-01")
+    assert "沪人社规〔2023〕4号" in late.reason and "2028-12-31" in late.reason
