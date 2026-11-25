@@ -71,3 +71,6 @@ data/world/
 
 data/reports/generate-eval.json
 eval/pools/
+
+# matplotlib 缓存（重建脚本用）
+data/.mpl/
