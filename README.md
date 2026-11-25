@@ -8,8 +8,10 @@
 
 `Python 3.13` · `FastAPI` · 混合召回（BM25 + bge-small-zh）· 状态与事件落 SQLite（`data/runtime.db`，WAL）· 每步一个 OTel span（`data/runs/traces.jsonl`）
 
-> **实际用了什么，写什么**：LangGraph、Postgres/pgvector、MCP、OTel 目前只在设计里
-> （`docs/ARCHITECTURE.md` / `docs/FOUNDATION.md`），代码还没接。等接了再写进这一行。
+> **实际用了什么，写什么**：
+> 已接：SQLite 状态/事件、OTel span（`app/runtime/tracing.py`，落到 `data/runs/traces.jsonl`）、进程内工具层（`app/tools/service.py`）。
+> 没接：LangGraph、Postgres/pgvector、MCP、多租户 RLS、Agent 运行时（AgentScope 只在 `spikes/` 里验证过）。
+> 设计稿在 `docs/ARCHITECTURE.md` / `docs/FOUNDATION.md`，接了再改这一行。
 
 ---
 
