@@ -7,6 +7,8 @@ from dataclasses import dataclass, field
 
 from bs4 import BeautifulSoup, Comment
 
+from tools.ingest.tables import Table, covered_by, grid_from_docx, grid_from_html, grids_from_pdf, render_rows
+
 CN = re.compile(r"[\u4e00-\u9fff]")
 SCAN_PAGE_CHARS = 50
 BLOCK_TAGS = ("h1", "h2", "h3", "h4", "p", "table", "li", "div")
@@ -17,7 +19,7 @@ CRUMB = ("您现在的位置", "当前位置", "相关链接", "首页 >", "首�
 FOOTER = re.compile(r"(打印本页|分享到|相关稿件|相关链接|返回顶部|关闭窗口|字体[:：]|上一篇|下一篇|扫一扫)")
 
 # 解析器版本：偏移量只在同一版本内有效，换版本必须重算引用
-PARSER_VERSION = "0.3.18"
+PARSER_VERSION = "0.3.19"
 
 
 @dataclass
@@ -36,6 +38,7 @@ class Parsed:
     extract: str = "native"   # native / ocr / textutil / unsupported
     ocr_conf: float | None = None
     meta: dict = field(default_factory=dict)   # 页面 <meta>（PubDate/ContentSource 等）
+    tables: list = field(default_factory=list)  # tools.ingest.tables.Table
 
     @property
     def text(self) -> str:
@@ -107,6 +110,7 @@ def parse_html(data: bytes, base_url: str) -> Parsed:
         root = biggest   # 选择器只圈到了一小块，退回最大文字块
 
     blocks: list[Block] = []
+    parsed_tables: list = []
 
     def _walk(el):
         """按文档顺序走，但**不钻进 <table>**——表格只取一次，不取它的单元格。"""
@@ -135,7 +139,10 @@ def parse_html(data: bytes, base_url: str) -> Parsed:
         if el.name == "table":
             # 表格只吃一次就停：以前递归再进单元格，同一批字会以
             # `序号`/`文件名称`/`文号` 各成一块的形式重复一遍。
-            for row in _table_rows(el):
+            rows = grid_from_html(el)
+            if rows:
+                parsed_tables.append(Table(rows=rows, source="html"))
+            for row in render_rows(rows):
                 if not row.startswith(CRUMB):
                     blocks.append(Block(len(blocks), "table", row))
             continue
@@ -160,7 +167,8 @@ def parse_html(data: bytes, base_url: str) -> Parsed:
         h = a["href"].lower()
         if re.search(r"\.(pdf|docx?|wps)(\?|$)", h):
             atts.append(httpx_urljoin(base_url, a["href"]))
-    return Parsed(blocks, title, list(dict.fromkeys(atts)), meta=meta)
+    return Parsed(blocks, title, list(dict.fromkeys(atts)), meta=meta,
+                  tables=parsed_tables)
 
 
 def httpx_urljoin(base: str, href: str) -> str:
@@ -269,20 +277,35 @@ def parse_pdf(data: bytes, path: str | None = None) -> Parsed:
                     blocks.append(Block(len(blocks), "para", ln, page=pg))
             return Parsed(blocks, title, extract="ocr", ocr_conf=round(conf, 3))
 
+    grids: dict[int, list] = {}
+    for pno, rows, bbox in grids_from_pdf(data):
+        grids.setdefault(pno, []).append((rows, bbox))
     blocks: list[Block] = []
+    tables: list = []
     for pg, t in pages:
-        for ln in _merge_wrapped(_merge_fragments(t.splitlines())):
+        lines = list(_merge_wrapped(_merge_fragments(t.splitlines())))
+        page_tables = grids.get(pg, [])
+        blob = " ".join(c for rows, _ in page_tables for r in rows for c in r)
+        for ln in lines:
+            # PDF 的行文本与表格单元格是同一批字：表格页里那几行“序号文件名称文号…”
+            # 如果原样留着，同一段内容会进库两遍（一遍无分隔、一遍带表头）。
+            if blob and covered_by(ln, blob):
+                continue
             blocks.append(Block(len(blocks), "para", ln, page=pg))
-    return Parsed(blocks, title)
+        for rows, bbox in page_tables:
+            tables.append(Table(rows=rows, page=pg, bbox=bbox, source="pdf"))
+            for row in render_rows(rows):
+                blocks.append(Block(len(blocks), "table", row, page=pg))
+    return Parsed(blocks, title, tables=tables)
 
 
 def parse_docx(data: bytes) -> Parsed:
     import docx
-    from docx.table import Table
     from docx.text.paragraph import Paragraph
 
     d = docx.Document(io.BytesIO(data))
     blocks: list[Block] = []
+    tables: list = []
     for child in d.element.body.iterchildren():
         tag = child.tag.rsplit("}", 1)[-1]
         if tag == "p":
@@ -295,16 +318,12 @@ def parse_docx(data: bytes) -> Parsed:
         elif tag == "tbl":
             # Word 表格里的字在 `paragraphs` 里一个字都取不到——
             # 沪人社规〔2022〕20号 的三个 docx 附件就是因此抽成 0 字。
-            rows = []
-            for row in Table(child, d).rows:
-                cells = [_clean(c.text) for c in row.cells]
-                cells = [c for c in dict.fromkeys(cells) if c]
-                if cells:
-                    rows.append(" | ".join(cells))
-            txt = "\n".join(rows)
-            if len(CN.findall(txt)) >= 2:
-                blocks.append(Block(len(blocks), "table", txt))
-    return Parsed(blocks)
+            rows = grid_from_docx(child, d)
+            if rows:
+                tables.append(Table(rows=rows, source="docx"))
+            for row in render_rows(rows):
+                blocks.append(Block(len(blocks), "table", row))
+    return Parsed(blocks, tables=tables)
 
 
 def parse_doc(path: str) -> Parsed:

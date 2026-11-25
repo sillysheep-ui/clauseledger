@@ -37,6 +37,7 @@ class Carrier:
     ocr_conf: float | None = None
     blocks: list[Block] = field(default_factory=list)
     clauses: list[Clause] = field(default_factory=list)
+    tables: list = field(default_factory=list)
 
     @property
     def chars(self) -> int:
@@ -72,6 +73,7 @@ def load_carriers(rec: dict) -> list[Carrier]:
                 path=page_file, url=url, kind=kind, extract=parsed.extract,
                 ocr_conf=parsed.ocr_conf,
                 blocks=[Block(i, b.kind, b.text, b.page) for i, b in enumerate(parsed.blocks)],
+                tables=list(parsed.tables),
             ))
         except Exception:
             pass
@@ -89,6 +91,7 @@ def load_carriers(rec: dict) -> list[Carrier]:
             url=a.get("url") or "", kind=kind, extract=parsed.extract,
             ocr_conf=parsed.ocr_conf,
             blocks=[Block(j, b.kind, b.text, b.page) for j, b in enumerate(parsed.blocks)],
+            tables=list(parsed.tables),
         ))
     for c in out:
         c.blocks = drop_nav(c.blocks)
@@ -260,6 +263,10 @@ def rebuild(rec: dict) -> dict:
         text = (text + "\n" + c.text) if text else c.text
         c.block_index = blocks[-1].index
         c.start, c.end = start, start + len(c.text)
+    # 表格结构随主副本走，补充载体的表追加在后面
+    tables = list(p.main.tables)
+    for sup, _partial in p.supplements:
+        tables.extend(sup.tables)
     clauses.sort(key=lambda c: (c.start, c.end))
     out = dict(rec)
     out.update({
@@ -270,6 +277,7 @@ def rebuild(rec: dict) -> dict:
         "ocr_conf": p.main.ocr_conf,
         "stats": {
             "blocks": len(blocks), "chars": len(text), "clauses": len(clauses),
+            "tables": len(tables),
             "by_level": {str(k): sum(1 for c in clauses if c.level == k)
                          for k in sorted({c.level for c in clauses})},
         },
@@ -280,6 +288,7 @@ def rebuild(rec: dict) -> dict:
              "carrier": c.carrier}
             for c in clauses
         ],
+        "tables": [t.as_dict(i) for i, t in enumerate(tables)],
         "blocks": [{"i": b.index, "kind": b.kind, "page": b.page, "text": b.text}
                    for b in blocks],
         "carriers": [c.summary() for c in cands],

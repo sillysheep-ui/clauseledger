@@ -48,6 +48,7 @@ def ingest(url: str, *, slug: str | None = None, hint: dict | None = None) -> di
     page = fetch_smart(url)
     kind, parsed = parse_any(page.content, page.content_type, url, page.path)
     blocks: list[Block] = [Block(i, b.kind, b.text, b.page) for i, b in enumerate(parsed.blocks)]
+    tables = list(parsed.tables)
     atts = []
     for a in parsed.attachments[:MAX_ATT]:
         try:
@@ -55,6 +56,7 @@ def ingest(url: str, *, slug: str | None = None, hint: dict | None = None) -> di
             akind, aparsed = parse_any(f.content, f.content_type, a, f.path)
             for b in aparsed.blocks:
                 blocks.append(Block(len(blocks), b.kind, b.text, b.page))
+            tables.extend(aparsed.tables)
             atts.append({"url": a, "kind": akind, "sha256": f.sha256,
                          "chars": len(aparsed.text), "blocks": len(aparsed.blocks),
                          "extract": aparsed.extract, "ocr_conf": aparsed.ocr_conf})
@@ -93,6 +95,7 @@ def ingest(url: str, *, slug: str | None = None, hint: dict | None = None) -> di
         "effective_from": iso(m_from.group(1) if m_from else None),
         "effective_to": iso(hint.get("valid_until") or (m_to.group(1) if m_to else None)),
         "stats": {"blocks": len(blocks), "chars": len(text), "clauses": len(clauses),
+                  "tables": len(tables),
                   "by_level": {str(k): sum(1 for c in clauses if c.level == k)
                                for k in sorted({c.level for c in clauses})}},
         "clauses": [
@@ -101,6 +104,7 @@ def ingest(url: str, *, slug: str | None = None, hint: dict | None = None) -> di
              "start": c.start, "end": c.end, "sec": c.sec, "part": c.part, "carrier": c.carrier}
             for c in clauses
         ],
+        "tables": [t.as_dict(i) for i, t in enumerate(tables)],
         "blocks": [{"i": b.index, "kind": b.kind, "page": b.page, "text": b.text} for b in blocks],
     }
     OUT.mkdir(parents=True, exist_ok=True)
@@ -138,6 +142,7 @@ def reparse(rec: dict) -> dict:
     # 只传 bytes 的话 pypdfium2 无处开门，OCR 静默跳过——103 份扫描件会变成 0 字。
     kind, parsed = parse_any(page_file.read_bytes(), "", url, str(page_file))
     blocks = [Block(i, b.kind, b.text, b.page) for i, b in enumerate(parsed.blocks)]
+    tables = list(parsed.tables)
     atts = []
     for a in rec.get("attachments") or []:
         sha = a.get("sha256")
@@ -148,6 +153,7 @@ def reparse(rec: dict) -> dict:
         akind, aparsed = parse_any(af.read_bytes(), "", a.get("url") or "", str(af))
         for b in aparsed.blocks:
             blocks.append(Block(len(blocks), b.kind, b.text, b.page))
+        tables.extend(aparsed.tables)
         atts.append({**a, "kind": akind, "chars": len(aparsed.text),
                      "blocks": len(aparsed.blocks), "extract": aparsed.extract,
                      "ocr_conf": aparsed.ocr_conf})
@@ -166,6 +172,7 @@ def reparse(rec: dict) -> dict:
         "extract": parsed.extract,
         "ocr_conf": parsed.ocr_conf,
         "stats": {"blocks": len(blocks), "chars": len(text), "clauses": len(clauses),
+                  "tables": len(tables),
                   "by_level": {str(k): sum(1 for c in clauses if c.level == k)
                                for k in sorted({c.level for c in clauses})}},
         "clauses": [
@@ -174,6 +181,7 @@ def reparse(rec: dict) -> dict:
              "start": c.start, "end": c.end, "sec": c.sec, "part": c.part, "carrier": c.carrier}
             for c in clauses
         ],
+        "tables": [t.as_dict(i) for i, t in enumerate(tables)],
         "blocks": [{"i": b.index, "kind": b.kind, "page": b.page, "text": b.text} for b in blocks],
     })
     # 只补空，不覆盖：人工补录/回填得来的日期优先级高于正文正则

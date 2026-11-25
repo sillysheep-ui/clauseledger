@@ -37,7 +37,8 @@ def test_table_keeps_row_structure() -> None:
     _, p = parse_any(HTML_TABLE.encode(), "text/html", "https://example.gov.cn/a.html")
     rows = [b.text for b in p.blocks if b.kind == "table"]
     assert "序号 | 文件名称 | 文号" in rows
-    assert "1 | 关于印发《上海市集体合同审查办法》的通知 | 沪人社规〔2021〕26号" in rows
+    assert ("序号：1 | 文件名称：关于印发《上海市集体合同审查办法》的通知 | "
+            "文号：沪人社规〔2021〕26号") in rows
 
 
 def test_breadcrumb_is_dropped() -> None:
