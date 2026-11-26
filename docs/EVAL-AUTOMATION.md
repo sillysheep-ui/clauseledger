@@ -17,8 +17,8 @@
 |---|---|---|---|
 | `smoke` | dev 前 10 题 + 负样本（12+18） | ~3.5 min / ~10 s | 每次改检索或装配后、PR |
 | `full` | dev / test / holdout 全量官方题 + 负样本 | ~60–90 min / 秒级 | 夜间、发布前 |
-| `behavior` | 6 条终态断言（C17–C22） | 秒级 | PR、发布前 |
-| `citation` | 50 条人工抽样（CLR/CSR） | 人工 30 min | 发布前 |
+| `behavior` | 6 条终态断言（C17–C22，`python -m tools.eval_behavior`） | 秒级 | PR、发布前 |
+| `citation` | 50 条人工抽样（`python -m tools.eval_citation --sample 50`） | 人工 30 min | 发布前 |
 
 命令：
 
@@ -61,4 +61,5 @@ python -m tools.evalkit.run --suite full --debug-rank   # 只在需要诊断时
 
 - **LLM judge 不引入**：主指标全部确定性；语义支撑（CSR）用人工 50 条 + κ。
 - 判定 30 条标注未写：写好之前，判定准确率在报告里显示"未测"，不显示假数字。
-- 行为套件仍是单测形态（`tests/test_recovery.py` 等），下一步抽成 `tools/eval_behavior.py`。
+- 行为套件已抽成 `tools/eval_behavior.py`（6/6 通过，秒级，不调模型）；
+- 引用抽样已抽成 `tools/eval_citation.py`（`--sample N` 生成 CSV，`--score` 算 CSR 与 κ）。

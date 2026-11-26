@@ -37,9 +37,9 @@ def render(title: str, res: dict) -> str:
         "| 指标 | 值 | 说明 |",
         "|---|---|---|",
     ]
-    aec = rate(sum(1 for r in rows if r.get("aec")), n)
-    lines.append(f"| AEC 证据覆盖 | {pct(aec)} | 官方答案句出现在给模型的证据里 |")
     live = [r for r in rows if r.get("state") != "stale_gold"]
+    aec = rate(sum(1 for r in rows if r.get("aec")), n)
+    lines.append(f"| AEC 证据覆盖 | {pct(aec)} | 官方答案句出现在给模型的证据里；分母=全部 {n} 题 |")
     for k in (1, 5, 10):
         got = sum(1 for r in live if r.get("rank") and r["rank"] <= k)
         lines.append(f"| EvidenceRecall@{k} | {pct(rate(got, len(live)))} | 前 {k} 条并起来能覆盖答案句；分母=可核对 {len(live)} 题 |")
@@ -56,6 +56,7 @@ def render(title: str, res: dict) -> str:
         )
     lines += [
         "| Groundedness | 未在本套件内 | 生成层单独跑 |",
+        f"| stale_gold（数据缺口） | {n - len(live)}/{n} | 金标文件的叶子里覆盖不到官方答案句，单列不计入上面的分母 |",
         "| 判定准确率 | 未测 | 缺 30 条标注 |",
         "| 行为断言 | 未成套件 | C17–C22 仍是单测 |",
         "",
