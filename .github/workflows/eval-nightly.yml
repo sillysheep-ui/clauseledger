@@ -1,0 +1,27 @@
+name: eval-nightly
+on:
+  schedule:
+    - cron: "0 18 * * *"   # UTC 18:00 = 北京时间 02:00
+  workflow_dispatch:
+jobs:
+  full:
+    runs-on: ${{ vars.EVAL_RUNNER || 'ubuntu-latest' }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+        with:
+          python-version: "3.13"
+      - run: uv sync --extra dev --no-install-project
+      - name: 语料检查
+        run: |
+          if [ ! -f data/index/clauses.jsonl ]; then
+            echo "::notice::本 runner 没有语料，跳过全量评测"; exit 0; fi
+          uv run python -m tools.evalkit.run --suite full
+          uv run python -m tools.eval_behavior
+          uv run python -m tools.eval_gate
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: eval-reports
+          path: eval/reports/
+          if-no-files-found: ignore

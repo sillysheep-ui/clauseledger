@@ -1,0 +1,31 @@
+name: eval-pr
+on:
+  pull_request:
+    paths:
+      - "app/**"
+      - "tools/**"
+      - "eval/**"
+jobs:
+  smoke:
+    runs-on: ${{ vars.EVAL_RUNNER || 'ubuntu-latest' }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+        with:
+          python-version: "3.13"
+      - run: uv sync --extra dev --no-install-project
+      - id: corpus
+        name: 语料检查
+        run: |
+          if [ -f data/index/clauses.jsonl ]; then
+            echo "has=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "has=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::本 runner 没有语料，跳过行为与冒烟评测"
+          fi
+      - if: steps.corpus.outputs.has == 'true'
+        run: uv run python -m tools.eval_behavior
+      - if: steps.corpus.outputs.has == 'true'
+        run: uv run python -m tools.evalkit.run --suite smoke
+      - if: steps.corpus.outputs.has == 'true'
+        run: uv run python -m tools.eval_gate

@@ -63,3 +63,23 @@ python -m tools.evalkit.run --suite full --debug-rank   # 只在需要诊断时
 - 判定 30 条标注未写：写好之前，判定准确率在报告里显示"未测"，不显示假数字。
 - 行为套件已抽成 `tools/eval_behavior.py`（6/6 通过，秒级，不调模型）；
 - 引用抽样已抽成 `tools/eval_citation.py`（`--sample N` 生成 CSV，`--score` 算 CSR 与 κ）。
+
+## 7. 落地的文件
+
+| 文件 | 作用 |
+|---|---|
+| `Makefile` | `make eval-smoke / eval-full / eval-behavior / eval-citation / eval-gate` |
+| `.github/workflows/eval-pr.yml` | PR：行为套件 + smoke + 门禁（无语料自动跳过） |
+| `.github/workflows/eval-nightly.yml` | 每天 02:00（北京时间）：full + 行为 + 门禁，上传报告 |
+| `tools/eval_gate.py` | 把报告变成退出码：误答=0、拒答 100%、AEC 不比基线低 5pp |
+| `eval/baseline.json` | 基线（`--update-baseline` 写入；改口径时要重置） |
+
+门禁判定：
+
+```bash
+python -m tools.eval_gate                 # 取最新报告
+python -m tools.eval_gate --update-baseline
+```
+
+托管 runner 没有语料，所以 PR 与夜间任务都会先查 `data/index/clauses.jsonl`；
+有语料的自托管 runner 才会真正跑（`vars.EVAL_RUNNER` 可指定 label）。
