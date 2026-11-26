@@ -252,3 +252,12 @@ def clopper_pearson_upper(k: int, n: int, alpha: float = 0.05) -> float:
         else:
             hi = mid
     return hi
+
+
+def clause_recall(ranks: Sequence[int | None], k: int) -> Rate:
+    """条款级召回，分母无条件（None 计失败）。
+
+    >>> clause_recall([1, None, 6], 5).successes
+    1
+    """
+    return rate(sum(1 for r in ranks if r is not None and r <= k), len(ranks))

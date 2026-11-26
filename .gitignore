@@ -81,3 +81,4 @@ data/derived/
 
 # 试验目录（AgentScope spike，不进产品仓库）
 spikes/
+eval/cache/

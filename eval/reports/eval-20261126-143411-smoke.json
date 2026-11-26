@@ -1,0 +1,128 @@
+{
+  "suite": "smoke",
+  "splits": [
+    "dev"
+  ],
+  "rows": [
+    {
+      "id": "OFFI-001",
+      "split": "dev",
+      "rank": null,
+      "state": "stale_gold",
+      "aec": true,
+      "items": 18,
+      "chars": 2748,
+      "outcome": "answer",
+      "taxonomy": "stale_gold"
+    },
+    {
+      "id": "OFFI-002",
+      "split": "dev",
+      "rank": null,
+      "state": "stale_gold",
+      "aec": false,
+      "items": 0,
+      "chars": 0,
+      "outcome": "out_of_domain",
+      "taxonomy": "stale_gold"
+    },
+    {
+      "id": "OFFI-003",
+      "split": "dev",
+      "rank": null,
+      "state": "stale_gold",
+      "aec": false,
+      "items": 22,
+      "chars": 2508,
+      "outcome": "answer",
+      "taxonomy": "stale_gold"
+    },
+    {
+      "id": "OFFI-004",
+      "split": "dev",
+      "rank": null,
+      "state": "no_answer",
+      "aec": false,
+      "items": 29,
+      "chars": 3616,
+      "outcome": "answer",
+      "taxonomy": "retrieval_miss"
+    },
+    {
+      "id": "OFFI-005",
+      "split": "dev",
+      "rank": 1,
+      "state": "ok",
+      "aec": true,
+      "items": 17,
+      "chars": 2789,
+      "outcome": "answer",
+      "taxonomy": "ok"
+    },
+    {
+      "id": "OFFI-006",
+      "split": "dev",
+      "rank": 1,
+      "state": "ok",
+      "aec": true,
+      "items": 17,
+      "chars": 2934,
+      "outcome": "answer",
+      "taxonomy": "ok"
+    },
+    {
+      "id": "OFFI-007",
+      "split": "dev",
+      "rank": null,
+      "state": "stale_gold",
+      "aec": false,
+      "items": 30,
+      "chars": 3841,
+      "outcome": "answer",
+      "taxonomy": "stale_gold"
+    },
+    {
+      "id": "OFFI-008",
+      "split": "dev",
+      "rank": 1,
+      "state": "ok",
+      "aec": true,
+      "items": 30,
+      "chars": 3304,
+      "outcome": "answer",
+      "taxonomy": "ok"
+    },
+    {
+      "id": "OFFI-009",
+      "split": "dev",
+      "rank": 1,
+      "state": "ok",
+      "aec": true,
+      "items": 25,
+      "chars": 4141,
+      "outcome": "answer",
+      "taxonomy": "ok"
+    },
+    {
+      "id": "OFFI-010",
+      "split": "dev",
+      "rank": 3,
+      "state": "ok",
+      "aec": true,
+      "items": 30,
+      "chars": 3565,
+      "outcome": "answer",
+      "taxonomy": "ok"
+    }
+  ],
+  "negatives": {
+    "no_policy_n": 12,
+    "no_policy_refused": 12,
+    "oos_n": 18,
+    "oos_refused": 18,
+    "neg_answered": 0
+  },
+  "false_refused": 1,
+  "rerank": "1",
+  "corpus": "docs=574 clauses=6035"
+}
